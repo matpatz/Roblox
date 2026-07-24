@@ -1,0 +1,71 @@
+.stats-container {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100vh - 84px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.stats-inner {
+  max-width: 860px;
+  width: 100%;
+}
+
+.stats-header {
+  text-align: center;
+}
+
+.stats-header .eyebrow {
+  margin-bottom: 8px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 36px;
+  text-align: left;
+}
+
+.stat-card {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.stat-card:hover {
+  border-color: var(--text);
+  transform: translateY(-2px);
+}
+
+.stat-label {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.stat-number {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
+}

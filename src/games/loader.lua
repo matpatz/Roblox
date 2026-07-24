@@ -12,25 +12,25 @@ local GameList = {
 local PlaceId = GameList[game.PlaceId]
 
 return {
-	IsCorrectGame = function()
-		return PlaceId
+	IsValid = function()
+		return PlaceId ~= nil
 	end,
-	Warning = function()
+	Error = function()
 		local Names = {}
 		for _, Game in next, (GameList) do
 			table.insert(Names, Game.name)
 		end
 		warn("Please join one of our supported games: " .. table.concat(Names, ", "))
 	end,
-	Load = function()
+	LoadScript = function()
 		loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/" .. PlaceId.name .. "/main.lua"))()
 	end
 }
 
 --[[
-if IsCorrectGame() then
-	Load()
+if IsValid() then
+	LoadScript()
 else
-	Warning()
+	Error()
 end
 ]]

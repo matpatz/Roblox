@@ -1,10 +1,13 @@
 :root {
-  --bg: #000000;
-  --bg-soft: #111111;
-  --line: #333333;
-  --text: #ffffff;
-  --muted: #888888;
-  --accent: #dddddd;
+  --bg: #0a0a0f;
+  --bg-soft: #111118;
+  --line: #2a2a35;
+  --text: #f0f0f4;
+  --muted: #888892;
+  --accent: #c8cad0;
+  --accent-color: #5a6b8a;
+  --accent-hover: #7088b0;
+  --accent-subtle: #3d4a60;
 }
 
 * { box-sizing: border-box; }
@@ -54,7 +57,7 @@ body {
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  color: var(--text);
+  color: var(--accent-color);
   font-family: 'Chakra Petch', sans-serif;
   font-weight: 700;
   font-size: 18px;
@@ -92,13 +95,13 @@ body {
   bottom: 0;
   height: 2px;
   width: 0%;
-  background: var(--text);
+  background: var(--accent-color);
   transition: width 0.25s ease;
 }
 
 .links a:hover,
 .links a.active {
-  color: var(--text);
+  color: var(--accent-hover);
 }
 
 .links a:hover::after,
@@ -109,7 +112,7 @@ body {
 .links a:focus-visible,
 .brand:focus-visible,
 .discord-btn:focus-visible {
-  outline: 2px solid var(--text);
+  outline: 2px solid var(--accent-color);
   outline-offset: 4px;
   border-radius: 4px;
 }
@@ -146,6 +149,7 @@ h1 {
   line-height: 1.15;
   margin: 0 0 14px;
   letter-spacing: -0.01em;
+  color: var(--text);
 }
 
 
@@ -176,7 +180,7 @@ h1 {
   gap: 10px;
   padding: 14px 28px;
   background: var(--bg-soft);
-  border: 1px solid var(--line);
+  border: 1px solid var(--accent-subtle);
   border-radius: 10px;
   color: var(--text);
   text-decoration: none;
@@ -189,11 +193,11 @@ h1 {
 
 .discord-btn.secondary {
   background: transparent;
-  border-color: var(--line);
+  border-color: var(--accent-subtle);
 }
 
 .discord-btn.secondary:hover {
-  border-color: var(--text);
+  border-color: var(--accent-color);
 }
 
 .discord-btn img {
@@ -203,7 +207,7 @@ h1 {
 }
 
 .discord-btn:hover {
-  border-color: var(--text);
+  border-color: var(--accent-color);
   transform: translateY(-2px);
 }
 

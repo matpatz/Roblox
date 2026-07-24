@@ -51,7 +51,7 @@ var execGraph = document.getElementById('execGraph');
 
 function renderStats(data) {
   var discord = data.discord_community || {};
-  var memberCount = discord.presence_count || discord.member_count || 0;
+  var memberCount = discord.member_count || discord.presence_count || 0;
 
   var stats = [
     { label: 'Total Executions', value: data.total_executions || 0, description: 'Successful loadstring executions across all games.' },

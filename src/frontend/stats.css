@@ -40,7 +40,7 @@
 }
 
 .stat-card:hover {
-  border-color: var(--text);
+  border-color: var(--accent-color);
   transform: translateY(-2px);
 }
 
@@ -124,7 +124,7 @@
 .graph-bar {
   width: 100%;
   max-width: 48px;
-  background: linear-gradient(to top, #555, #ccc);
+  background: linear-gradient(to top, #2d3a52, #5a7099);
   border-radius: 4px 4px 0 0;
   transition: height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }

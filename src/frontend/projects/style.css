@@ -25,7 +25,7 @@
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-color);
   margin: 0 0 12px;
 }
 
@@ -86,12 +86,12 @@
 }
 
 .option-card:hover {
-  border-color: var(--text);
+  border-color: var(--accent-color);
   transform: translateY(-2px);
 }
 
 .option-card:focus-visible {
-  outline: 2px solid var(--text);
+  outline: 2px solid var(--accent-color);
   outline-offset: 4px;
 }
 
@@ -115,7 +115,7 @@
 }
 
 .back-link:hover {
-  color: var(--text);
+  color: var(--accent-color);
   transform: translateX(-4px);
 }
 
@@ -148,7 +148,7 @@
 }
 
 .search-box input:focus {
-  border-color: var(--text);
+  border-color: var(--accent-color);
 }
 
 .search-box svg {
@@ -181,8 +181,8 @@
 }
 
 .pill:hover, .pill.active {
-  color: var(--text);
-  border-color: var(--text);
+  color: var(--accent-hover);
+  border-color: var(--accent-color);
 }
 
 .project-grid {
@@ -205,7 +205,7 @@
 }
 
 .project-card:hover {
-  border-color: var(--text);
+  border-color: var(--accent-color);
   transform: translateY(-2px);
 }
 
@@ -264,9 +264,9 @@
 }
 
 .badge-active, .badge-functional {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(90, 107, 138, 0.12);
+  color: var(--accent-hover);
+  border: 1px solid rgba(90, 107, 138, 0.25);
 }
 
 .badge-in-development, .badge-beta {
@@ -276,15 +276,15 @@
 }
 
 .badge-undetected {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(70, 110, 90, 0.12);
+  color: #8ab5a0;
+  border: 1px solid rgba(70, 110, 90, 0.25);
 }
 
 .badge-detected {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--muted);
-  border: 1px solid var(--line);
+  background: rgba(140, 70, 70, 0.12);
+  color: #c09090;
+  border: 1px solid rgba(140, 70, 70, 0.2);
 }
 
 .badge-tag {
@@ -294,13 +294,13 @@
 }
 
 .code-box {
-  background: #050508;
+  background: #08080d;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 10px;
   font-family: 'Courier New', Courier, monospace;
   font-size: 11.5px;
-  color: #a9b7c6;
+  color: #9baec8;
   position: relative;
   overflow: hidden;
   word-break: break-all;
@@ -340,7 +340,7 @@
 }
 
 .action-btn:hover {
-  background: var(--text);
+  background: var(--accent-color);
   color: var(--bg);
 }
 
@@ -351,8 +351,8 @@
 }
 
 .action-btn.secondary-btn:hover {
-  border-color: var(--text);
-  color: var(--text);
+  border-color: var(--accent-color);
+  color: var(--accent-hover);
 }
 
 .toast {
@@ -362,7 +362,7 @@
   z-index: 100;
   padding: 12px 20px;
   background: var(--bg-soft);
-  border: 1px solid var(--text);
+  border: 1px solid var(--accent-color);
   border-radius: 8px;
   color: var(--text);
   font-family: 'Chakra Petch', sans-serif;

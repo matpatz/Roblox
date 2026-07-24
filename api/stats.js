@@ -1,4 +1,4 @@
-export default async function handler() {
+export default async function handler(req, res) {
     const guild_id = "1355796182143598804";
     let discord_community = {};
 
@@ -17,7 +17,9 @@ export default async function handler() {
         }
     } catch (e) {}
 
-    return Response.json({
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate");
+    return res.status(200).json({
         total_executions: 0,
         active_users: 0,
         api_status: "Operational",

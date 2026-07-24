@@ -34,36 +34,22 @@
       <p class="byline">Live metrics for Voltex scripts, executions, and network uptime.</p>
     </div>
 
-    <div class="stats-grid" id="statsGrid">
-      <p style="color: var(--muted); font-family: 'Inter', sans-serif; grid-column: 1/-1;">Loading stats...</p>
-    </div>
+    <div class="stats-grid" id="statsGrid"></div>
   </div>
 </main>
 
 <script>
-const statsGrid = document.getElementById('statsGrid');
-
-const fallbackData = {
-  total_executions: 148920,
-  active_users: 12450,
-  api_status: 'Operational',
-  discord_community: { presence_count: 3800 }
-};
-
-function formatNumber(n) {
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  return String(n);
-}
+var statsGrid = document.getElementById('statsGrid');
 
 function renderStats(data) {
-  const discord = data.discord_community || {};
-  const memberCount = discord.presence_count || discord.member_count || 0;
+  var discord = data.discord_community || {};
+  var memberCount = discord.presence_count || discord.member_count || 0;
 
-  const stats = [
-    { label: 'Total Executions', value: formatNumber(data.total_executions), description: 'Successful loadstring executions across all games.' },
-    { label: 'Active Users', value: formatNumber(data.active_users), description: 'Monthly unique Roblox users leveraging Voltex.' },
-    { label: 'API Status', value: data.api_status, small: true },
-    { label: 'Discord Community', value: formatNumber(memberCount), description: 'Members on the official Voltex Discord.' }
+  var stats = [
+    { label: 'Total Executions', value: data.total_executions || 0, description: 'Successful loadstring executions across all games.' },
+    { label: 'Active Users', value: data.active_users || 0, description: 'Monthly unique Roblox users leveraging Voltex.' },
+    { label: 'API Status', value: data.api_status || 'Unknown', small: true },
+    { label: 'Discord Community', value: memberCount, description: 'Members on the official Voltex Discord.' }
   ];
 
   statsGrid.innerHTML = stats.map(function(stat) {
@@ -73,25 +59,19 @@ function renderStats(data) {
   }).join('');
 }
 
-function fetchWithTimeout(url, ms) {
-  return new Promise(function(resolve, reject) {
-    var controller = new AbortController();
-    var timer = setTimeout(function() { controller.abort(); reject(new Error('Timeout')); }, ms);
-    fetch(url, { signal: controller.signal })
-      .then(function(res) { clearTimeout(timer); resolve(res); })
-      .catch(function(err) { clearTimeout(timer); reject(err); });
-  });
-}
+renderStats({ total_executions: 0, active_users: 0, api_status: 'Unknown', discord_community: {} });
 
-renderStats(fallbackData);
+var controller = new AbortController();
+var timer = setTimeout(function() { controller.abort(); }, 8000);
 
-fetchWithTimeout('/api/stats', 8000)
-  .then(function(response) {
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    return response.json();
+fetch('/api/stats', { signal: controller.signal })
+  .then(function(res) {
+    clearTimeout(timer);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
   })
   .then(function(data) { renderStats(data); })
-  .catch(function(err) { console.warn('Stats API unavailable, using fallback:', err.message); });
+  .catch(function(err) { console.warn('Stats API:', err.message); });
 </script>
 </body>
 </html>

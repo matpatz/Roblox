@@ -86,12 +86,12 @@ function renderGraph(history) {
   }
 
   var maxCount = Math.max.apply(null, history.map(function(d) { return d.count; }));
-  if (maxCount === 0) maxCount = 1;
+  var yAxisMax = Math.max(maxCount * 2, 100);
 
   var dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   var barsHtml = history.map(function(entry) {
-    var pct = (entry.count / maxCount) * 100;
+    var pct = (entry.count / yAxisMax) * 100;
     var d = new Date(entry.date + 'T00:00:00');
     var label = dayLabels[d.getDay()] + ' ' + d.getDate();
     return '<div class="graph-bar-wrap">' +

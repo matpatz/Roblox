@@ -191,6 +191,14 @@ h1 {
   font-weight: 600;
 }
 
+.btn-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
 .discord-btn {
   display: inline-flex;
   align-items: center;
@@ -206,6 +214,16 @@ h1 {
   font-size: 15px;
   letter-spacing: 0.02em;
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.discord-btn.secondary {
+  background: transparent;
+  border-color: var(--line);
+}
+
+.discord-btn.secondary:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 8px 24px rgba(0, 229, 255, 0.2);
 }
 
 .discord-btn img {

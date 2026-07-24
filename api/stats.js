@@ -13,12 +13,19 @@ export default async function handler(req, res) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 5000);
         const response = await fetch(
-            `https://discord.com/api/v10/guilds/${guild_id}/widget.json?with_counts=true`,
-            { signal: controller.signal }
+            `https://discord.com/api/v10/guilds/${guild_id}?with_counts=true`,
+            {
+                signal: controller.signal,
+                headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` }
+            }
         );
         clearTimeout(timeout);
         if (response.ok) {
-            discord_community = await response.json();
+            const data = await response.json();
+            discord_community = {
+                presence_count: data.approximate_presence_count || 0,
+                member_count: data.approximate_member_count || 0
+            };
         }
     } catch (e) {}
 

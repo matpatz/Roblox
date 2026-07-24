@@ -1,8 +1,13 @@
+// api/save.js
+export const config = {
+    runtime: 'edge',
+};
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SECRET_KEY // service role key — server-side only, bypasses RLS wqfewfwfwef
+    process.env.SUPABASE_SECRET_KEY
 );
 
 export default async function handler(request) {

@@ -12,7 +12,7 @@
     "title": "Voltex API Bridge",
     "description": "API connector module handling authentication, analytics reporting, and version checking.",
     "snippet": "fetch(\"https://raw.githubusercontent.com/matpatz/Roblox/main/api/alpha.js\")",
-    "buttonText": "Copy URL",
+    "buttonText": "⚡ Copy URL",
     "rawUrl": "https://raw.githubusercontent.com/matpatz/Roblox/main/api/alpha.js"
   },
   {
@@ -20,7 +20,7 @@
     "title": "Discord Webhook Logger",
     "description": "Send execution logs, errors, and status reports directly to your Discord webhook.",
     "snippet": "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/matpatz/Roblox/main/init.luau\"))()",
-    "buttonText": "Copy Snippet",
+    "buttonText": "⚡ Copy Snippet",
     "rawUrl": "https://raw.githubusercontent.com/matpatz/Roblox/main/init.luau"
   }
 ]

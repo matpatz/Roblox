@@ -12,9 +12,9 @@
   {
     "id": "esp",
     "title": "ESP",
-    "description": "ESP -- Key System Tag",
+    "description": "ESP",
     "updated": "6 months ago",
-    "tags": ["Open Source"],
+    "tags": ["Open Source", "Key System"],
     "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/scripts/esp/main.lua\"))()",
     "buttonText": "Copy Loadstring",
     "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/esp/main.lua"

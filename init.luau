@@ -1,1 +1,1 @@
-
+local Script = shared.script

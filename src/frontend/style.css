@@ -1,11 +1,10 @@
 :root {
-  --bg: #08080d;
-  --bg-soft: #0e0e17;
-  --line: #1c1c29;
-  --violet: #8b5cff;
-  --cyan: #00e5ff;
-  --text: #f1f1f6;
-  --muted: #8b8b9e;
+  --bg: #000000;
+  --bg-soft: #111111;
+  --line: #333333;
+  --text: #ffffff;
+  --muted: #888888;
+  --accent: #dddddd;
 }
 
 * { box-sizing: border-box; }
@@ -29,22 +28,7 @@ body {
   * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
 }
 
-/* faint circuit-grid background */
-.grid-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, black 0%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, black 0%, transparent 75%);
-  opacity: 0.6;
-}
 
-/* ---------- Header ---------- */
 .topbar {
   position: sticky;
   top: 0;
@@ -81,7 +65,6 @@ body {
   width: 18px;
   height: 18px;
   display: block;
-  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.6));
 }
 
 .links {
@@ -109,7 +92,7 @@ body {
   bottom: 0;
   height: 2px;
   width: 0%;
-  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  background: var(--text);
   transition: width 0.25s ease;
 }
 
@@ -126,12 +109,12 @@ body {
 .links a:focus-visible,
 .brand:focus-visible,
 .discord-btn:focus-visible {
-  outline: 2px solid var(--cyan);
+  outline: 2px solid var(--text);
   outline-offset: 4px;
   border-radius: 4px;
 }
 
-/* ---------- Hero ---------- */
+
 .hero {
   position: relative;
   z-index: 1;
@@ -154,13 +137,6 @@ body {
   width: 52px;
   height: 52px;
   margin-bottom: 28px;
-  animation: pulse 2.6s ease-in-out infinite;
-  filter: drop-shadow(0 0 18px rgba(139, 92, 255, 0.55));
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 18px rgba(139, 92, 255, 0.55)); }
-  50% { transform: scale(1.08); filter: drop-shadow(0 0 28px rgba(0, 229, 255, 0.65)); }
 }
 
 h1 {
@@ -172,12 +148,7 @@ h1 {
   letter-spacing: -0.01em;
 }
 
-.glow {
-  background: linear-gradient(90deg, var(--violet), var(--cyan));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+
 
 .byline {
   font-family: 'Inter', sans-serif;
@@ -222,8 +193,7 @@ h1 {
 }
 
 .discord-btn.secondary:hover {
-  border-color: var(--cyan);
-  box-shadow: 0 8px 24px rgba(0, 229, 255, 0.2);
+  border-color: var(--text);
 }
 
 .discord-btn img {
@@ -233,9 +203,8 @@ h1 {
 }
 
 .discord-btn:hover {
-  border-color: var(--violet);
+  border-color: var(--text);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(139, 92, 255, 0.25);
 }
 
 @media (max-width: 480px) {

@@ -67,54 +67,10 @@
   margin-bottom: 8px;
 }
 
-.stat-number.glow-cyan {
-  color: var(--cyan);
-  text-shadow: 0 0 16px rgba(0, 229, 255, 0.4);
-}
 
-.stat-number.glow-violet {
-  color: var(--violet);
-  text-shadow: 0 0 16px rgba(139, 92, 255, 0.4);
-}
-
-.stat-desc {
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.status-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: rgba(0, 229, 255, 0.1);
-  border: 1px solid rgba(0, 229, 255, 0.3);
-  border-radius: 20px;
-  color: var(--cyan);
-  font-family: 'Chakra Petch', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  margin-top: 12px;
-}
-
-.dot-pulse {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--cyan);
-  box-shadow: 0 0 8px var(--cyan);
-  animation: blink 1.6s ease-in-out infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
 </style>
 </head>
 <body>
-<div class="grid-bg" aria-hidden="true"></div>
 
 <header class="topbar">
   <nav class="nav">
@@ -142,13 +98,13 @@
       
       <div class="stat-card">
         <div class="stat-label">Total Executions</div>
-        <div class="stat-number glow-cyan">148,920+</div>
+        <div class="stat-number">148,920+</div>
         <div class="stat-desc">Successful loadstring executions across all games.</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-label">Active Users</div>
-        <div class="stat-number glow-violet">12,450+</div>
+        <div class="stat-number">12,450+</div>
         <div class="stat-desc">Monthly unique Roblox users leveraging Voltex.</div>
       </div>
 
@@ -156,13 +112,13 @@
         <div class="stat-label">API Status</div>
         <div class="stat-number" style="font-size: 28px;">99.98%</div>
         <div class="status-indicator">
-          <span class="dot-pulse"></span> Systems Operational
+          Systems Operational
         </div>
       </div>
 
       <div class="stat-card">
         <div class="stat-label">Discord Community</div>
-        <div class="stat-number glow-cyan">3,800+</div>
+        <div class="stat-number">3,800+</div>
         <div class="stat-desc">Members on the official Voltex Discord.</div>
       </div>
 

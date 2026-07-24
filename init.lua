@@ -1,5 +1,5 @@
 local GameLoader = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/loader.lua"))()
-local ValidGame = GameLoader.IsValid() 
+local ValidGame = GameLoader.IsValid
 
 if ValidGame then
 	GameLoader.LoadScript()

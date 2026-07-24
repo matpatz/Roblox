@@ -16,7 +16,7 @@
     "description": "Auto Farm",
     "updated": "2 days ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/bluzzle/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Block-Puzzle/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/15564827526/Block-Puzzle",
     "playButtonText": "Play on Roblox"
@@ -27,7 +27,7 @@
     "description": "Get Best Animal",
     "updated": "4 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/cat/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Catch-And-Tame/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/96645548064314/Catch-And-Tame",
     "playButtonText": "Play on Roblox"
@@ -38,7 +38,7 @@
     "description": "Basic Aimbot and Esp",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected", "First Script for a game"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/catastrophia/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Catastrophia/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/1087852616/CATASTROPHIA-Survive",
     "playButtonText": "Play on Roblox"
@@ -49,7 +49,7 @@
     "description": "Misc",
     "updated": "5 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/escape/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Escape-Tsunami-for-Brainrots/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/131623223084840/Escape-Tsunami-For-Brainrots",
     "playButtonText": "Play on Roblox"
@@ -71,7 +71,7 @@
     "description": "Silent Aim",
     "updated": "5 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/heavy/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Heavy-Metal/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/74669489500088/Heavy-Rust",
     "playButtonText": "Play on Roblox"
@@ -93,7 +93,7 @@
     "description": "Best Kick",
     "updated": "2 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/kickablock/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Kick-a-Lucky-Block-for-Brainrots/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/89469502395769/Kick-a-Lucky-Block",
     "playButtonText": "Play on Roblox"
@@ -115,7 +115,7 @@
     "description": "Basic Aimbot and Esp",
     "updated": "last month",
     "tags": ["Functional", "Undetected", "Key System"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/operationone/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Operation-One/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/72920620366355/Operation-One",
     "playButtonText": "Play on Roblox"
@@ -148,7 +148,7 @@
     "description": "Kill Aura for Titans and People",
     "updated": "3 months ago",
     "tags": ["Functional", "Undetected", "Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/titanwarfare/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Titan-Warfare/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/6297822481/Titan-Warfare",
     "playButtonText": "Play on Roblox"
@@ -159,7 +159,7 @@
     "description": "Basic Aimbot, Esp, Silent aim, amany of features.",
     "updated": "2 weeks ago",
     "tags": ["In Development"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/trident/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Trident/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/13253735473/Trident-Survival",
     "playButtonText": "Play on Roblox"

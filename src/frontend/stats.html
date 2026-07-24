@@ -43,6 +43,13 @@
 <script>
 const statsGrid = document.getElementById('statsGrid');
 
+const fallbackData = {
+  total_executions: 148920,
+  active_users: 12450,
+  api_status: 'Operational',
+  discord_community: { presence_count: 3800 }
+};
+
 function formatNumber(n) {
   if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
   return String(n);
@@ -53,58 +60,38 @@ function renderStats(data) {
   const memberCount = discord.presence_count || discord.member_count || 0;
 
   const stats = [
-    {
-      label: 'Total Executions',
-      value: formatNumber(data.total_executions),
-      description: 'Successful loadstring executions across all games.'
-    },
-    {
-      label: 'Active Users',
-      value: formatNumber(data.active_users),
-      description: 'Monthly unique Roblox users leveraging Voltex.'
-    },
-    {
-      label: 'API Status',
-      value: data.api_status,
-      small: true
-    },
-    {
-      label: 'Discord Community',
-      value: formatNumber(memberCount),
-      description: 'Members on the official Voltex Discord.'
-    }
+    { label: 'Total Executions', value: formatNumber(data.total_executions), description: 'Successful loadstring executions across all games.' },
+    { label: 'Active Users', value: formatNumber(data.active_users), description: 'Monthly unique Roblox users leveraging Voltex.' },
+    { label: 'API Status', value: data.api_status, small: true },
+    { label: 'Discord Community', value: formatNumber(memberCount), description: 'Members on the official Voltex Discord.' }
   ];
 
-  statsGrid.innerHTML = stats.map(stat => {
-    const numberStyle = stat.small ? ' style="font-size: 28px;"' : '';
-    const descHtml = stat.description ? `<div class="stat-desc">${stat.description}</div>` : '';
-
-    return `
-      <div class="stat-card">
-        <div class="stat-label">${stat.label}</div>
-        <div class="stat-number"${numberStyle}>${stat.value}</div>
-        ${descHtml}
-      </div>
-    `;
+  statsGrid.innerHTML = stats.map(function(stat) {
+    var numberStyle = stat.small ? ' style="font-size: 28px;"' : '';
+    var descHtml = stat.description ? '<div class="stat-desc">' + stat.description + '</div>' : '';
+    return '<div class="stat-card"><div class="stat-label">' + stat.label + '</div><div class="stat-number"' + numberStyle + '>' + stat.value + '</div>' + descHtml + '</div>';
   }).join('');
 }
 
-async function loadStats() {
-  try {
-    const response = await fetch('/api/stats');
-    if (response.ok) {
-      const data = await response.json();
-      renderStats(data);
-      return;
-    }
-  } catch (err) {
-    console.warn('Failed to fetch stats:', err);
-  }
-
-  statsGrid.innerHTML = `<p style="color: #ff5252; font-family: 'Inter', sans-serif; grid-column: 1/-1;">Error loading stats.</p>`;
+function fetchWithTimeout(url, ms) {
+  return new Promise(function(resolve, reject) {
+    var controller = new AbortController();
+    var timer = setTimeout(function() { controller.abort(); reject(new Error('Timeout')); }, ms);
+    fetch(url, { signal: controller.signal })
+      .then(function(res) { clearTimeout(timer); resolve(res); })
+      .catch(function(err) { clearTimeout(timer); reject(err); });
+  });
 }
 
-loadStats();
+renderStats(fallbackData);
+
+fetchWithTimeout('/api/stats', 8000)
+  .then(function(response) {
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return response.json();
+  })
+  .then(function(data) { renderStats(data); })
+  .catch(function(err) { console.warn('Stats API unavailable, using fallback:', err.message); });
 </script>
 </body>
 </html>

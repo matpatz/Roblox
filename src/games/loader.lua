@@ -12,9 +12,7 @@ local GameList = {
 local PlaceId = GameList[game.PlaceId]
 
 return {
-	IsValid = function()
-		return PlaceId ~= nil
-	end,
+	IsValid = (PlaceId ~= nil),
 	Error = function()
 		local Names = {}
 		for _, Game in next, (GameList) do

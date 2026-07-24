@@ -20,8 +20,8 @@ export default async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate");
     return res.status(200).json({
-        total_executions: 0,
-        active_users: 0,
+        total_executions: 1,
+        active_users: 1,
         api_status: "Operational",
         discord_community
     });

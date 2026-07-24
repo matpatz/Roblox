@@ -1,15 +1,14 @@
 local GameLoader = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/loader.lua"))()
-local InGame = GameLoader.InGame() 
+local ValidGame = GameLoader.IsValid() 
 
-if InGame then
+if ValidGame then
 	GameLoader.LoadScript()
 end
 
-local Script = shared.script
 local ScriptLoader = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/scripts/loader.lua"))()
 
-if Script and not InGame then
+if ScriptLoader.IsValid and not ValidGame then
 	ScriptLoader.LoadScript()
 else
-	GameLoader.WrongGame()
+	GameLoader.Error()
 end

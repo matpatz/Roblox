@@ -261,16 +261,28 @@
   text-transform: uppercase;
 }
 
-.badge-active {
+.badge-active, .badge-functional {
   background: rgba(0, 229, 255, 0.12);
   color: var(--cyan);
   border: 1px solid rgba(0, 229, 255, 0.3);
 }
 
-.badge-beta {
+.badge-in-development, .badge-beta {
   background: rgba(139, 92, 255, 0.15);
   color: var(--violet);
   border: 1px solid rgba(139, 92, 255, 0.3);
+}
+
+.badge-undetected {
+  background: rgba(0, 230, 118, 0.15);
+  color: #00e676;
+  border: 1px solid rgba(0, 230, 118, 0.35);
+}
+
+.badge-detected {
+  background: rgba(255, 82, 82, 0.15);
+  color: #ff5252;
+  border: 1px solid rgba(255, 82, 82, 0.35);
 }
 
 .badge-tag {

@@ -45,99 +45,10 @@
         </svg>
         <input type="text" id="searchInput" placeholder="Search tools and experiments...">
       </div>
-
-      <div class="filter-pills" id="filterGroup">
-        <button class="pill active" data-filter="all">All</button>
-        <button class="pill" data-filter="tools">Tools</button>
-        <button class="pill" data-filter="libraries">Libraries</button>
-      </div>
     </div>
 
     <div class="project-grid" id="miscGrid">
-      
-      <!-- Misc Card 1 -->
-      <div class="project-card" data-category="libraries">
-        <div>
-          <div class="card-head">
-            <div class="card-title-group">
-              <h3>Rayfield UI Module</h3>
-              <p class="card-desc">Standalone customized Rayfield UI module for embedding sleek modern interfaces into any Luau script.</p>
-            </div>
-          </div>
-          <div class="badge-group" style="margin-top: 10px;">
-            <span class="badge badge-active">Active</span>
-            <span class="badge badge-tag">Library</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="code-box">
-            <code>local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/main/libraries/Rayfield.luau"))()</code>
-          </div>
-          <div class="card-actions">
-            <button class="action-btn" onclick="copyCode('local Rayfield = loadstring(game:HttpGet(&quot;https://raw.githubusercontent.com/matpatz/Roblox/main/libraries/Rayfield.luau&quot;))()')">
-              ⚡ Copy Snippet
-            </button>
-            <a class="action-btn secondary-btn" href="/libraries/Rayfield.luau" target="_blank">View File</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Misc Card 2 -->
-      <div class="project-card" data-category="tools">
-        <div>
-          <div class="card-head">
-            <div class="card-title-group">
-              <h3>Voltex API Bridge</h3>
-              <p class="card-desc">API connector module handling authentication, analytics reporting, and version checking.</p>
-            </div>
-          </div>
-          <div class="badge-group" style="margin-top: 10px;">
-            <span class="badge badge-beta">Alpha</span>
-            <span class="badge badge-tag">API</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="code-box">
-            <code>fetch("https://raw.githubusercontent.com/matpatz/Roblox/main/api/alpha.js")</code>
-          </div>
-          <div class="card-actions">
-            <button class="action-btn" onclick="copyCode('https://raw.githubusercontent.com/matpatz/Roblox/main/api/alpha.js')">
-              ⚡ Copy URL
-            </button>
-            <a class="action-btn secondary-btn" href="/api/alpha.js" target="_blank">View API</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Misc Card 3 -->
-      <div class="project-card" data-category="tools">
-        <div>
-          <div class="card-head">
-            <div class="card-title-group">
-              <h3>Discord Webhook Logger</h3>
-              <p class="card-desc">Send execution logs, errors, and status reports directly to your Discord webhook.</p>
-            </div>
-          </div>
-          <div class="badge-group" style="margin-top: 10px;">
-            <span class="badge badge-active">Active</span>
-            <span class="badge badge-tag">Utility</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="code-box">
-            <code>loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/main/init.luau"))()</code>
-          </div>
-          <div class="card-actions">
-            <button class="action-btn" onclick="copyCode('loadstring(game:HttpGet(&quot;https://raw.githubusercontent.com/matpatz/Roblox/main/init.luau&quot;))()')">
-              ⚡ Copy Snippet
-            </button>
-          </div>
-        </div>
-      </div>
-
+      <p style="color: var(--muted); font-family: 'Inter', sans-serif;">Loading misc projects data...</p>
     </div>
 
   </div>
@@ -146,6 +57,20 @@
 <div class="toast" id="toast">Copied to clipboard!</div>
 
 <script>
+let miscData = [];
+
+const searchInput = document.getElementById('searchInput');
+const miscGrid = document.getElementById('miscGrid');
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function copyCode(text) {
   navigator.clipboard.writeText(text).then(() => {
     const toast = document.getElementById('toast');
@@ -154,40 +79,85 @@ function copyCode(text) {
   });
 }
 
-const searchInput = document.getElementById('searchInput');
-const filterPills = document.querySelectorAll('.filter-pills .pill');
-const cards = document.querySelectorAll('.project-card');
+function renderMiscProjects(projects) {
+  if (!projects || projects.length === 0) {
+    miscGrid.innerHTML = `<p style="color: var(--muted); font-family: 'Inter', sans-serif; grid-column: 1/-1;">No projects found matching your search.</p>`;
+    return;
+  }
 
-let currentFilter = 'all';
+  miscGrid.innerHTML = projects.map(item => {
+    const escapedSnippet = escapeHtml(item.snippet);
+    const rawLinkHtml = item.rawUrl 
+      ? `<a class="action-btn secondary-btn" href="${item.rawUrl}" target="_blank" rel="noopener noreferrer">View File</a>` 
+      : '';
 
-filterPills.forEach(pill => {
-  pill.addEventListener('click', () => {
-    filterPills.forEach(p => p.classList.remove('active'));
-    pill.classList.add('active');
-    currentFilter = pill.getAttribute('data-filter');
-    filterCards();
-  });
-});
+    return `
+      <div class="project-card">
+        <div>
+          <div class="card-head">
+            <div class="card-title-group">
+              <h3>${item.title}</h3>
+              <p class="card-desc">${item.description}</p>
+            </div>
+          </div>
+        </div>
 
-searchInput.addEventListener('input', filterCards);
+        <div>
+          <div class="code-box">
+            <code>${escapedSnippet}</code>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" onclick="copyCode(this.getAttribute('data-code'))" data-code="${escapedSnippet}">
+              ${item.buttonText || '⚡ Copy Snippet'}
+            </button>
+            ${rawLinkHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
 
-function filterCards() {
+function filterAndRender() {
   const query = searchInput.value.toLowerCase().trim();
 
-  cards.forEach(card => {
-    const text = card.textContent.toLowerCase();
-    const categories = card.getAttribute('data-category') || '';
+  const filtered = miscData.filter(item => {
+    const titleMatch = item.title.toLowerCase().includes(query);
+    const descMatch = item.description.toLowerCase().includes(query);
+    const snippetMatch = item.snippet.toLowerCase().includes(query);
 
-    const matchesSearch = query === '' || text.includes(query);
-    const matchesFilter = currentFilter === 'all' || categories.includes(currentFilter);
-
-    if (matchesSearch && matchesFilter) {
-      card.style.display = 'flex';
-    } else {
-      card.style.display = 'none';
-    }
+    return query === '' || titleMatch || descMatch || snippetMatch;
   });
+
+  renderMiscProjects(filtered);
 }
+
+async function loadMiscJSON() {
+  const paths = [
+    '/src/frontend/projects/misc.json',
+    './misc.json',
+    '/projects/misc.json'
+  ];
+
+  for (const path of paths) {
+    try {
+      const response = await fetch(path);
+      if (response.ok) {
+        miscData = await response.json();
+        renderMiscProjects(miscData);
+        return;
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch from ${path}:`, err);
+    }
+  }
+  
+  miscGrid.innerHTML = `<p style="color: #ff5252; font-family: 'Inter', sans-serif; grid-column: 1/-1;">Error loading misc.json</p>`;
+}
+
+searchInput.addEventListener('input', filterAndRender);
+
+loadMiscJSON();
 </script>
 </body>
 </html>

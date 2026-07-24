@@ -43,131 +43,148 @@
           <circle cx="11" cy="11" r="8"></circle>
           <path d="m21 21-4.35-4.35"></path>
         </svg>
-        <input type="text" id="searchInput" placeholder="Search games by title...">
+        <input type="text" id="searchInput" placeholder="Search games by title, tag, or description...">
       </div>
 
       <div class="filter-pills" id="filterGroup">
         <button class="pill active" data-filter="all">All</button>
-        <button class="pill" data-filter="playable">Playable</button>
-        <button class="pill" data-filter="indev">In Development</button>
+        <button class="pill" data-filter="In Development">In Development</button>
+        <button class="pill" data-filter="Undetected">Undetected</button>
+        <button class="pill" data-filter="Detected">Detected</button>
+        <button class="pill" data-filter="Functional">Functional</button>
       </div>
     </div>
 
     <div class="project-grid" id="gameGrid">
-      
-      <!-- Game Card 1 -->
-      <div class="project-card" data-category="playable">
-        <div>
-          <div class="card-head">
-            <div class="card-title-group">
-              <h3>Voltex Cyber Runner</h3>
-              <p class="card-desc">Fast-paced parkour game set in a neon futuristic city. Built with custom Luau physics and leaderboard systems.</p>
-            </div>
-          </div>
-          <div class="badge-group" style="margin-top: 10px;">
-            <span class="badge badge-active">Playable</span>
-            <span class="badge badge-tag">Action</span>
-            <span class="badge badge-tag">Singleplayer</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="card-actions">
-            <a class="action-btn" href="https://www.roblox.com" target="_blank" rel="noopener noreferrer">
-              🎮 Play on Roblox
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Game Card 2 -->
-      <div class="project-card" data-category="indev">
-        <div>
-          <div class="card-head">
-            <div class="card-title-group">
-              <h3>Voltex Arena PvP</h3>
-              <p class="card-desc">Competitive sci-fi arena shooter featuring custom weapon scripting, raycast gun mechanics, and matchmaking.</p>
-            </div>
-          </div>
-          <div class="badge-group" style="margin-top: 10px;">
-            <span class="badge badge-beta">In Development</span>
-            <span class="badge badge-tag">PvP Shooter</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="card-actions">
-            <a class="action-btn secondary-btn" href="https://discord.gg/bSPRYhBGtf" target="_blank" rel="noopener noreferrer">
-              📢 Follow on Discord
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Game Card 3 -->
-      <div class="project-card" data-category="playable">
-        <div>
-          <div class="card-head">
-            <div class="card-title-group">
-              <h3>Overdrive Obby</h3>
-              <p class="card-desc">Precision platformer with dynamic moving obstacles, checkpoints, and global speedrun timers.</p>
-            </div>
-          </div>
-          <div class="badge-group" style="margin-top: 10px;">
-            <span class="badge badge-active">Playable</span>
-            <span class="badge badge-tag">Obstacle Course</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="card-actions">
-            <a class="action-btn" href="https://www.roblox.com" target="_blank" rel="noopener noreferrer">
-              🎮 Play on Roblox
-            </a>
-          </div>
-        </div>
-      </div>
-
+      <p style="color: var(--muted); font-family: 'Inter', sans-serif;">Loading games data...</p>
     </div>
 
   </div>
 </main>
 
 <script>
-const searchInput = document.getElementById('searchInput');
-const filterPills = document.querySelectorAll('.filter-pills .pill');
-const cards = document.querySelectorAll('.project-card');
-
+let gamesData = [];
 let currentFilter = 'all';
 
+const searchInput = document.getElementById('searchInput');
+const filterPills = document.querySelectorAll('.filter-pills .pill');
+const gameGrid = document.getElementById('gameGrid');
+
+// Helper to determine badge CSS class for a tag
+function getBadgeClass(tag) {
+  switch (tag) {
+    case 'In Development':
+      return 'badge-in-development';
+    case 'Undetected':
+      return 'badge-undetected';
+    case 'Detected':
+      return 'badge-detected';
+    case 'Functional':
+      return 'badge-functional';
+    default:
+      return 'badge-tag';
+  }
+}
+
+// Render game cards dynamically from JSON array
+function renderGames(games) {
+  if (!games || games.length === 0) {
+    gameGrid.innerHTML = `<p style="color: var(--muted); font-family: 'Inter', sans-serif; grid-column: 1/-1;">No games found matching your search criteria.</p>`;
+    return;
+  }
+
+  gameGrid.innerHTML = games.map(game => {
+    const tags = Array.isArray(game.tags) ? game.tags : [game.tags];
+    const tagsDataAttr = tags.join(' ');
+    
+    const badgesHtml = tags.map(tag => `
+      <span class="badge ${getBadgeClass(tag)}">${tag}</span>
+    `).join('');
+
+    const buttonClass = (game.tags && game.tags.includes('In Development')) ? 'action-btn secondary-btn' : 'action-btn';
+
+    return `
+      <div class="project-card" data-tags="${tagsDataAttr}">
+        <div>
+          <div class="card-head">
+            <div class="card-title-group">
+              <h3>${game.title}</h3>
+              <p class="card-desc">${game.description}</p>
+            </div>
+          </div>
+          <div class="badge-group" style="margin-top: 10px;">
+            ${badgesHtml}
+          </div>
+        </div>
+
+        <div>
+          <div class="card-actions">
+            <a class="${buttonClass}" href="${game.buttonUrl}" target="_blank" rel="noopener noreferrer">
+              ${game.buttonText}
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Filter and search handler
+function filterAndRender() {
+  const query = searchInput.value.toLowerCase().trim();
+
+  const filtered = gamesData.filter(game => {
+    const titleMatch = game.title.toLowerCase().includes(query);
+    const descMatch = game.description.toLowerCase().includes(query);
+    const tagsMatch = game.tags.some(t => t.toLowerCase().includes(query));
+    const matchesSearch = query === '' || titleMatch || descMatch || tagsMatch;
+
+    const matchesFilter = currentFilter === 'all' || game.tags.includes(currentFilter);
+
+    return matchesSearch && matchesFilter;
+  });
+
+  renderGames(filtered);
+}
+
+// Load JSON data
+async function loadGamesJSON() {
+  const paths = [
+    '/src/frontend/projects/games.json',
+    './games.json',
+    '/projects/games.json'
+  ];
+
+  for (const path of paths) {
+    try {
+      const response = await fetch(path);
+      if (response.ok) {
+        gamesData = await response.json();
+        renderGames(gamesData);
+        return;
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch from ${path}:`, err);
+    }
+  }
+  
+  gameGrid.innerHTML = `<p style="color: #ff5252; font-family: 'Inter', sans-serif; grid-column: 1/-1;">Error loading games.json</p>`;
+}
+
+// Event Listeners
 filterPills.forEach(pill => {
   pill.addEventListener('click', () => {
     filterPills.forEach(p => p.classList.remove('active'));
     pill.classList.add('active');
     currentFilter = pill.getAttribute('data-filter');
-    filterCards();
+    filterAndRender();
   });
 });
 
-searchInput.addEventListener('input', filterCards);
+searchInput.addEventListener('input', filterAndRender);
 
-function filterCards() {
-  const query = searchInput.value.toLowerCase().trim();
-
-  cards.forEach(card => {
-    const text = card.textContent.toLowerCase();
-    const categories = card.getAttribute('data-category') || '';
-
-    const matchesSearch = query === '' || text.includes(query);
-    const matchesFilter = currentFilter === 'all' || categories.includes(currentFilter);
-
-    if (matchesSearch && matchesFilter) {
-      card.style.display = 'flex';
-    } else {
-      card.style.display = 'none';
-    }
-  });
-}
+// Initialize
+loadGamesJSON();
 </script>
 </body>
 </html>

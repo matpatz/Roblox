@@ -1,0 +1,26 @@
+[
+  {
+    "id": "voltex-universal-hub",
+    "title": "Voltex Universal Hub",
+    "description": "Complete universal script suite with ESP, Fly, Noclip, Speed Hack, and customizable keybinds.",
+    "loadstring": "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/matpatz/Roblox/main/init.luau\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "rawUrl": "https://raw.githubusercontent.com/matpatz/Roblox/main/init.luau"
+  },
+  {
+    "id": "rayfield-ui-framework",
+    "title": "Rayfield UI Framework",
+    "description": "Clean, modern, key-system supported Rayfield UI library for script developers.",
+    "loadstring": "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/matpatz/Roblox/main/libraries/Rayfield.luau\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "rawUrl": "https://raw.githubusercontent.com/matpatz/Roblox/main/libraries/Rayfield.luau"
+  },
+  {
+    "id": "voltex-admin-commands",
+    "title": "Voltex Admin Commands",
+    "description": "Lightweight client-side admin system giving you command access in any experience.",
+    "loadstring": "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/matpatz/Roblox/main/api/alpha.js\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "rawUrl": "https://raw.githubusercontent.com/matpatz/Roblox/main/api/alpha.js"
+  }
+]

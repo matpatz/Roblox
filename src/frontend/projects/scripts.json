@@ -5,9 +5,9 @@
     "description": "Turns simple text into ASCII using an API.",
     "updated": "last month",
     "tags": ["Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/scripts/ascii/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/scripts/ascii/main.lua\"))()",
     "buttonText": "Copy Loadstring",
-    "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/ascii/main.lua"
+    "rawUrl": "https://roblox-alpha-murex.vercel.app/src/scripts/ascii/main.lua"
   },
   {
     "id": "esp",
@@ -15,18 +15,18 @@
     "description": "ESP",
     "updated": "6 months ago",
     "tags": ["Open Source", "Key System"],
-    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/scripts/esp/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/scripts/esp/main.lua\"))()",
     "buttonText": "Copy Loadstring",
-    "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/esp/main.lua"
+    "rawUrl": "https://roblox-alpha-murex.vercel.app/src/scripts/esp/main.lua"
   },
   {
     "id": "powerball",
     "title": "Powerball",
     "description": "Play Powerball in Roblox with a simple GUI, no money required.",
     "updated": "4 months ago",
-    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/scripts/powerball/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/scripts/powerball/main.lua\"))()",
     "buttonText": "Copy Loadstring",
-    "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/powerball/main.lua"
+    "rawUrl": "https://roblox-alpha-murex.vercel.app/src/scripts/powerball/main.lua"
   },
   {
     "id": "unc",
@@ -34,8 +34,8 @@
     "description": "Replicates Sunc functions, and more, for better script compatibility.",
     "updated": "3 weeks ago",
     "tags": ["Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/scripts/unc/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/scripts/unc/main.lua\"))()",
     "buttonText": "Copy Loadstring",
-    "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/unc/main.lua"
+    "rawUrl": "https://roblox-alpha-murex.vercel.app/src/scripts/unc/main.lua"
   }
 ]

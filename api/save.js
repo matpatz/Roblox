@@ -1,9 +1,8 @@
-// api/save.js
+import { createClient } from '@supabase/supabase-js';
+
 export const config = {
     runtime: 'edge',
 };
-
-import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -38,6 +37,17 @@ export default async function handler(request) {
         console.error('Supabase insert error:', error);
         return Response.json({ error: 'Failed to save identifier' }, { status: 500 });
     }
+
+    const { data: row } = await supabase
+        .from('totals')
+        .select('total_executions')
+        .eq('id', 1)
+        .single();
+
+    const newTotal = (row?.total_executions || 0) + 1;
+    await supabase
+        .from('totals')
+        .upsert({ id: 1, total_executions: newTotal });
 
     return Response.json({ success: true, data }, { status: 201 });
 }

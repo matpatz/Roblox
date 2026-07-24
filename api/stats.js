@@ -34,10 +34,12 @@ export default async function handler(req, res) {
     let execution_history = [];
 
     try {
-        const { count } = await supabase
-            .from('identifiers')
-            .select('*', { count: 'exact', head: true });
-        total_executions = count || 0;
+        const { data: row } = await supabase
+            .from('totals')
+            .select('total_executions')
+            .eq('id', 1)
+            .single();
+        total_executions = row?.total_executions || 0;
     } catch (e) {}
 
     try {
@@ -78,6 +80,15 @@ export default async function handler(req, res) {
             const unique = new Set(users.map(function(u) { return u.identifier; }));
             active_users = unique.size;
         }
+    } catch (e) {}
+
+    try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        await supabase
+            .from('identifiers')
+            .delete()
+            .lt('added_at', sevenDaysAgo.toISOString());
     } catch (e) {}
 
     res.setHeader("Access-Control-Allow-Origin", "*");

@@ -10,13 +10,27 @@ local GameList = {
 }
 
 local PlaceId = GameList[game.PlaceId]
-if PlaceId then
-    -- load the script
-    loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/" .. PlaceId.name .. "/main.lua"))()
+
+return {
+	IsCorrectGame = function()
+		return PlaceId
+	end,
+	Warning = function()
+		local Names = {}
+		for _, Game in next, (GameList) do
+			table.insert(Names, Game.name)
+		end
+		warn("Please join one of our supported games: " .. table.concat(Names, ", "))
+	end,
+	Load = function()
+		loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/" .. PlaceId.name .. "/main.lua"))()
+	end
+}
+
+--[[
+if IsCorrectGame() then
+	Load()
 else
-    local Names = {}
-    for _, Game in next, (GameList) do
-        table.insert(Names, Game.name)
-    end
-    warn("Please join one of our supported games: " .. table.concat(Names, ", "))
+	Warning()
 end
+]]

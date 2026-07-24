@@ -5,8 +5,10 @@
     "description": "Answer questions correctly or face elimination in this intense trivia survival experience.",
     "updated": "10 months ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/11966456877/Answer-or-Die"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/answerordie/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/11966456877/Answer-or-Die",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "bluzzle",
@@ -14,8 +16,10 @@
     "description": "Strategic block puzzle experience with dynamic levels and speed-solve challenges.",
     "updated": "2 days ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/15564827526/Block-Puzzle"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/bluzzle/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/15564827526/Block-Puzzle",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "cat",
@@ -23,8 +27,10 @@
     "description": "Explore the wild world, catch creature companions, and tame legendary pets.",
     "updated": "4 months ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/96645548064314/Catch-And-Tame"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/cat/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/96645548064314/Catch-And-Tame",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "catastrophia",
@@ -32,8 +38,10 @@
     "description": "Survive extreme global disaster events, intense hazards, and environmental collapses.",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/1087852616/CATASTROPHIA-Survive"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/catastrophia/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/1087852616/CATASTROPHIA-Survive",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "escape",
@@ -41,8 +49,10 @@
     "description": "Outrun giant tsunamis while navigating chaotic obstacle courses.",
     "updated": "5 months ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/131623223084840/Escape-Tsunami-For-Brainrots"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/escape/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/131623223084840/Escape-Tsunami-For-Brainrots",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "flagod",
@@ -50,8 +60,10 @@
     "description": "Fast-paced flag guessing quiz game. Identify world flags under pressure.",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/88817068170433/Guess-the-Country-Flag-or-Die"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/flagod/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/88817068170433/Guess-the-Country-Flag-or-Die",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "heavy",
@@ -59,8 +71,10 @@
     "description": "Gritty survival experience focused on base building, raiding, and combat.",
     "updated": "5 months ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/74669489500088/Heavy-Rust"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/heavy/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/74669489500088/Heavy-Rust",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "idleBlocks",
@@ -68,8 +82,10 @@
     "description": "Incremental block breaking and progression game with automatic upgrades.",
     "updated": "2 months ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/101759436219635/Idle-Blocks"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/idleBlocks/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/101759436219635/Idle-Blocks",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "kickablock",
@@ -77,8 +93,10 @@
     "description": "Kick lucky blocks across map arenas to open rare loot drops and multipliers.",
     "updated": "2 months ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/89469502395769/Kick-a-Lucky-Block"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/kickablock/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/89469502395769/Kick-a-Lucky-Block",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "luckyblock",
@@ -86,8 +104,10 @@
     "description": "Action-packed battlegrounds game featuring random weapons and abilities from lucky blocks.",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/662417684/LUCKY-BLOCKS-Battlegrounds"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/luckyblock/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/662417684/LUCKY-BLOCKS-Battlegrounds",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "operationone",
@@ -95,8 +115,10 @@
     "description": "Tactical tactical FPS experience featuring team objective combat.",
     "updated": "last month",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/72920620366355/Operation-One"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/operationone/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/72920620366355/Operation-One",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "prospecting",
@@ -104,8 +126,10 @@
     "description": "Mining and resource prospecting simulation with deep upgrade paths.",
     "updated": "2 hours ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/129827112113663/Prospecting"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/prospecting/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/129827112113663/Prospecting",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "teentitan",
@@ -113,8 +137,10 @@
     "description": "Superhero battleground combat game with powerful hero powers and arena fights.",
     "updated": "last month",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/3082002798/T-Titans-Battlegrounds"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/teentitan/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/3082002798/T-Titans-Battlegrounds",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "titanwarfare",
@@ -122,8 +148,10 @@
     "description": "High-stakes anime-inspired titan battle simulation and defense warfare.",
     "updated": "3 months ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/6297822481/Titan-Warfare"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/titanwarfare/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/6297822481/Titan-Warfare",
+    "playButtonText": "Play on Roblox"
   },
   {
     "id": "trident",
@@ -131,7 +159,9 @@
     "description": "Hardcore open-world survival game with looting, building, and PvP combat.",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected"],
-    "buttonText": "🎮 Play on Roblox",
-    "buttonUrl": "https://www.roblox.com/games/13253735473/Trident-Survival"
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/games/trident/main.lua\"))()",
+    "buttonText": "⚡ Copy Loadstring",
+    "playUrl": "https://www.roblox.com/games/13253735473/Trident-Survival",
+    "playButtonText": "Play on Roblox"
   }
 ]

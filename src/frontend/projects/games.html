@@ -34,7 +34,7 @@
       <a href="/projects" class="back-link">← Back to Category Picker</a>
       <p class="eyebrow">Standalone Experiences</p>
       <h1>Luau Games</h1>
-      <p class="picker-sub">Custom Roblox experiences and games engineered with Luau.</p>
+      <p class="picker-sub">Custom Roblox experiences and scripts engineered with Luau.</p>
     </div>
 
     <div class="controls-bar">
@@ -62,6 +62,8 @@
   </div>
 </main>
 
+<div class="toast" id="toast">Copied script loadstring to clipboard!</div>
+
 <script>
 let gamesData = [];
 let currentFilter = 'all';
@@ -70,7 +72,24 @@ const searchInput = document.getElementById('searchInput');
 const filterPills = document.querySelectorAll('.filter-pills .pill');
 const gameGrid = document.getElementById('gameGrid');
 
-// Helper to determine badge CSS class for a tag
+function escapeHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function copyCode(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2400);
+  });
+}
+
 function getBadgeClass(tag) {
   switch (tag) {
     case 'In Development':
@@ -86,7 +105,6 @@ function getBadgeClass(tag) {
   }
 }
 
-// Render game cards dynamically from JSON array
 function renderGames(games) {
   if (!games || games.length === 0) {
     gameGrid.innerHTML = `<p style="color: var(--muted); font-family: 'Inter', sans-serif; grid-column: 1/-1;">No games found matching your search criteria.</p>`;
@@ -94,7 +112,7 @@ function renderGames(games) {
   }
 
   gameGrid.innerHTML = games.map(game => {
-    const tags = Array.isArray(game.tags) ? game.tags : [game.tags];
+    const tags = Array.isArray(game.tags) ? game.tags : (game.tags ? [game.tags] : []);
     const tagsDataAttr = tags.join(' ');
     
     const badgesHtml = tags.map(tag => `
@@ -102,8 +120,12 @@ function renderGames(games) {
     `).join('');
 
     const updatedHtml = game.updated ? `<span class="update-time">🕒 Updated ${game.updated}</span>` : '';
+    const loadstringCode = game.loadstring || `loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/games/${game.id}/main.lua"))()`;
+    const escapedCode = escapeHtml(loadstringCode);
 
-    const buttonClass = (game.tags && game.tags.includes('In Development')) ? 'action-btn secondary-btn' : 'action-btn';
+    const playBtnHtml = game.playUrl 
+      ? `<a class="action-btn secondary-btn" href="${game.playUrl}" target="_blank" rel="noopener noreferrer">${game.playButtonText || 'Play on Roblox'}</a>` 
+      : '';
 
     return `
       <div class="project-card" data-tags="${tagsDataAttr}">
@@ -115,16 +137,20 @@ function renderGames(games) {
               ${updatedHtml}
             </div>
           </div>
-          <div class="badge-group" style="margin-top: 12px;">
+          <div class="badge-group" style="margin-top: 10px;">
             ${badgesHtml}
           </div>
         </div>
 
         <div>
+          <div class="code-box">
+            <code>${escapedCode}</code>
+          </div>
           <div class="card-actions">
-            <a class="${buttonClass}" href="${game.buttonUrl}" target="_blank" rel="noopener noreferrer">
-              ${game.buttonText}
-            </a>
+            <button class="action-btn" onclick="copyCode(this.getAttribute('data-code'))" data-code="${escapedCode}">
+              ${game.buttonText || '⚡ Copy Loadstring'}
+            </button>
+            ${playBtnHtml}
           </div>
         </div>
       </div>
@@ -132,18 +158,17 @@ function renderGames(games) {
   }).join('');
 }
 
-// Filter and search handler
 function filterAndRender() {
   const query = searchInput.value.toLowerCase().trim();
 
   const filtered = gamesData.filter(game => {
     const titleMatch = game.title.toLowerCase().includes(query);
     const descMatch = game.description.toLowerCase().includes(query);
-    const tagsMatch = game.tags.some(t => t.toLowerCase().includes(query));
+    const tagsMatch = game.tags ? game.tags.some(t => t.toLowerCase().includes(query)) : false;
     const updatedMatch = game.updated ? game.updated.toLowerCase().includes(query) : false;
     const matchesSearch = query === '' || titleMatch || descMatch || tagsMatch || updatedMatch;
 
-    const matchesFilter = currentFilter === 'all' || game.tags.includes(currentFilter);
+    const matchesFilter = currentFilter === 'all' || (game.tags && game.tags.includes(currentFilter));
 
     return matchesSearch && matchesFilter;
   });
@@ -151,7 +176,6 @@ function filterAndRender() {
   renderGames(filtered);
 }
 
-// Load JSON data
 async function loadGamesJSON() {
   const paths = [
     '/src/frontend/projects/games.json',
@@ -175,7 +199,6 @@ async function loadGamesJSON() {
   gameGrid.innerHTML = `<p style="color: #ff5252; font-family: 'Inter', sans-serif; grid-column: 1/-1;">Error loading games.json</p>`;
 }
 
-// Event Listeners
 filterPills.forEach(pill => {
   pill.addEventListener('click', () => {
     filterPills.forEach(p => p.classList.remove('active'));
@@ -187,7 +210,6 @@ filterPills.forEach(pill => {
 
 searchInput.addEventListener('input', filterAndRender);
 
-// Initialize
 loadGamesJSON();
 </script>
 </body>

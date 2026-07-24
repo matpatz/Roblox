@@ -43,11 +43,37 @@
 <script>
 const statsGrid = document.getElementById('statsGrid');
 
-function renderStats(stats) {
-  if (!stats || stats.length === 0) {
-    statsGrid.innerHTML = `<p style="color: var(--muted); font-family: 'Inter', sans-serif; grid-column: 1/-1;">No stats available.</p>`;
-    return;
-  }
+function formatNumber(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+
+function renderStats(data) {
+  const discord = data.discord_community || {};
+  const memberCount = discord.presence_count || discord.member_count || 0;
+
+  const stats = [
+    {
+      label: 'Total Executions',
+      value: formatNumber(data.total_executions),
+      description: 'Successful loadstring executions across all games.'
+    },
+    {
+      label: 'Active Users',
+      value: formatNumber(data.active_users),
+      description: 'Monthly unique Roblox users leveraging Voltex.'
+    },
+    {
+      label: 'API Status',
+      value: data.api_status,
+      small: true
+    },
+    {
+      label: 'Discord Community',
+      value: formatNumber(memberCount),
+      description: 'Members on the official Voltex Discord.'
+    }
+  ];
 
   statsGrid.innerHTML = stats.map(stat => {
     const numberStyle = stat.small ? ' style="font-size: 28px;"' : '';

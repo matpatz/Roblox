@@ -90,6 +90,7 @@ function renderScripts(scripts) {
     const rawLinkHtml = script.rawUrl 
       ? `<a class="action-btn secondary-btn" href="${script.rawUrl}" target="_blank" rel="noopener noreferrer">View Raw</a>` 
       : '';
+    const updatedHtml = script.updated ? `<span class="update-time">🕒 Updated ${script.updated}</span>` : '';
 
     return `
       <div class="project-card">
@@ -98,6 +99,7 @@ function renderScripts(scripts) {
             <div class="card-title-group">
               <h3>${script.title}</h3>
               <p class="card-desc">${script.description}</p>
+              ${updatedHtml}
             </div>
           </div>
         </div>
@@ -125,8 +127,9 @@ function filterAndRender() {
     const titleMatch = script.title.toLowerCase().includes(query);
     const descMatch = script.description.toLowerCase().includes(query);
     const codeMatch = script.loadstring.toLowerCase().includes(query);
+    const updatedMatch = script.updated ? script.updated.toLowerCase().includes(query) : false;
 
-    return query === '' || titleMatch || descMatch || codeMatch;
+    return query === '' || titleMatch || descMatch || codeMatch || updatedMatch;
   });
 
   renderScripts(filtered);

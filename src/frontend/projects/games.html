@@ -101,6 +101,8 @@ function renderGames(games) {
       <span class="badge ${getBadgeClass(tag)}">${tag}</span>
     `).join('');
 
+    const updatedHtml = game.updated ? `<span class="update-time">🕒 Updated ${game.updated}</span>` : '';
+
     const buttonClass = (game.tags && game.tags.includes('In Development')) ? 'action-btn secondary-btn' : 'action-btn';
 
     return `
@@ -110,9 +112,10 @@ function renderGames(games) {
             <div class="card-title-group">
               <h3>${game.title}</h3>
               <p class="card-desc">${game.description}</p>
+              ${updatedHtml}
             </div>
           </div>
-          <div class="badge-group" style="margin-top: 10px;">
+          <div class="badge-group" style="margin-top: 12px;">
             ${badgesHtml}
           </div>
         </div>
@@ -137,7 +140,8 @@ function filterAndRender() {
     const titleMatch = game.title.toLowerCase().includes(query);
     const descMatch = game.description.toLowerCase().includes(query);
     const tagsMatch = game.tags.some(t => t.toLowerCase().includes(query));
-    const matchesSearch = query === '' || titleMatch || descMatch || tagsMatch;
+    const updatedMatch = game.updated ? game.updated.toLowerCase().includes(query) : false;
+    const matchesSearch = query === '' || titleMatch || descMatch || tagsMatch || updatedMatch;
 
     const matchesFilter = currentFilter === 'all' || game.tags.includes(currentFilter);
 

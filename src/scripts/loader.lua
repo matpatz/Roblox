@@ -1,8 +1,6 @@
 return {
-	IsValid = function()
-		return shared.Script ~= nil
-	end
+	IsValid = (shared.Script ~= nil),
 	Load = function()
-		
+		print("script loader")
 	end
 }

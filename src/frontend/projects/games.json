@@ -5,7 +5,7 @@
     "description": "Autofarm",
     "updated": "10 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/answerordie/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Answer-Or-Die/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/11966456877/Answer-or-Die",
     "playButtonText": "Play on Roblox"
@@ -60,7 +60,7 @@
     "description": "Autofarm",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/flagod/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Guess-The-Flag-Or-Die/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/88817068170433/Guess-the-Country-Flag-or-Die",
     "playButtonText": "Play on Roblox"
@@ -82,7 +82,7 @@
     "description": "Auto Farm",
     "updated": "2 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/idleBlocks/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Idle-Blocks/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/101759436219635/Idle-Blocks",
     "playButtonText": "Play on Roblox"
@@ -104,7 +104,7 @@
     "description": "Get Blocks Instantly",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected", "Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/luckyblock/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Lucky-Blocks-Battleground/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/662417684/LUCKY-BLOCKS-Battlegrounds",
     "playButtonText": "Play on Roblox"
@@ -126,7 +126,7 @@
     "description": "Autofarm",
     "updated": "2 hours ago",
     "tags": ["Functional", "Undetected", "Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/prospecting/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Prospecting/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/129827112113663/Prospecting",
     "playButtonText": "Play on Roblox"
@@ -137,7 +137,7 @@
     "description": "Autofarm, Esp, Aimbot, Triggerbot",
     "updated": "last month",
     "tags": ["Functional", "Undetected", "Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/teentitan/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Teen-Titan-Battleground/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/3082002798/T-Titans-Battlegrounds",
     "playButtonText": "Play on Roblox"

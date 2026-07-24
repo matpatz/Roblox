@@ -35,7 +35,7 @@
 
     <div class="stats-grid" id="statsGrid"></div>
 
-    <div class="graph-section" id="graphSection" style="display: none;">
+    <div class="graph-section" id="graphSection">
       <div class="graph-header">
         <h2>Executions (Last 7 Days)</h2>
       </div>
@@ -68,7 +68,22 @@ function renderStats(data) {
 }
 
 function renderGraph(history) {
-  if (!history || history.length === 0) return;
+  if (!history || history.length === 0) {
+    var dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var emptyHtml = '';
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date();
+      d.setDate(d.getDate() - i);
+      var label = dayLabels[d.getDay()] + ' ' + d.getDate();
+      emptyHtml += '<div class="graph-bar-wrap">' +
+        '<div class="graph-bar-value">0</div>' +
+        '<div class="graph-bar" style="height: 2%;"></div>' +
+        '<div class="graph-bar-label">' + label + '</div>' +
+      '</div>';
+    }
+    execGraph.innerHTML = '<div class="graph-bars">' + emptyHtml + '</div>';
+    return;
+  }
 
   var maxCount = Math.max.apply(null, history.map(function(d) { return d.count; }));
   if (maxCount === 0) maxCount = 1;
@@ -87,10 +102,10 @@ function renderGraph(history) {
   }).join('');
 
   execGraph.innerHTML = '<div class="graph-bars">' + barsHtml + '</div>';
-  graphSection.style.display = '';
 }
 
 renderStats({ total_executions: 0, active_users: 0, api_status: 'Unknown', discord_community: {} });
+renderGraph(null);
 
 var controller = new AbortController();
 var timer = setTimeout(function() { controller.abort(); }, 8000);

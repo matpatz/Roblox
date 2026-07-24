@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voltex Scripts — Luau Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/frontend/style.css">
+<link rel="stylesheet" href="/src/frontend/projects/style.css">
+</head>
+<body>
+<div class="grid-bg" aria-hidden="true"></div>
+
+<header class="topbar">
+  <nav class="nav">
+    <a href="/" class="brand">
+      <img class="bolt" src="/assets/bolt.png" alt="Voltex" width="18" height="18">
+      <span>VOLTEX</span>
+    </a>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/projects" class="active">Projects</a>
+      <a href="/stats">Stats</a>
+    </div>
+  </nav>
+</header>
+
+<main class="projects-container">
+  <div class="projects-content">
+    
+    <div class="projects-top">
+      <a href="/projects" class="back-link">← Back to Category Picker</a>
+      <p class="eyebrow">Standalone Experiences</p>
+      <h1>Luau Games</h1>
+      <p class="picker-sub">Custom Roblox experiences and games engineered with Luau.</p>
+    </div>
+
+    <div class="controls-bar">
+      <div class="search-box">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search games by title...">
+      </div>
+
+      <div class="filter-pills" id="filterGroup">
+        <button class="pill active" data-filter="all">All</button>
+        <button class="pill" data-filter="playable">Playable</button>
+        <button class="pill" data-filter="indev">In Development</button>
+      </div>
+    </div>
+
+    <div class="project-grid" id="gameGrid">
+      
+      <!-- Game Card 1 -->
+      <div class="project-card" data-category="playable">
+        <div>
+          <div class="card-head">
+            <div class="card-title-group">
+              <h3>Voltex Cyber Runner</h3>
+              <p class="card-desc">Fast-paced parkour game set in a neon futuristic city. Built with custom Luau physics and leaderboard systems.</p>
+            </div>
+          </div>
+          <div class="badge-group" style="margin-top: 10px;">
+            <span class="badge badge-active">Playable</span>
+            <span class="badge badge-tag">Action</span>
+            <span class="badge badge-tag">Singleplayer</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="card-actions">
+            <a class="action-btn" href="https://www.roblox.com" target="_blank" rel="noopener noreferrer">
+              🎮 Play on Roblox
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Card 2 -->
+      <div class="project-card" data-category="indev">
+        <div>
+          <div class="card-head">
+            <div class="card-title-group">
+              <h3>Voltex Arena PvP</h3>
+              <p class="card-desc">Competitive sci-fi arena shooter featuring custom weapon scripting, raycast gun mechanics, and matchmaking.</p>
+            </div>
+          </div>
+          <div class="badge-group" style="margin-top: 10px;">
+            <span class="badge badge-beta">In Development</span>
+            <span class="badge badge-tag">PvP Shooter</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="card-actions">
+            <a class="action-btn secondary-btn" href="https://discord.gg/bSPRYhBGtf" target="_blank" rel="noopener noreferrer">
+              📢 Follow on Discord
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Card 3 -->
+      <div class="project-card" data-category="playable">
+        <div>
+          <div class="card-head">
+            <div class="card-title-group">
+              <h3>Overdrive Obby</h3>
+              <p class="card-desc">Precision platformer with dynamic moving obstacles, checkpoints, and global speedrun timers.</p>
+            </div>
+          </div>
+          <div class="badge-group" style="margin-top: 10px;">
+            <span class="badge badge-active">Playable</span>
+            <span class="badge badge-tag">Obstacle Course</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="card-actions">
+            <a class="action-btn" href="https://www.roblox.com" target="_blank" rel="noopener noreferrer">
+              🎮 Play on Roblox
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<script>
+const searchInput = document.getElementById('searchInput');
+const filterPills = document.querySelectorAll('.filter-pills .pill');
+const cards = document.querySelectorAll('.project-card');
+
+let currentFilter = 'all';
+
+filterPills.forEach(pill => {
+  pill.addEventListener('click', () => {
+    filterPills.forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    currentFilter = pill.getAttribute('data-filter');
+    filterCards();
+  });
+});
+
+searchInput.addEventListener('input', filterCards);
+
+function filterCards() {
+  const query = searchInput.value.toLowerCase().trim();
+
+  cards.forEach(card => {
+    const text = card.textContent.toLowerCase();
+    const categories = card.getAttribute('data-category') || '';
+
+    const matchesSearch = query === '' || text.includes(query);
+    const matchesFilter = currentFilter === 'all' || categories.includes(currentFilter);
+
+    if (matchesSearch && matchesFilter) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Voltex Scripts — Luau Scripts</title>
+<title>Voltex Scripts — Misc Projects</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -32,9 +32,9 @@
     
     <div class="projects-top">
       <a href="/projects" class="back-link">← Back to Category Picker</a>
-      <p class="eyebrow">Roblox Luau</p>
-      <h1>Luau Scripts</h1>
-      <p class="picker-sub">Feature-rich scripts engineered for maximum execution stability and speed.</p>
+      <p class="eyebrow">Tools & Utilities</p>
+      <h1>Misc Projects</h1>
+      <p class="picker-sub">Developer tools, security modules, APIs, and experimental scripts.</p>
     </div>
 
     <div class="controls-bar">
@@ -43,33 +43,86 @@
           <circle cx="11" cy="11" r="8"></circle>
           <path d="m21 21-4.35-4.35"></path>
         </svg>
-        <input type="text" id="searchInput" placeholder="Search scripts by name or tag...">
+        <input type="text" id="searchInput" placeholder="Search tools and experiments...">
       </div>
 
       <div class="filter-pills" id="filterGroup">
         <button class="pill active" data-filter="all">All</button>
-        <button class="pill" data-filter="universal">Universal</button>
-        <button class="pill" data-filter="combat">Combat</button>
-        <button class="pill" data-filter="visuals">Visuals</button>
-        <button class="pill" data-filter="admin">Admin</button>
+        <button class="pill" data-filter="tools">Tools</button>
+        <button class="pill" data-filter="libraries">Libraries</button>
       </div>
     </div>
 
-    <div class="project-grid" id="scriptGrid">
+    <div class="project-grid" id="miscGrid">
       
-      <!-- Script Card 1 -->
-      <div class="project-card" data-category="universal combat">
+      <!-- Misc Card 1 -->
+      <div class="project-card" data-category="libraries">
         <div>
           <div class="card-head">
             <div class="card-title-group">
-              <h3>Voltex Universal Hub</h3>
-              <p class="card-desc">Complete universal script suite with ESP, Fly, Noclip, Speed Hack, and customizable keybinds.</p>
+              <h3>Rayfield UI Module</h3>
+              <p class="card-desc">Standalone customized Rayfield UI module for embedding sleek modern interfaces into any Luau script.</p>
             </div>
           </div>
           <div class="badge-group" style="margin-top: 10px;">
-            <span class="badge badge-active">Active v2.4</span>
-            <span class="badge badge-tag">Universal</span>
-            <span class="badge badge-tag">Combat</span>
+            <span class="badge badge-active">Active</span>
+            <span class="badge badge-tag">Library</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="code-box">
+            <code>local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/main/libraries/Rayfield.luau"))()</code>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" onclick="copyCode('local Rayfield = loadstring(game:HttpGet(&quot;https://raw.githubusercontent.com/matpatz/Roblox/main/libraries/Rayfield.luau&quot;))()')">
+              ⚡ Copy Snippet
+            </button>
+            <a class="action-btn secondary-btn" href="/libraries/Rayfield.luau" target="_blank">View File</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Misc Card 2 -->
+      <div class="project-card" data-category="tools">
+        <div>
+          <div class="card-head">
+            <div class="card-title-group">
+              <h3>Voltex API Bridge</h3>
+              <p class="card-desc">API connector module handling authentication, analytics reporting, and version checking.</p>
+            </div>
+          </div>
+          <div class="badge-group" style="margin-top: 10px;">
+            <span class="badge badge-beta">Alpha</span>
+            <span class="badge badge-tag">API</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="code-box">
+            <code>fetch("https://raw.githubusercontent.com/matpatz/Roblox/main/api/alpha.js")</code>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn" onclick="copyCode('https://raw.githubusercontent.com/matpatz/Roblox/main/api/alpha.js')">
+              ⚡ Copy URL
+            </button>
+            <a class="action-btn secondary-btn" href="/api/alpha.js" target="_blank">View API</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Misc Card 3 -->
+      <div class="project-card" data-category="tools">
+        <div>
+          <div class="card-head">
+            <div class="card-title-group">
+              <h3>Discord Webhook Logger</h3>
+              <p class="card-desc">Send execution logs, errors, and status reports directly to your Discord webhook.</p>
+            </div>
+          </div>
+          <div class="badge-group" style="margin-top: 10px;">
+            <span class="badge badge-active">Active</span>
+            <span class="badge badge-tag">Utility</span>
           </div>
         </div>
 
@@ -79,66 +132,8 @@
           </div>
           <div class="card-actions">
             <button class="action-btn" onclick="copyCode('loadstring(game:HttpGet(&quot;https://raw.githubusercontent.com/matpatz/Roblox/main/init.luau&quot;))()')">
-              ⚡ Copy Loadstring
+              ⚡ Copy Snippet
             </button>
-            <a class="action-btn secondary-btn" href="/init.luau" target="_blank">View Raw</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Script Card 2 -->
-      <div class="project-card" data-category="visuals universal">
-        <div>
-          <div class="card-head">
-            <div class="card-title-group">
-              <h3>Rayfield UI Framework</h3>
-              <p class="card-desc">Clean, modern, key-system supported Rayfield UI library for script developers.</p>
-            </div>
-          </div>
-          <div class="badge-group" style="margin-top: 10px;">
-            <span class="badge badge-active">Stable</span>
-            <span class="badge badge-tag">Visuals</span>
-            <span class="badge badge-tag">Library</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="code-box">
-            <code>loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/main/libraries/Rayfield.luau"))()</code>
-          </div>
-          <div class="card-actions">
-            <button class="action-btn" onclick="copyCode('loadstring(game:HttpGet(&quot;https://raw.githubusercontent.com/matpatz/Roblox/main/libraries/Rayfield.luau&quot;))()')">
-              ⚡ Copy Loadstring
-            </button>
-            <a class="action-btn secondary-btn" href="/libraries/Rayfield.luau" target="_blank">View Raw</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Script Card 3 -->
-      <div class="project-card" data-category="admin">
-        <div>
-          <div class="card-head">
-            <div class="card-title-group">
-              <h3>Voltex Admin Commands</h3>
-              <p class="card-desc">Lightweight client-side admin system giving you command access in any experience.</p>
-            </div>
-          </div>
-          <div class="badge-group" style="margin-top: 10px;">
-            <span class="badge badge-beta">Beta v1.1</span>
-            <span class="badge badge-tag">Admin</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="code-box">
-            <code>loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/main/api/alpha.js"))()</code>
-          </div>
-          <div class="card-actions">
-            <button class="action-btn" onclick="copyCode('loadstring(game:HttpGet(&quot;https://raw.githubusercontent.com/matpatz/Roblox/main/api/alpha.js&quot;))()')">
-              ⚡ Copy Loadstring
-            </button>
-            <a class="action-btn secondary-btn" href="/api/alpha.js" target="_blank">View Raw</a>
           </div>
         </div>
       </div>
@@ -148,7 +143,7 @@
   </div>
 </main>
 
-<div class="toast" id="toast">Copied loadstring to clipboard!</div>
+<div class="toast" id="toast">Copied to clipboard!</div>
 
 <script>
 function copyCode(text) {
@@ -159,7 +154,6 @@ function copyCode(text) {
   });
 }
 
-// Search and Filter functionality
 const searchInput = document.getElementById('searchInput');
 const filterPills = document.querySelectorAll('.filter-pills .pill');
 const cards = document.querySelectorAll('.project-card');

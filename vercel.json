@@ -1,7 +1,10 @@
 {
   "rewrites": [
     { "source": "/", "destination": "/src/frontend/index.html" },
-    { "source": "/projects", "destination": "/src/frontend/projects/index.html" },
+    { "source": "/projects", "destination": "/src/frontend/projects.html" },
+    { "source": "/projects/scripts", "destination": "/src/frontend/projects/scripts.html" },
+    { "source": "/projects/games", "destination": "/src/frontend/projects/games.html" },
+    { "source": "/projects/misc", "destination": "/src/frontend/projects/misc.html" },
     { "source": "/stats", "destination": "/src/frontend/stats.html" }
   ]
 }

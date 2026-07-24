@@ -88,7 +88,7 @@ function renderScripts(scripts) {
     const rawLinkHtml = script.rawUrl 
       ? `<a class="action-btn secondary-btn" href="${script.rawUrl}" target="_blank" rel="noopener noreferrer">View Raw</a>` 
       : '';
-    const updatedHtml = script.updated ? `<span class="update-time">🕒 Updated ${script.updated}</span>` : '';
+    const updatedHtml = script.updated ? `<span class="update-time">Updated ${script.updated}</span>` : '';
 
     return `
       <div class="project-card">
@@ -108,7 +108,7 @@ function renderScripts(scripts) {
           </div>
           <div class="card-actions">
             <button class="action-btn" onclick="copyCode(this.getAttribute('data-code'))" data-code="${escapedLoadstring}">
-              ${script.buttonText || '⚡ Copy Loadstring'}
+              ${script.buttonText || 'Copy Loadstring'}
             </button>
             ${rawLinkHtml}
           </div>

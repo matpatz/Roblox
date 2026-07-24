@@ -117,7 +117,7 @@ function renderGames(games) {
       <span class="badge ${getBadgeClass(tag)}">${tag}</span>
     `).join('');
 
-    const updatedHtml = game.updated ? `<span class="update-time">🕒 Updated ${game.updated}</span>` : '';
+    const updatedHtml = game.updated ? `<span class="update-time">Updated ${game.updated}</span>` : '';
     const loadstringCode = game.loadstring || `loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/games/${game.id}/main.lua"))()`;
     const escapedCode = escapeHtml(loadstringCode);
 

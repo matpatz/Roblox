@@ -43,6 +43,11 @@
         </svg>
         <input type="text" id="searchInput" placeholder="Search scripts by title or description...">
       </div>
+
+      <div class="filter-pills" id="filterGroup">
+        <button class="pill active" data-filter="all">All</button>
+        <button class="pill" data-filter="Open Source">Open Source</button>
+      </div>
     </div>
 
     <div class="project-grid" id="scriptGrid">
@@ -56,8 +61,10 @@
 
 <script>
 let scriptsData = [];
+let currentFilter = 'all';
 
 const searchInput = document.getElementById('searchInput');
+const filterPills = document.querySelectorAll('.filter-pills .pill');
 const scriptGrid = document.getElementById('scriptGrid');
 
 function escapeHtml(text) {
@@ -139,8 +146,11 @@ function filterAndRender() {
     const codeMatch = script.loadstring.toLowerCase().includes(query);
     const updatedMatch = script.updated ? script.updated.toLowerCase().includes(query) : false;
     const tagsMatch = script.tags ? script.tags.some(t => t.toLowerCase().includes(query)) : false;
+    const matchesSearch = query === '' || titleMatch || descMatch || codeMatch || updatedMatch || tagsMatch;
 
-    return query === '' || titleMatch || descMatch || codeMatch || updatedMatch || tagsMatch;
+    const matchesFilter = currentFilter === 'all' || (script.tags && script.tags.includes(currentFilter));
+
+    return matchesSearch && matchesFilter;
   });
 
   renderScripts(filtered);
@@ -170,6 +180,15 @@ async function loadScriptsJSON() {
 }
 
 searchInput.addEventListener('input', filterAndRender);
+
+filterPills.forEach(pill => {
+  pill.addEventListener('click', () => {
+    filterPills.forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    currentFilter = pill.getAttribute('data-filter');
+    filterAndRender();
+  });
+});
 
 loadScriptsJSON();
 </script>

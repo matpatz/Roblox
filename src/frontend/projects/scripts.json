@@ -10,15 +10,6 @@
     "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/ascii/main.lua"
   },
   {
-    "id": "chat",
-    "title": "Chat",
-    "description": "Link",
-    "updated": "6 months ago",
-    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/scripts/chat/main.lua\"))()",
-    "buttonText": "Copy Loadstring",
-    "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/chat/main.lua"
-  },
-  {
     "id": "esp",
     "title": "ESP",
     "description": "ESP -- Key System Tag",

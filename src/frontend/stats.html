@@ -34,11 +34,20 @@
     </div>
 
     <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="graph-section" id="graphSection" style="display: none;">
+      <div class="graph-header">
+        <h2>Executions (Last 7 Days)</h2>
+      </div>
+      <div class="graph-container" id="execGraph"></div>
+    </div>
   </div>
 </main>
 
 <script>
 var statsGrid = document.getElementById('statsGrid');
+var graphSection = document.getElementById('graphSection');
+var execGraph = document.getElementById('execGraph');
 
 function renderStats(data) {
   var discord = data.discord_community || {};
@@ -58,6 +67,29 @@ function renderStats(data) {
   }).join('');
 }
 
+function renderGraph(history) {
+  if (!history || history.length === 0) return;
+
+  var maxCount = Math.max.apply(null, history.map(function(d) { return d.count; }));
+  if (maxCount === 0) maxCount = 1;
+
+  var dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  var barsHtml = history.map(function(entry) {
+    var pct = (entry.count / maxCount) * 100;
+    var d = new Date(entry.date + 'T00:00:00');
+    var label = dayLabels[d.getDay()] + ' ' + d.getDate();
+    return '<div class="graph-bar-wrap">' +
+      '<div class="graph-bar-value">' + entry.count + '</div>' +
+      '<div class="graph-bar" style="height: ' + Math.max(pct, 2) + '%;"></div>' +
+      '<div class="graph-bar-label">' + label + '</div>' +
+    '</div>';
+  }).join('');
+
+  execGraph.innerHTML = '<div class="graph-bars">' + barsHtml + '</div>';
+  graphSection.style.display = '';
+}
+
 renderStats({ total_executions: 0, active_users: 0, api_status: 'Unknown', discord_community: {} });
 
 var controller = new AbortController();
@@ -69,7 +101,10 @@ fetch('/api/stats', { signal: controller.signal })
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
   })
-  .then(function(data) { renderStats(data); })
+  .then(function(data) {
+    renderStats(data);
+    if (data.execution_history) renderGraph(data.execution_history);
+  })
   .catch(function(err) { console.warn('Stats API:', err.message); });
 </script>
 </body>

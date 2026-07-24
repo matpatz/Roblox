@@ -69,3 +69,63 @@
   color: var(--muted);
   line-height: 1.45;
 }
+
+.graph-section {
+  margin-top: 40px;
+}
+
+.graph-header {
+  margin-bottom: 20px;
+}
+
+.graph-header h2 {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  margin: 0;
+}
+
+.graph-container {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.graph-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 180px;
+}
+
+.graph-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.graph-bar-value {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.graph-bar {
+  width: 100%;
+  background: var(--text);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.4s ease;
+}
+
+.graph-bar-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 8px;
+  text-align: center;
+}

@@ -92,7 +92,6 @@ function renderStats(data) {
 async function loadStats() {
   try {
     const response = await fetch('/api/stats');
-    console.log('Stats response:', response.status, response.statusText);
     if (response.ok) {
       const data = await response.json();
       renderStats(data);

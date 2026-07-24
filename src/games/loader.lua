@@ -6,17 +6,17 @@ local GameList = {
 	  [101759436219635] = {name = "Idle-Blocks"},
 	  [3082002798] = {name = "Teen-Titan-Battleground"}
 
-	  -- 106931261124996 ?? idk
+	-- 106931261124996 ?? idk
 }
 
 local PlaceId = GameList[game.PlaceId]
 if PlaceId then
     -- load the script
-    loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/games/" .. PlaceId.name .. "/main.lua"))()
+    loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/" .. PlaceId.name .. "/main.lua"))()
 else
     local Names = {}
     for _, Game in next, (GameList) do
         table.insert(Names, Game.name)
     end
-    warn("Please join one of our supported games: " .. table.concat(names, ", "))
+    warn("Please join one of our supported games: " .. table.concat(Names, ", "))
 end

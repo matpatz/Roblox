@@ -12,3 +12,5 @@ if ScriptLoader.IsValid and not ValidGame then
 else
 	GameLoader.Error()
 end
+
+-- loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/init.lua"))()

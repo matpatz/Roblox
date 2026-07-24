@@ -77,6 +77,15 @@ function copyCode(text) {
   });
 }
 
+function getBadgeClass(tag) {
+  switch (tag) {
+    case 'Open Source':
+      return 'badge-undetected';
+    default:
+      return 'badge-tag';
+  }
+}
+
 function renderScripts(scripts) {
   if (!scripts || scripts.length === 0) {
     scriptGrid.innerHTML = `<p style="color: var(--muted); font-family: 'Inter', sans-serif; grid-column: 1/-1;">No scripts found matching your search.</p>`;
@@ -89,6 +98,8 @@ function renderScripts(scripts) {
       ? `<a class="action-btn secondary-btn" href="${script.rawUrl}" target="_blank" rel="noopener noreferrer">View Raw</a>` 
       : '';
     const updatedHtml = script.updated ? `<span class="update-time">Updated ${script.updated}</span>` : '';
+    const tags = Array.isArray(script.tags) ? script.tags : [];
+    const badgesHtml = tags.map(tag => `<span class="badge ${getBadgeClass(tag)}">${tag}</span>`).join('');
 
     return `
       <div class="project-card">
@@ -100,6 +111,7 @@ function renderScripts(scripts) {
               ${updatedHtml}
             </div>
           </div>
+          ${badgesHtml ? `<div class="badge-group" style="margin-top: 10px;">${badgesHtml}</div>` : ''}
         </div>
 
         <div>
@@ -126,8 +138,9 @@ function filterAndRender() {
     const descMatch = script.description.toLowerCase().includes(query);
     const codeMatch = script.loadstring.toLowerCase().includes(query);
     const updatedMatch = script.updated ? script.updated.toLowerCase().includes(query) : false;
+    const tagsMatch = script.tags ? script.tags.some(t => t.toLowerCase().includes(query)) : false;
 
-    return query === '' || titleMatch || descMatch || codeMatch || updatedMatch;
+    return query === '' || titleMatch || descMatch || codeMatch || updatedMatch || tagsMatch;
   });
 
   renderScripts(filtered);

@@ -4,15 +4,26 @@
     "title": "ASCII to Text",
     "description": "Turns simple text into ASCII using an API.",
     "updated": "last month",
+    "tags": ["Open Source"],
     "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/scripts/ascii/main.lua\"))()",
     "buttonText": "Copy Loadstring",
     "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/ascii/main.lua"
   },
   {
+    "id": "chat",
+    "title": "Chat",
+    "description": "Link",
+    "updated": "6 months ago",
+    "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/scripts/chat/main.lua\"))()",
+    "buttonText": "Copy Loadstring",
+    "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/chat/main.lua"
+  },
+  {
     "id": "esp",
     "title": "ESP",
-    "description": "ESP",
+    "description": "ESP -- Key System Tag",
     "updated": "6 months ago",
+    "tags": ["Open Source"],
     "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/scripts/esp/main.lua\"))()",
     "buttonText": "Copy Loadstring",
     "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/esp/main.lua"
@@ -31,6 +42,7 @@
     "title": "MoreUnc v4",
     "description": "Replicates Sunc functions, and more, for better script compatibility.",
     "updated": "3 weeks ago",
+    "tags": ["Open Source"],
     "loadstring": "loadstring(game:HttpGet(\"https://website-iota-ivory-12.vercel.app/code/scripts/unc/main.lua\"))()",
     "buttonText": "Copy Loadstring",
     "rawUrl": "https://website-iota-ivory-12.vercel.app/code/scripts/unc/main.lua"

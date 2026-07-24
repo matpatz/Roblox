@@ -39,8 +39,8 @@ export default async function handler(req, res) {
 
         const { data: recent } = await supabase
             .from('identifiers')
-            .select('created_at')
-            .gte('created_at', sevenDaysAgo.toISOString());
+            .select('added_at')
+            .gte('added_at', sevenDaysAgo.toISOString());
 
         if (recent) {
             const counts = {};
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
                 counts[key] = 0;
             }
             recent.forEach(function(row) {
-                const day = row.created_at.slice(0, 10);
+                const day = row.added_at.slice(0, 10);
                 if (counts[day] !== undefined) counts[day]++;
             });
             execution_history = Object.keys(counts).map(function(day) {
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
         const { data: users } = await supabase
             .from('identifiers')
             .select('identifier')
-            .gte('created_at', thirtyDaysAgo.toISOString());
+            .gte('added_at', thirtyDaysAgo.toISOString());
         if (users) {
             const unique = new Set(users.map(function(u) { return u.identifier; }));
             active_users = unique.size;

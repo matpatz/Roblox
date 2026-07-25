@@ -1,5 +1,4 @@
--- Voltex API - Supabase Schema
--- Run this in Supabase SQL Editor.
+-- nobody knows SQL
 
 -- Totals
 CREATE TABLE IF NOT EXISTS totals (

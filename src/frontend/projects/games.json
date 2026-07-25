@@ -38,7 +38,7 @@
     "description": "Basic Aimbot and Esp",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected", "First Script for a game"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Catastrophia/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/catastrophia/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/1087852616/CATASTROPHIA-Survive",
     "playButtonText": "Play on Roblox"
@@ -121,12 +121,12 @@
     "playButtonText": "Play on Roblox"
   },
   {
-    "id": "prospecting",
+    "id": "Prospecting",
     "title": "Prospecting",
     "description": "Autofarm",
     "updated": "2 hours ago",
     "tags": ["Functional", "Undetected", "Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/prospecting/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Prospecting/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/129827112113663/Prospecting",
     "playButtonText": "Play on Roblox"

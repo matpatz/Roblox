@@ -42,7 +42,8 @@ body{display:flex;align-items:center;justify-content:center;min-height:100vh;mar
 
   <div id="s2" class="step">
     <h1>Step 2: Seed Data</h1>
-    <p class="sub">One click to populate your tables with scripts, games, and misc data.</p>
+    <p class="sub">Enter your SETUP_KEY to populate tables.</p>
+    <input type="password" id="skey" placeholder="SETUP_KEY" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #2a2a3a;background:#0a0a12;color:#e2e2f0;font-size:13px;box-sizing:border-box;margin-bottom:14px;font-family:'Inter',sans-serif">
     <button class="btn" id="seedBtn" onclick="seed()">Seed Data</button>
     <div id="log"></div>
   </div>
@@ -136,13 +137,15 @@ function copySql() {
 function seed() {
   var btn = document.getElementById('seedBtn');
   var log = document.getElementById('log');
+  var skey = document.getElementById('skey').value.trim();
+  if (!skey) { alert('Enter your SETUP_KEY'); return; }
   btn.disabled = true;
   btn.textContent = 'Seeding...';
   log.style.display = 'block';
   log.className = '';
   log.textContent = 'Seeding data...';
 
-  fetch('/api/v1/seed', { method: 'POST' })
+  fetch('/api/v1/seed', { method: 'POST', headers: { 'X-Setup-Key': skey } })
   .then(function(r){return r.json()})
   .then(function(d){
     if (d.error) {

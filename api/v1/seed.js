@@ -38,6 +38,9 @@ export default async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
 
+  const key = req.headers['x-setup-key'];
+  if (!key || key !== process.env.SETUP_KEY) throw new ApiError(403, 'Invalid setup key');
+
   const supabase = getSupabase();
 
   let scriptsSeeded = 0, gamesSeeded = 0, miscSeeded = 0;

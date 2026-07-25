@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voltex — API Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/frontend/style.css">
+<style>
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+.box{background:#111118;border:1px solid #2a2a3a;border-radius:16px;padding:40px;max-width:520px;width:100%;text-align:center}
+.box h1{font-family:'Chakra Petch',sans-serif;color:#e2e2f0;font-size:26px;margin:0 0 6px}
+.box .sub{color:#888;margin:0 0 28px;font-size:14px}
+.step{display:none}.step.on{display:block}
+.sql-wrap{background:#0a0a12;border:1px solid #2a2a3a;border-radius:8px;padding:14px;text-align:left;max-height:260px;overflow:auto;margin-bottom:16px;position:relative}
+.sql-wrap pre{margin:0;color:#4ecdc4;font-size:12px;line-height:1.5;white-space:pre}
+.copy-btn{position:sticky;top:0;float:right;background:#6c5ce7;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif}
+.copy-btn:hover{background:#7c6df7}
+.btn{width:100%;padding:12px;border-radius:8px;border:none;background:#6c5ce7;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Chakra Petch',sans-serif;transition:background .2s;margin-top:8px}
+.btn:hover{background:#7c6df7}
+.btn:disabled{background:#333;cursor:not-allowed}
+.btn.green{background:#4ecdc4;color:#111}.btn.green:hover{background:#5eddd4}
+.note{font-size:12px;color:#555;margin-top:14px}
+#log{margin-top:16px;text-align:left;font-size:12px;font-family:monospace;background:#0a0a12;border-radius:8px;padding:14px;display:none;color:#aaa;white-space:pre-wrap;max-height:200px;overflow:auto}
+#log.ok{color:#4ecdc4}#log.err{color:#ff6b6b}
+</style>
+</head>
+<body>
+<div class="box">
+
+  <div id="s1" class="step on">
+    <h1>Voltex API Setup</h1>
+    <p class="sub">Step 1: Run this SQL in your Supabase SQL Editor.</p>
+    <div class="sql-wrap">
+      <button class="copy-btn" onclick="copySql()">Copy SQL</button>
+      <pre id="sqlCode"></pre>
+    </div>
+    <button class="btn green" onclick="go(2)">I ran the SQL, continue</button>
+  </div>
+
+  <div id="s2" class="step">
+    <h1>Step 2: Seed Data</h1>
+    <p class="sub">Paste your Supabase service role key and a setup key.</p>
+    <input type="text" id="url" placeholder="https://xxxxx.supabase.co" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #2a2a3a;background:#0a0a12;color:#e2e2f0;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:'Inter',sans-serif">
+    <input type="password" id="key" placeholder="Service Role Key (sb_secret_...)" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #2a2a3a;background:#0a0a12;color:#e2e2f0;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:'Inter',sans-serif">
+    <input type="password" id="skey" placeholder="SETUP_KEY (any string you choose)" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #2a2a3a;background:#0a0a12;color:#e2e2f0;font-size:13px;box-sizing:border-box;margin-bottom:14px;font-family:'Inter',sans-serif">
+    <button class="btn" onclick="seed()">Seed Data</button>
+    <div id="log"></div>
+    <div class="note">Set SETUP_KEY as a Vercel env var so only you can re-seed.</div>
+  </div>
+
+  <div id="s3" class="step">
+    <h1>All Done!</h1>
+    <p class="sub">Your API is ready.</p>
+    <div id="log2" style="text-align:left;font-size:13px;color:#4ecdc4;background:#0a0a12;border-radius:8px;padding:14px;margin-bottom:16px"></div>
+    <a href="/stats" class="btn" style="display:block;text-decoration:none;text-align:center">View Stats</a>
+  </div>
+
+</div>
+
+<script>
+var SQL=`-- Voltex API Schema
+-- Run this in Supabase SQL Editor
+
+CREATE TABLE IF NOT EXISTS totals (
+  id INT PRIMARY KEY DEFAULT 1,
+  total_executions BIGINT DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS identifiers (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  identifier TEXT NOT NULL,
+  added_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS scripts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  loadstring TEXT NOT NULL,
+  raw_url TEXT,
+  tags TEXT[] DEFAULT '{}',
+  button_text TEXT DEFAULT 'Copy Loadstring',
+  updated TEXT DEFAULT 'just now',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS games (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  loadstring TEXT NOT NULL,
+  play_url TEXT,
+  tags TEXT[] DEFAULT '{}',
+  button_text TEXT DEFAULT 'Get Script',
+  play_button_text TEXT DEFAULT 'Play on Roblox',
+  updated TEXT DEFAULT 'just now',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS misc (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  snippet TEXT,
+  raw_url TEXT,
+  button_text TEXT DEFAULT 'Copy Snippet',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_identifiers_added_at ON identifiers(added_at);
+CREATE INDEX IF NOT EXISTS idx_identifiers_identifier ON identifiers(identifier);
+CREATE INDEX IF NOT EXISTS idx_scripts_created_at ON scripts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_scripts_tags ON scripts USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_games_created_at ON games(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_games_tags ON games USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_misc_created_at ON misc(created_at DESC);`;
+
+document.getElementById('sqlCode').textContent = SQL;
+
+function go(n) {
+  document.querySelectorAll('.step').forEach(function(s){s.classList.remove('on')});
+  document.getElementById('s'+n).classList.add('on');
+}
+
+function copySql() {
+  navigator.clipboard.writeText(SQL).then(function(){
+    var b = document.querySelector('.copy-btn');
+    b.textContent = 'Copied!';
+    setTimeout(function(){b.textContent='Copy SQL'},1500);
+  });
+}
+
+function seed() {
+  var url = document.getElementById('url').value.trim();
+  var key = document.getElementById('key').value.trim();
+  var skey = document.getElementById('skey').value.trim();
+  var log = document.getElementById('log');
+
+  if (!url || !key || !skey) { alert('Fill in all fields'); return; }
+
+  log.style.display = 'block';
+  log.className = '';
+  log.textContent = 'Seeding data...';
+
+  fetch('/api/v1/seed', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Setup-Key': skey },
+    body: JSON.stringify({ supabase_url: url, supabase_key: key })
+  })
+  .then(function(r){return r.json()})
+  .then(function(d){
+    if (d.error) {
+      log.className = 'err';
+      log.textContent = 'Error: ' + d.error.message;
+    } else {
+      log.className = 'ok';
+      var r = d.data;
+      log.textContent = 'Scripts seeded: ' + r.scripts + '\nGames seeded: ' + r.games + '\nMisc seeded: ' + r.misc;
+      document.getElementById('log2').innerHTML =
+        '<b>Scripts:</b> ' + r.scripts + '<br><b>Games:</b> ' + r.games + '<br><b>Misc:</b> ' + r.misc;
+      setTimeout(function(){go(3)}, 1000);
+    }
+  })
+  .catch(function(e){ log.className='err'; log.textContent='Failed: '+e.message; });
+}
+</script>
+</body>
+</html>

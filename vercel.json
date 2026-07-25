@@ -8,6 +8,7 @@
     { "source": "/projects/games.json", "destination": "/src/frontend/projects/games.json" },
     { "source": "/projects/misc", "destination": "/src/frontend/projects/misc.html" },
     { "source": "/projects/misc.json", "destination": "/src/frontend/projects/misc.json" },
-    { "source": "/stats", "destination": "/src/frontend/stats.html" }
+    { "source": "/stats", "destination": "/src/frontend/stats.html" },
+    { "source": "/setup", "destination": "/src/frontend/setup.html" }
   ]
 }

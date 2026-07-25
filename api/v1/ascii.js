@@ -1,4 +1,7 @@
 import sharp from 'sharp';
+import { handler, successResponse } from '../_lib/response.js';
+import { handleOptions } from '../_lib/cors.js';
+import { ApiError } from '../_lib/errors.js';
 
 const CHARS = ' .\'`^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$';
 
@@ -48,23 +51,15 @@ function pixelsToRichText(data, width, height, cols) {
   return lines.join('\n');
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export default async function handler_fn(req, res) {
+  if (req.method === 'OPTIONS') return handleOptions(req, res);
+  if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST.' });
-
-  let body;
-  try {
-    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  } catch {
-    return res.status(400).json({ error: 'Invalid JSON.' });
-  }
+  const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  if (!body || typeof body !== 'object') throw new ApiError(400, 'Invalid request body');
 
   const { image, columns } = body;
-  if (!image) return res.status(400).json({ error: 'Missing "image" field.' });
+  if (!image) throw new ApiError(400, 'Missing "image" field');
 
   const cols = Math.min(Math.max(parseInt(columns) || 80, 10), 200);
   const b64data = image.includes(',') ? image.split(',')[1] : image;
@@ -78,9 +73,11 @@ export default async function handler(req, res) {
     height = meta.height;
     raw = await img.raw().toBuffer();
   } catch (err) {
-    return res.status(400).json({ error: 'Could not decode image.', detail: err.message });
+    throw new ApiError(400, 'Could not decode image');
   }
 
   const ascii = pixelsToRichText(raw, width, height, cols);
-  return res.status(200).json({ ascii });
+  return successResponse(res, req, { ascii });
 }
+
+export { handler_fn as handler };

@@ -110,7 +110,7 @@ renderGraph(null);
 var controller = new AbortController();
 var timer = setTimeout(function() { controller.abort(); }, 8000);
 
-fetch('/api/stats', { signal: controller.signal })
+fetch('/api/v1/stats', { signal: controller.signal })
   .then(function(res) {
     clearTimeout(timer);
     if (!res.ok) throw new Error('HTTP ' + res.status);

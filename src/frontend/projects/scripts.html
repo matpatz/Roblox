@@ -156,12 +156,19 @@ function filterAndRender() {
 }
 
 async function loadScriptsJSON() {
-  const paths = [
-    '/src/frontend/projects/scripts.json',
-    './scripts.json',
-    '/projects/scripts.json'
-  ];
+  try {
+    const response = await fetch('/api/v1/scripts?limit=100');
+    if (response.ok) {
+      const result = await response.json();
+      scriptsData = result.data || [];
+      renderScripts(scriptsData);
+      return;
+    }
+  } catch (err) {
+    console.warn('API fetch failed, falling back to static:', err);
+  }
 
+  const paths = ['/src/frontend/projects/scripts.json', './scripts.json', '/projects/scripts.json'];
   for (const path of paths) {
     try {
       const response = await fetch(path);
@@ -170,12 +177,10 @@ async function loadScriptsJSON() {
         renderScripts(scriptsData);
         return;
       }
-    } catch (err) {
-      console.warn(`Failed to fetch from ${path}:`, err);
-    }
+    } catch (err) {}
   }
-  
-  scriptGrid.innerHTML = `<p style="color: #ff5252; font-family: 'Inter', sans-serif; grid-column: 1/-1;">Error loading scripts.json</p>`;
+
+  scriptGrid.innerHTML = `<p style="color: #ff5252; font-family: 'Inter', sans-serif; grid-column: 1/-1;">Error loading scripts</p>`;
 }
 
 searchInput.addEventListener('input', filterAndRender);

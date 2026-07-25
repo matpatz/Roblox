@@ -1,5 +1,6 @@
 import { handler, successResponse } from '../_lib/response.js';
 import { handleOptions } from '../_lib/cors.js';
+import { getSupabase } from '../_lib/supabase.js';
 import { ApiError } from '../_lib/errors.js';
 
 const SCRIPTS = [
@@ -37,12 +38,7 @@ export default async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
 
-  const key = req.headers['x-setup-key'];
-  if (key !== process.env.SETUP_KEY) throw new ApiError(403, 'Invalid setup key');
-
-  const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  const { createClient } = await import('@supabase/supabase-js');
-  const supabase = createClient(body.supabase_url, body.supabase_key);
+  const supabase = getSupabase();
 
   let scriptsSeeded = 0, gamesSeeded = 0, miscSeeded = 0;
 

@@ -42,13 +42,9 @@ body{display:flex;align-items:center;justify-content:center;min-height:100vh;mar
 
   <div id="s2" class="step">
     <h1>Step 2: Seed Data</h1>
-    <p class="sub">Paste your Supabase service role key and a setup key.</p>
-    <input type="text" id="url" placeholder="https://xxxxx.supabase.co" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #2a2a3a;background:#0a0a12;color:#e2e2f0;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:'Inter',sans-serif">
-    <input type="password" id="key" placeholder="Service Role Key (sb_secret_...)" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #2a2a3a;background:#0a0a12;color:#e2e2f0;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:'Inter',sans-serif">
-    <input type="password" id="skey" placeholder="SETUP_KEY (any string you choose)" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #2a2a3a;background:#0a0a12;color:#e2e2f0;font-size:13px;box-sizing:border-box;margin-bottom:14px;font-family:'Inter',sans-serif">
-    <button class="btn" onclick="seed()">Seed Data</button>
+    <p class="sub">One click to populate your tables with scripts, games, and misc data.</p>
+    <button class="btn" id="seedBtn" onclick="seed()">Seed Data</button>
     <div id="log"></div>
-    <div class="note">Set SETUP_KEY as a Vercel env var so only you can re-seed.</div>
   </div>
 
   <div id="s3" class="step">
@@ -138,37 +134,37 @@ function copySql() {
 }
 
 function seed() {
-  var url = document.getElementById('url').value.trim();
-  var key = document.getElementById('key').value.trim();
-  var skey = document.getElementById('skey').value.trim();
+  var btn = document.getElementById('seedBtn');
   var log = document.getElementById('log');
-
-  if (!url || !key || !skey) { alert('Fill in all fields'); return; }
-
+  btn.disabled = true;
+  btn.textContent = 'Seeding...';
   log.style.display = 'block';
   log.className = '';
   log.textContent = 'Seeding data...';
 
-  fetch('/api/v1/seed', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Setup-Key': skey },
-    body: JSON.stringify({ supabase_url: url, supabase_key: key })
-  })
+  fetch('/api/v1/seed', { method: 'POST' })
   .then(function(r){return r.json()})
   .then(function(d){
     if (d.error) {
       log.className = 'err';
       log.textContent = 'Error: ' + d.error.message;
+      btn.disabled = false;
+      btn.textContent = 'Retry Seed';
     } else {
       log.className = 'ok';
       var r = d.data;
-      log.textContent = 'Scripts seeded: ' + r.scripts + '\nGames seeded: ' + r.games + '\nMisc seeded: ' + r.misc;
+      log.textContent = 'Scripts: ' + r.scripts + '\nGames: ' + r.games + '\nMisc: ' + r.misc;
       document.getElementById('log2').innerHTML =
         '<b>Scripts:</b> ' + r.scripts + '<br><b>Games:</b> ' + r.games + '<br><b>Misc:</b> ' + r.misc;
-      setTimeout(function(){go(3)}, 1000);
+      setTimeout(function(){go(3)}, 800);
     }
   })
-  .catch(function(e){ log.className='err'; log.textContent='Failed: '+e.message; });
+  .catch(function(e){
+    log.className='err';
+    log.textContent='Failed: '+e.message;
+    btn.disabled=false;
+    btn.textContent='Retry Seed';
+  });
 }
 </script>
 </body>

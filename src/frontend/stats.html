@@ -116,7 +116,8 @@ fetch('/api/v1/stats', { signal: controller.signal })
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
   })
-  .then(function(data) {
+  .then(function(json) {
+    var data = json.data || json;
     renderStats(data);
     if (data.execution_history) renderGraph(data.execution_history);
   })

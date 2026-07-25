@@ -3,30 +3,30 @@ import { ApiError } from './errors.js';
 export function requireFields(body, fields) {
   const missing = fields.filter(f => body[f] === undefined || body[f] === null || body[f] === '');
   if (missing.length > 0) {
-    throw new ApiError(400, `Missing required fields: ${missing.join(', ')}`);
+    throw new ApiError(400, 'Missing required fields');
   }
 }
 
 export function validateString(value, name, { min, max, pattern } = {}) {
   if (typeof value !== 'string') {
-    throw new ApiError(400, `${name} must be a string`);
+    throw new ApiError(400, 'Invalid field');
   }
   const trimmed = value.trim();
   if (min && trimmed.length < min) {
-    throw new ApiError(400, `${name} must be at least ${min} characters`);
+    throw new ApiError(400, 'Field too short');
   }
   if (max && trimmed.length > max) {
-    throw new ApiError(400, `${name} must be at most ${max} characters`);
+    throw new ApiError(400, 'Field too long');
   }
   if (pattern && !pattern.test(trimmed)) {
-    throw new ApiError(400, `${name} has invalid format`);
+    throw new ApiError(400, 'Invalid format');
   }
   return trimmed;
 }
 
 export function validateArray(value, name) {
   if (!Array.isArray(value)) {
-    throw new ApiError(400, `${name} must be an array`);
+    throw new ApiError(400, 'Invalid field');
   }
   return value;
 }

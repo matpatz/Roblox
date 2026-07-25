@@ -117,7 +117,17 @@ CREATE INDEX IF NOT EXISTS idx_scripts_created_at ON scripts(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_scripts_tags ON scripts USING GIN(tags);
 CREATE INDEX IF NOT EXISTS idx_games_created_at ON games(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_games_tags ON games USING GIN(tags);
-CREATE INDEX IF NOT EXISTS idx_misc_created_at ON misc(created_at DESC);`;
+CREATE INDEX IF NOT EXISTS idx_misc_created_at ON misc(created_at DESC);
+
+CREATE OR REPLACE FUNCTION increment_executions()
+RETURNS void AS $$
+BEGIN
+  INSERT INTO totals (id, total_executions) VALUES (1, 1)
+  ON CONFLICT (id) DO UPDATE SET
+    total_executions = totals.total_executions + 1,
+    updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql;`;
 
 document.getElementById('sqlCode').textContent = SQL;
 

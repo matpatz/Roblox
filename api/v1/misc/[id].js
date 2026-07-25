@@ -2,13 +2,14 @@ import { handler, successResponse } from '../_lib/response.js';
 import { handleOptions } from '../_lib/cors.js';
 import { getSupabase } from '../_lib/supabase.js';
 import { ApiError } from '../_lib/errors.js';
+import { requireAdmin } from '../_lib/admin.js';
 import { validateString } from '../_lib/validate.js';
 
 export default async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
 
   const { id } = req.query;
-  if (!id) throw new ApiError(400, 'Missing misc item id');
+  if (!id) throw new ApiError(400, 'Missing id');
 
   const supabase = getSupabase();
 
@@ -19,20 +20,22 @@ export default async function handler_fn(req, res) {
       .eq('id', id)
       .single();
 
-    if (error || !data) throw new ApiError(404, 'Misc item not found');
+    if (error || !data) throw new ApiError(404, 'Not found');
     return successResponse(res, req, data);
   }
 
   if (req.method === 'PUT') {
+    requireAdmin(req);
+
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     if (!body || typeof body !== 'object') throw new ApiError(400, 'Invalid request body');
 
     const updates = {};
     if (body.title !== undefined) updates.title = validateString(body.title, 'title', { min: 1, max: 100 });
     if (body.description !== undefined) updates.description = validateString(body.description, 'description', { min: 1, max: 500 });
-    if (body.snippet !== undefined) updates.snippet = body.snippet ? validateString(body.snippet, 'snippet') : null;
-    if (body.rawUrl !== undefined) updates.raw_url = body.rawUrl ? validateString(body.rawUrl, 'rawUrl') : null;
-    if (body.buttonText !== undefined) updates.button_text = body.buttonText;
+    if (body.snippet !== undefined) updates.snippet = body.snippet ? validateString(body.snippet, 'snippet', { max: 10000 }) : null;
+    if (body.rawUrl !== undefined) updates.raw_url = body.rawUrl ? validateString(body.rawUrl, 'rawUrl', { max: 2000 }) : null;
+    if (body.buttonText !== undefined) updates.button_text = validateString(body.buttonText, 'buttonText', { max: 50 });
     updates.updated_at = new Date().toISOString();
 
     const { data, error } = await supabase
@@ -42,18 +45,20 @@ export default async function handler_fn(req, res) {
       .select()
       .single();
 
-    if (error) throw new ApiError(500, 'Failed to update misc item');
-    if (!data) throw new ApiError(404, 'Misc item not found');
+    if (error) throw new ApiError(500, 'Failed to update');
+    if (!data) throw new ApiError(404, 'Not found');
     return successResponse(res, req, data);
   }
 
   if (req.method === 'DELETE') {
+    requireAdmin(req);
+
     const { error } = await supabase
       .from('misc')
       .delete()
       .eq('id', id);
 
-    if (error) throw new ApiError(500, 'Failed to delete misc item');
+    if (error) throw new ApiError(500, 'Failed to delete');
     return successResponse(res, req, { deleted: true });
   }
 

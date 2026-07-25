@@ -2,7 +2,12 @@ import { handler, successResponse, paginatedResponse } from '../_lib/response.js
 import { handleOptions } from '../_lib/cors.js';
 import { getSupabase } from '../_lib/supabase.js';
 import { ApiError } from '../_lib/errors.js';
+import { requireAdmin } from '../_lib/admin.js';
 import { validateString, parsePagination } from '../_lib/validate.js';
+
+function sanitizeSearch(s) {
+  return s.replace(/[,().]/g, '');
+}
 
 export default async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
@@ -11,7 +16,7 @@ export default async function handler_fn(req, res) {
 
   if (req.method === 'GET') {
     const { page, limit, offset } = parsePagination(req.query);
-    const search = req.query.search || '';
+    const search = sanitizeSearch(req.query.search || '');
     const tag = req.query.tag || '';
 
     let query = supabase
@@ -30,38 +35,32 @@ export default async function handler_fn(req, res) {
       .range(offset, offset + limit - 1);
 
     const { data, error, count } = await query;
-    if (error) throw new ApiError(500, 'Failed to fetch scripts');
+    if (error) throw new ApiError(500, 'Failed to fetch');
 
     return paginatedResponse(res, req, { data: data || [], total: count || 0, page, limit });
   }
 
   if (req.method === 'POST') {
+    requireAdmin(req);
+
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     if (!body || typeof body !== 'object') throw new ApiError(400, 'Invalid request body');
 
     const title = validateString(body.title, 'title', { min: 1, max: 100 });
     const description = validateString(body.description, 'description', { min: 1, max: 500 });
-    const loadstring = validateString(body.loadstring, 'loadstring', { min: 1 });
-    const rawUrl = body.rawUrl ? validateString(body.rawUrl, 'rawUrl') : null;
-    const tags = Array.isArray(body.tags) ? body.tags : [];
-    const buttonText = body.buttonText || 'Copy Loadstring';
-    const updated = body.updated || 'just now';
+    const loadstring = validateString(body.loadstring, 'loadstring', { min: 1, max: 10000 });
+    const rawUrl = body.rawUrl ? validateString(body.rawUrl, 'rawUrl', { max: 2000 }) : null;
+    const tags = Array.isArray(body.tags) ? body.tags.slice(0, 20) : [];
+    const buttonText = validateString(body.buttonText || 'Copy Loadstring', 'buttonText', { max: 50 });
+    const updated = validateString(body.updated || 'just now', 'updated', { max: 50 });
 
     const { data, error } = await supabase
       .from('scripts')
-      .insert({
-        title,
-        description,
-        loadstring,
-        raw_url: rawUrl,
-        tags,
-        button_text: buttonText,
-        updated
-      })
+      .insert({ title, description, loadstring, raw_url: rawUrl, tags, button_text: buttonText, updated })
       .select()
       .single();
 
-    if (error) throw new ApiError(500, 'Failed to create script');
+    if (error) throw new ApiError(500, 'Failed to create');
     return successResponse(res, req, data, 201);
   }
 

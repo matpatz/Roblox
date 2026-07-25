@@ -50,7 +50,7 @@ export default async function handler_fn(req, res) {
     const { error } = await supabase.from('scripts').insert(SCRIPTS);
     if (!error) scriptsSeeded = SCRIPTS.length;
   } else {
-    scriptsSeeded = `already has ${sc} items`;
+    scriptsSeeded = 'exists';
   }
 
   const { count: gc } = await supabase.from('games').select('*', { count: 'exact', head: true });
@@ -58,7 +58,7 @@ export default async function handler_fn(req, res) {
     const { error } = await supabase.from('games').insert(GAMES);
     if (!error) gamesSeeded = GAMES.length;
   } else {
-    gamesSeeded = `already has ${gc} items`;
+    gamesSeeded = 'exists';
   }
 
   const { count: mc } = await supabase.from('misc').select('*', { count: 'exact', head: true });
@@ -66,7 +66,7 @@ export default async function handler_fn(req, res) {
     const { error } = await supabase.from('misc').insert(MISC);
     if (!error) miscSeeded = MISC.length;
   } else {
-    miscSeeded = `already has ${mc} items`;
+    miscSeeded = 'exists';
   }
 
   return successResponse(res, req, { scripts: scriptsSeeded, games: gamesSeeded, misc: miscSeeded });

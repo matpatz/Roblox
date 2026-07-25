@@ -59,11 +59,13 @@ export default async function handler_fn(req, res) {
   if (!body || typeof body !== 'object') throw new ApiError(400, 'Invalid request body');
 
   const { image, columns } = body;
-  if (!image) throw new ApiError(400, 'Missing "image" field');
+  if (!image || typeof image !== 'string') throw new ApiError(400, 'Missing image');
 
   const cols = Math.min(Math.max(parseInt(columns) || 80, 10), 200);
   const b64data = image.includes(',') ? image.split(',')[1] : image;
   const buffer = Buffer.from(b64data, 'base64');
+
+  if (buffer.length > 5 * 1024 * 1024) throw new ApiError(413, 'Image too large (max 5MB)');
 
   let raw, width, height;
   try {

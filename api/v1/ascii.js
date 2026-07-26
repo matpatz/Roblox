@@ -3,6 +3,8 @@ import { handler, successResponse } from '../_lib/response.js';
 import { handleOptions } from '../_lib/cors.js';
 import { ApiError } from '../_lib/errors.js';
 
+export const config = { runtime: 'nodejs' };
+
 const CHARS = ' .\'`^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$';
 
 function toHex(r, g, b) {

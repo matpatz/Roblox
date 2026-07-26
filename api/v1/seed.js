@@ -1,7 +1,8 @@
 import { handler, successResponse } from '../_lib/response.js';
 import { handleOptions } from '../_lib/cors.js';
-import { getSupabase } from '../_lib/supabase.js';
 import { ApiError } from '../_lib/errors.js';
+
+export const config = { runtime: 'nodejs' };
 
 const SCRIPTS = [
   { title: 'ASCII to Text', description: 'Turns simple text into ASCII using an API.', loadstring: 'loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/scripts/ascii/main.lua"))()', raw_url: 'https://roblox-alpha-murex.vercel.app/src/scripts/ascii/main.lua', tags: ['Open Source'], button_text: 'Copy Loadstring', updated: 'last month' },

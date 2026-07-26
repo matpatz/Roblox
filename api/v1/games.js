@@ -4,6 +4,8 @@ import { getSupabase } from '../_lib/supabase.js';
 import { ApiError } from '../_lib/errors.js';
 import { parsePagination } from '../_lib/validate.js';
 
+export const config = { runtime: 'nodejs' };
+
 function sanitizeSearch(s) {
   return s.replace(/[,().]/g, '');
 }

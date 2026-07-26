@@ -3,6 +3,8 @@ import { handleOptions } from '../_lib/cors.js';
 import { getSupabase } from '../_lib/supabase.js';
 import { ApiError } from '../_lib/errors.js';
 
+export const config = { runtime: 'nodejs' };
+
 export default async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'GET') throw new ApiError(405, 'Method not allowed');

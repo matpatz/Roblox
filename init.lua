@@ -2,7 +2,11 @@ local Script = shared.script
 	-- "scripts/ascii"
 	-- "games/catastrophia"
 
-loadstring(game:HttpGet(string.format("https://roblox-alpha-murex.vercel.app/src/%s/main.lua", Script)))()
+local Success, Error = pcall(function()
+    loadstring(game:HttpGet(string.format("https://roblox-alpha-murex.vercel.app/src/%s/main.lua", Script)))()
+end); if not Success then
+    warn(Error)
+end
 
 local cloneref = cloneref and cloneref or function(x)
 	return x

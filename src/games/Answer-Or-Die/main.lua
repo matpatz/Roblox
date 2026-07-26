@@ -25,8 +25,8 @@ local function solve()
         local answer = longest(qText)
 
         if answer then
-            task.delay(10, function()
-                rep.Common.Library.Network.RemoteFunction:InvokeServer("S_System_SubmitAnswer", { answer })
+            task.delay(getgenv().delay or 10, function()
+                rep.Common.Library.Network.RemoteFunction:InvokeServer("S_System_NewSubmitAnswer", { answer })
                 print("Answered:", qText, "->", answer)
             end)
         else

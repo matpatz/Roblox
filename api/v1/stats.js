@@ -70,26 +70,28 @@ export default async function handler_fn(req, res) {
 
   let executionHistory = [];
   try {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const { data } = await supabase
-      .from('identifiers')
-      .select('added_at')
-      .gte('added_at', sevenDaysAgo.toISOString())
-      .range(0, 99999);
-    if (data) {
-      const counts = {};
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        counts[d.toISOString().slice(0, 10)] = 0;
-      }
-      data.forEach(row => {
-        const day = row.added_at.slice(0, 10);
-        if (counts[day] !== undefined) counts[day]++;
-      });
-      executionHistory = Object.entries(counts).map(([date, count]) => ({ date, count }));
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const next = new Date(d);
+      next.setDate(next.getDate() + 1);
+      days.push({ date: key, start: d.toISOString(), end: next.toISOString() });
     }
+    const results = await Promise.all(
+      days.map(day =>
+        supabase
+          .from('identifiers')
+          .select('*', { count: 'exact', head: true })
+          .gte('added_at', day.start)
+          .lt('added_at', day.end)
+      )
+    );
+    executionHistory = days.map((day, i) => ({
+      date: day.date,
+      count: results[i].count || 0
+    }));
   } catch {}
 
   return successResponse(res, req, {

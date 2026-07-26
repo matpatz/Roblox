@@ -5,6 +5,8 @@ import { ApiError } from '../_lib/errors.js';
 import { validateString } from '../_lib/validate.js';
 import { createHash } from 'crypto';
 
+export const config = { runtime: 'nodejs' };
+
 export default async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
@@ -27,9 +29,15 @@ export default async function handler_fn(req, res) {
     throw new ApiError(500, 'Failed to save');
   }
 
-  await supabase.rpc('increment_executions').catch(() => {
-    return supabase.from('totals').upsert({ id: 1, total_executions: 1 });
-  });
+  const { data: row } = await supabase
+    .from('totals')
+    .select('total_executions')
+    .eq('id', 1)
+    .single();
+
+  await supabase
+    .from('totals')
+    .upsert({ id: 1, total_executions: (row?.total_executions || 0) + 1 });
 
   return successResponse(res, req, { id: data.id }, 201);
 }

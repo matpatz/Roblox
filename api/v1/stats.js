@@ -50,7 +50,8 @@ export default async function handler_fn(req, res) {
     const { data } = await supabase
       .from('identifiers')
       .select('identifier')
-      .gte('added_at', thirtyDaysAgo.toISOString());
+      .gte('added_at', thirtyDaysAgo.toISOString())
+      .range(0, 99999);
     if (data) {
       activeUsers = new Set(data.map(u => u.identifier)).size;
     }
@@ -74,7 +75,8 @@ export default async function handler_fn(req, res) {
     const { data } = await supabase
       .from('identifiers')
       .select('added_at')
-      .gte('added_at', sevenDaysAgo.toISOString());
+      .gte('added_at', sevenDaysAgo.toISOString())
+      .range(0, 99999);
     if (data) {
       const counts = {};
       for (let i = 6; i >= 0; i--) {

@@ -166,6 +166,32 @@ h1 {
   font-weight: 600;
 }
 
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(90, 107, 138, 0.1);
+  border: 1px solid var(--accent-subtle);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  background: #4ecdc4;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .btn-row {
   display: flex;
   align-items: center;

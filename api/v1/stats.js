@@ -54,6 +54,17 @@ export default async function handler_fn(req, res) {
     }
   } catch {}
 
+  let executionsLastHour = 0;
+  try {
+    const oneHourAgo = new Date();
+    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+    const { count } = await supabase
+      .from('identifiers')
+      .select('*', { count: 'exact', head: true })
+      .gte('added_at', oneHourAgo.toISOString());
+    executionsLastHour = count || 0;
+  } catch {}
+
   let executionHistory = [];
   try {
     const sevenDaysAgo = new Date();
@@ -80,6 +91,7 @@ export default async function handler_fn(req, res) {
   return successResponse(res, req, {
     total_executions: totalExecutions,
     active_users: activeUsers,
+    executions_last_hour: executionsLastHour,
     api_status: 'Operational',
     discord_community: discordCommunity,
     execution_history: executionHistory

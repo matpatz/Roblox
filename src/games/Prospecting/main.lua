@@ -10,13 +10,6 @@ local Rayfield = loadstring(game:HttpGet(
 
 local lp = services["player"]
 
-local WaterPosition = {
-    -81.4958725, 9, 42.0576935,
-    -0.016976133, 6.39132764e-08, 0.999855876,
-    7.69858788e-10, 1, -6.39094182e-08,
-    -0.999855876, -3.1518696e-10, -0.016976133,
-}
-
 local window = Rayfield:CreateWindow({
     Name = "Prospecting",
     LoadingTitle = "Prospecting",
@@ -28,7 +21,7 @@ local window = Rayfield:CreateWindow({
 
 local Tabs = {
     main = window:CreateTab("Main", 4483362458),
-    awdf = window:CreateTab("Lebron james")
+    settings = window:CreateTab("Settings", 4483362458),
 }
 
 local Connections = {
@@ -41,6 +34,9 @@ local States = {
         AutoFarm = false,
         CurrentAction = "Collecting",
         SavedPosition = nil,
+        WaterPosition = nil,
+        PlayerPosition = nil,
+        PanSpeed = 0.05,
     },
 }
 
@@ -108,6 +104,18 @@ local function GetMaxCapacity()
     return Stats and Stats:GetAttribute("Capacity") or 0
 end
 
+local function CFrameToTable(cframe)
+    return {
+        cframe.X, cframe.Y, cframe.Z,
+        cframe:GetComponents()
+    }
+end
+
+local function TableToCFrame(t)
+    if not t or #t < 12 then return nil end
+    return CFrame.new(t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9], t[10], t[11], t[12])
+end
+
 local function RunAutomation()
     local Hrp
     local Tool
@@ -126,13 +134,17 @@ local function RunAutomation()
         local CurrentFill = GetCurrentFill()
         local Action = States.values.CurrentAction
         local SavedPos = States.values.SavedPosition
+        local PlayerPos = States.values.PlayerPosition
+        local WaterPos = States.values.WaterPosition
 
         if Action == "Collecting" then
             if Remotes.Shake then
                 Remotes.Shake:FireServer()
             end
 
-            if Hrp and SavedPos then
+            if Hrp and PlayerPos then
+                Hrp.CFrame = PlayerPos
+            elseif Hrp and SavedPos then
                 Hrp.CFrame = SavedPos
             end
 
@@ -147,8 +159,8 @@ local function RunAutomation()
             end
 
         elseif Action == "Panning" then
-            if Hrp then
-                Hrp.CFrame = CFrame.new(unpack(WaterPosition))
+            if Hrp and WaterPos then
+                Hrp.CFrame = WaterPos
             end
 
             if Remotes.Pan then
@@ -159,7 +171,7 @@ local function RunAutomation()
                 Remotes.Shake:FireServer()
             end
 
-            task.wait(0.02)
+            task.wait(States.values.PanSpeed)
 
             CurrentFill = GetCurrentFill()
             if CurrentFill == 0 then
@@ -190,6 +202,81 @@ Tabs.main:CreateToggle({
         else
             RemoveConnection(Connections, "automation")
         end
+    end,
+})
+
+Tabs.settings:CreateLabel("Position Saving")
+
+Tabs.settings:CreateButton({
+    Name = "Save Player Position",
+    Callback = function()
+        local Hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+        if Hrp then
+            SetValue(States.values, "PlayerPosition", Hrp.CFrame)
+            Rayfield:Notify({
+                Title = "Position Saved",
+                Content = "Player position saved! ✓",
+                Duration = 3,
+                Image = 4483362458,
+            })
+        else
+            Rayfield:Notify({
+                Title = "Error",
+                Content = "Could not find player position.",
+                Duration = 3,
+                Image = 4483362458,
+            })
+        end
+    end,
+})
+
+Tabs.settings:CreateButton({
+    Name = "Save Water Position",
+    Callback = function()
+        local Hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+        if Hrp then
+            SetValue(States.values, "WaterPosition", Hrp.CFrame)
+            Rayfield:Notify({
+                Title = "Position Saved",
+                Content = "Water position saved!",
+                Duration = 3,
+                Image = 4483362458,
+            })
+        else
+            Rayfield:Notify({
+                Title = "Error",
+                Content = "Could not find water position.",
+                Duration = 3,
+                Image = 4483362458,
+            })
+        end
+    end,
+})
+
+Tabs.settings:CreateLabel("Pan Speed")
+
+Tabs.settings:CreateSlider({
+    Name = "Pan Speed (Lower = Faster)",
+    Range = {0.01, 0.2},
+    Increment = 0.01,
+    Suffix = "s",
+    CurrentValue = 0.05,
+    Callback = function(value)
+        SetValue(States.values, "PanSpeed", value)
+    end,
+})
+
+Tabs.settings:CreateButton({
+    Name = "Clear Saved Positions",
+    Callback = function()
+        SetValue(States.values, "PlayerPosition", nil)
+        SetValue(States.values, "WaterPosition", nil)
+        Rayfield:Notify({
+            Title = "Cleared",
+            Content = "All saved positions cleared.",
+            Duration = 3,
+            Image = 4483362458,
+        })
     end,
 })
 

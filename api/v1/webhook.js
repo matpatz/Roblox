@@ -51,7 +51,10 @@ export default async function handler_fn(req, res) {
 	if (req.method === 'OPTIONS') return handleOptions(req, res);
 	if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
 
-	const { User, UserId, Executor, Script, Game, PlaceId } = req.body || {};
+	const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+	if (!body || typeof body !== 'object') throw new ApiError(400, 'Invalid request');
+
+	const { User, UserId, Executor, Script, Game, PlaceId } = body;
 	if (!Script) throw new ApiError(400, 'Missing Script field');
 
 	const webhookUrl = webhooks[Script];

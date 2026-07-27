@@ -20,7 +20,7 @@ local Payload = {
 }
 
 request({
-    Url = "https://website-iota-ivory-12.vercel.app/api/webhook.js",
+    Url = "https://website-iota-ivory-12.vercel.app/api/v1/webhook",
 
     Method = "POST",
 

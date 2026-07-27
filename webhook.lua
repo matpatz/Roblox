@@ -30,3 +30,5 @@ request({
 
     Body = Services["HttpService"]:JSONEncode(Payload)
 })
+
+shared.script = nil

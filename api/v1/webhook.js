@@ -29,6 +29,7 @@ const webhooks = {
 	'games/Titan-Warfare': 'https://discord.com/api/webhooks/1531138918576029878/OsN1JJMVgltvcaySsCih14zPeHtC_Y9t7jW-vC_w9h68N-JWmPSpF30HtKO0Pa2YoOPW',
 	'games/catastrophia': 'https://discord.com/api/webhooks/1531139025300095119/KXv4-OUzQc2_InjTLVAzvbGINLH4FwZGay22F4tuwzbwP6PH6ZPiUgSdXoScuGY2QTt3',
 	'games/trident': 'https://discord.com/api/webhooks/1531139142170181642/v9_E0Z4AogIv9XoPIHVk6-iDi2n7YPrxWw46FwM19rswCUXIqv_e__W1Y9bx_VCB-hj-',
+    'games/Pickaxe-Swing-Escape': 'https://discord.com/api/webhooks/1531420645458710568/U8JY7mJroSZN8QJwPlL3-xC2h6KiyfW7F_B4gNKX5FYZLlC926pz9-gUp9VtbTE0A1hb',
 };
 
 function buildEmbed({ User, UserId, Executor, Script, Game, PlaceId }) {

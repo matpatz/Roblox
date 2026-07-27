@@ -86,7 +86,7 @@ return setmetatable(Services, {
 -- Usage:
 
 -- local Services = loadstring(
---     game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Variable.lua")
+--     game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Variables.lua")
 -- )()
 
 -- print(Services.Workspace)

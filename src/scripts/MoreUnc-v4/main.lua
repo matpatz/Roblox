@@ -1929,6 +1929,7 @@ AddFunction("getrawmetatable", function(Object)
     return MT
 end)
 
+-- Fake
 AddFunction("setrawmetatable", function(Object, MT)
     if type(Object) ~= "table" and typeof(Object) ~= "userdata" then error("expected table or userdata at argument #1, got " .. typeof(Object), 2) end
     if type(MT) ~= "table" then error("expected table at argument #2, got " .. type(MT), 2) end
@@ -2035,17 +2036,15 @@ AddFunction("identifyversion", function()
     return select(2, identifyexecutor())
 end)
 
-local HardwareID
+local Hwid = crypt.hash(Services.RbxAnalyticsService:GetClientId(), "sha3-512")
 AddFunction("sethwid", function(Input)
     if Input ~= nil and type(Input) ~= "string" then error("expected string or nil at argument #1, got " .. type(Input), 2) end
-    HardwareID = Input
+    Hwid = Input
 end)
 
 AliasFunction({"set_hwid", "setmac"}, "sethwid")
-
-local AnalyticsService = Services.RbxAnalyticsService
 AddFunction("gethwid", function()
-    return HardwareID or crypt.hash(AnalyticsService:GetClientId())
+    return Hwid
 end)
 
 AliasFunction({"get_hwid", "get_user_identifier", "getmac"}, "gethwid")
@@ -2250,66 +2249,70 @@ AddFunction("setinternalparent", function(Instance, NewParent)
     Instance.Parent = NewParent
 end)
 
-local FlagTypes = {
-        number = "int",
-        boolean = "flag"
+local Getters = {
+    {
+        Type = "flag",
+        Get = function(Name) return game:GetFastFlag(Name) end,
+        Set = function(Name, Value) return game:SetFastFlag(Name, Value) end,
+    },
+    {
+        Type = "int",
+        Get = function(Name) return game:GetFastInt(Name) end,
+        Set = function(Name, Value) return game:SetFastInt(Name, Value) end,
+    },
+    {
+        Type = "string",
+        Get = function(Name) return game:GetFastString(Name) end,
+        Set = function(Name, Value) return game:SetFastString(Name, Value) end,
+    },
 }
+
+local function ResolveFlag(Flag)
+    for _, Entry in ipairs(Getters) do
+        local Ok, Value = pcall(Entry.Get, game, Flag)
+        if Ok then
+            return Entry, Value
+        end
+    end
+end
 
 AddFunction("getfflagtype", function(Flag)
     if type(Flag) ~= "string" then
         error("expected string at argument #1, got " .. type(Flag), 2)
     end
-    if Flag:match("^FInt") then return "int" end
-    if Flag:match("^FString") then return "string" end
-    if Flag:match("^FFlag") then return "flag" end
-    return nil
+    local Entry = ResolveFlag(Flag)
+    return Entry and Entry.Type or nil
 end)
 
 AliasFunction({"getfastflagtype"}, "getfflagtype")
 
 AddFunction("getfflag", function(Flag)
-    if typeof(Flag) ~= "string" then error("expected string at argument #1, got " .. typeof(Flag), 2) end
-
-    local FlagName = Flag
-        :gsub("^FFlag", "")
-        :gsub("^FInt", "")
-        :gsub("^FString", "")
-
-    local FlagType = Functions.getfflagtype(Flag)
-
-    if FlagType == "flag" then
-        return game:GetFastFlag(FlagName)
-    elseif FlagType == "int" then
-        return game:GetFastInt(FlagName)
-    elseif FlagType == "string" then
-        return game:GetFastString(FlagName)
+    if typeof(Flag) ~= "string" then
+        error("expected string at argument #1, got " .. typeof(Flag), 2)
     end
-
-    error(("Unknown flag type for '%s'"):format(Flag), 2)
+    local Entry, Value = ResolveFlag(Flag)
+    if not Entry then
+        error(("Unknown flag type for '%s'"):format(Flag), 2)
+    end
+    return Value
 end)
 
 AddFunction("setfflag", function(Flag, Value)
-    if typeof(Flag) ~= "string" then error("expected string at argument #1, got " .. typeof(Flag), 2) end
-
-    local FlagName = Flag
-        :gsub("^FFlag", "")
-        :gsub("^FInt", "")
-        :gsub("^FString", "")
-
-    local FlagType = Functions.getfflagtype(Flag)
-
-    if FlagType == "flag" then
-        if typeof(Value) ~= "boolean" then error("expected boolean at argument #2, got " .. typeof(Value), 2) end
-        return game:SetFastFlag(FlagName, Value)
-    elseif FlagType == "int" then
-        if typeof(Value) ~= "number" then error("expected number at argument #2, got " .. typeof(Value), 2) end
-        return game:SetFastInt(FlagName, Value)
-    elseif FlagType == "string" then
-        if typeof(Value) ~= "string" then error("expected string at argument #2, got " .. typeof(Value), 2) end
-        return game:SetFastString(FlagName, Value)
+    if typeof(Flag) ~= "string" then
+        error("expected string at argument #1, got " .. typeof(Flag), 2)
     end
 
-    error(("Unknown flag type for '%s'"):format(Flag), 2)
+    local Entry = ResolveFlag(Flag)
+    if not Entry then
+        error(("Unknown flag type for '%s'"):format(Flag), 2)
+    end
+
+    local ExpectedType = ({flag = "boolean", int = "number", string = "string"})[Entry.Type]
+    if typeof(Value) ~= ExpectedType then
+        error(("expected %s at argument #2, got %s"):format(ExpectedType, typeof(Value)), 2)
+    end
+
+    return Entry.Set(game, Flag, Value)
 end)
 
 AddFunction("setclipboard", function(Text)
@@ -2317,7 +2320,7 @@ AddFunction("setclipboard", function(Text)
     print(Text)
 end)
 
-local FPSCap = workspace:GetRealPhysicsFPS()
+local FPSCap = 60
 
 AddFunction("setfpscap", function(FPS)
     if typeof(FPS) ~= "number" then error("expected number at argument #1, got " .. typeof(FPS), 2) end
@@ -2413,41 +2416,22 @@ AddFunction("decompile", function(Script)
     }).Body
 end)
 
-local CachedDecompile = decompile
-local last = 0
-getgenv().decompile = function(scr) -- lua.expert
-    local ok, bytecode = pcall(getscriptbytecode, scr)
-    if not ok then
-        return "-- failed to read script bytecode\n--[[\n" .. tostring(bytecode) .. "\n--]]"
-    end
-
-    local encoder = base64_encode
-    local res = request({
-        Url = "https://api.lua.expert/decompile",
-        Method = "POST",
-        Headers = {
-            ["content-type"] = "application/json"
-        },
-        Body = Services.HttpService:JSONEncode({
-            script = encoder(bytecode)
-        })
-    })
-
-    if not res or res.StatusCode ~= 200 then
-        return "-- api request error\n--[[\n" .. (res and res.Body or "no response") .. "\n--]]"
-    end
-
-    return res.Body
-end
-
 AddFunction("getscripthash", function(Script)
     if typeof(Script) ~= "Instance" then error("expected Instance at argument #1, got " .. typeof(Script), 2) end
     return crypt.hash(getscriptbytecode(Script))
 end)
 
+-- Shit
 AddFunction("getfunctionhash", function(Func)
     if typeof(Func) ~= "function" then error("expected function at argument #1, got " .. typeof(Func), 2) end
-    return crypt.hash(Func, "sha384")
+
+	local Data = ""
+	if dumpbytecode then
+		Data = dumpbytecode(Func)
+	else
+		Data = debug.info(Func, "l") + #debug.info(Func, "s")
+	end
+	return crypt.hash(Data, "sha384")
 end)
 
 local SaveInstance = loadstring(game:HttpGet(
@@ -2499,10 +2483,8 @@ end)
 
 AddFunction("isrequired", function(Module)
     if not (typeof(Module) == "Instance" and Module:IsA("ModuleScript")) then error("expected ModuleScript, got " .. typeof(Module), 2) end
-    for _, Item in next, getloadedmodules() do
-        if Item == Module then return true end
-    end
-    return false
+	local Result = table.find(getloadedmodules(), Module)
+    return Result ~= nil
 end)
 
 AliasFunction({"isloadedmodule"}, "isrequired")
@@ -2517,13 +2499,24 @@ AddFunction("getdeletedactors", function()
     return DeletedActors
 end)
 
-AddFunction("getremotes", function()
-    local Remotes = {}
-    for _, Object in next, game:GetDescendants() do
-        if Object:IsA("RemoteEvent") or Object:IsA("RemoteFunction") then
-            Remotes[#Remotes + 1] = Object
-        end
+local function IsRemote(Object)
+    return Object:IsA("RemoteEvent") or Object:IsA("RemoteFunction")
+end
+
+local Remotes = {}
+for _, Object in next, game:GetDescendants() do
+    if IsRemote(Object) then
+        Remotes[#Remotes + 1] = Object
     end
+end
+
+game.DescendantAdded:Connect(function(Object)
+    if IsRemote(Object) then
+        Remotes[#Remotes + 1] = Object
+    end
+end)
+
+AddFunction("getremotes", function()
     return Remotes
 end)
 
@@ -2542,64 +2535,14 @@ AddFunction("hookremote", function(Remote, Hook)
     return OldNamecall
 end)
 
--- GC scanning
-
-local GCRegistry, GCCollection = {}, {}
-
-local function IsNaN(Value)
-    return type(Value) == "number" and Value ~= Value
-end
-
-local function ScanRoots(Root, Seen)
-    if Root == nil or IsNaN(Root) then return end
-    Seen = Seen or {}
-    if Seen[Root] then return end
-    Seen[Root] = true
-
-    local RootType = type(Root)
-    if RootType == "table" then
-        GCRegistry[#GCRegistry + 1]    = Root
-        GCCollection[#GCCollection + 1] = Root
-        for Key, Value in next, Root do
-            if not IsNaN(Key) then ScanRoots(Key, Seen) end
-            if not IsNaN(Value) then ScanRoots(Value, Seen) end
-        end
-        local MT = getmetatable(Root)
-        if MT then ScanRoots(MT, Seen) end
-    elseif RootType == "function" then
-        GCRegistry[#GCRegistry + 1]    = Root
-        GCCollection[#GCCollection + 1] = Root
-        local Index = 1
-        while true do
-            local Ok, Name, Upvalue = pcall(debug.getupvalue, Root, Index)
-            if not Ok or not Name then break end
-            if not IsNaN(Upvalue) then ScanRoots(Upvalue, Seen) end
-            Index += 1
-        end
-    elseif RootType == "thread" or RootType == "userdata" then
-        GCRegistry[#GCRegistry + 1]    = Root
-        GCCollection[#GCCollection + 1] = Root
-    end
-end
-
-ScanRoots(getgenv())
-
+-- Fake
 AddFunction("getreg", function()
-    return GCRegistry
+    return {}
 end)
-
+-- Fake
 AddFunction("getgc", function(IncludeTables)
     if IncludeTables ~= nil and type(IncludeTables) ~= "boolean" then error("expected boolean or nil at argument #1, got " .. type(IncludeTables), 2) end
-    if IncludeTables then
-        return GCCollection
-    end
-    local Out = {}
-    for _, Item in next, GCCollection do
-        if type(Item) == "function" then
-            Out[#Out + 1] = Item
-        end
-    end
-    return Out
+    return {}
 end)
 
 AddFunction("filtergc", function(FilterType, FilterOptions, ReturnOne)
@@ -2708,40 +2651,13 @@ AddFunction("getgenv", function()
     return getfenv(0)
 end)
 
-AddFunction("dumpenv", function()
-    local Result = {}
-    for Key, Value in next, getgenv() do
-        if typeof(Value) == "table" then
-            local Sub = {}
-            for SubKey, SubValue in next, Value do
-                Sub[SubKey] = SubValue
-            end
-            Result[Key] = Sub
-        else
-            Result[Key] = Value
-        end
-    end
-    return Result
-end)
-
-AddFunction("printenv", function()
-    local Env = dumpenv()
-    for Key, Value in next, Env do
-        print(Key, tostring(Value))
-        if typeof(Value) == "table" then
-            for SubKey, SubValue in next, Value do
-                print("\t", SubKey, tostring(SubValue))
-            end
-        end
-    end
-end)
-
 AddFunction("getsenv", function(Script)
     if not (typeof(Script) == "Instance" and Script:IsA("LocalScript")) then error("expected LocalScript, got " .. typeof(Script), 2) end
+    if not Script.Enabled then error("yo scripts disabled gngster") end -- change
     return getfenv(0)
 end)
 
-local function TestThreadIdentity()
+local function GetThreadIdentity()
     local function Try(F)
         return function() return select(1, pcall(F)) end
     end
@@ -2760,7 +2676,7 @@ local function TestThreadIdentity()
     return #Checks
 end
 
-local ThreadIdentity = TestThreadIdentity()
+local ThreadIdentity = GetThreadIdentity()
 
 AliasFunction({"getthreadidentity", "getthreadcontext", "getthreadcaps", "getthreacapibility", "identity"}, function()
     return ThreadIdentity
@@ -2777,48 +2693,13 @@ end)
 
 -- WebSocket
 
+-- Actors
+
 local function NewBindable()
     return Instance.new("BindableEvent")
 end
 
-AddFunction("WebSocket", {})
-
-AddFunction("WebSocket.connect", function(URL)
-    if type(URL) ~= "string" then error("expected string at argument #1, got " .. type(URL), 2) end
-    local Self = {
-        Url       = URL,
-        _open     = true,
-        OnMessage = NewBindable(),
-        OnClose   = NewBindable(),
-    }
-
-    Self.Send = function(self, Message)
-    if type(Message) ~= "string" then error("expected string at argument #1, got " .. type(Message), 2) end
-        if not self._open then
-            warn("WebSocket is closed")
-            return
-        end
-    end
-
-    Self.Close = function(self)
-        if not self._open then return end
-        self._open = false
-        print("[WebSocket:Closed]", self.Url)
-        self.OnClose:Fire()
-    end
-
-    task.defer(function()
-        if Self._open then
-            Self.OnMessage:Fire("[connected] " .. URL)
-        end
-    end)
-
-    return Self
-end)
-
--- Actors
-
-local ActorThreadList, CommunicationChannels = {}, {}
+local ActorThreads, CommunicationChannels = {}, {}
 
 AddFunction("create_comm_channel", function()
     local ID      = math.random(1, 99999)
@@ -2840,8 +2721,8 @@ AddFunction("run_on_actor", function(Actor, ScriptSource, ...)
         if not Fn then error(Err, 2) end
         setfenv(Fn, getgenv())
         Fn(...)
-    end, ...)
-    ActorThreadList[#ActorThreadList + 1] = Thread
+    end)
+    ActorThreads[#ActorThreads + 1] = Thread
 end)
 
 AddFunction("getactors", function()
@@ -2854,79 +2735,18 @@ AddFunction("getactors", function()
     return Actors
 end)
 
-local LuaStates, LuaStateCache = {}, {}
-local GlobalLuaState, LuaStateID = nil, 0
-
-local function NewLuaState(IsActor)
-    LuaStateID += 1
-    local State = {
-        Id          = LuaStateID,
-        IsActorState = IsActor and true or false,
-        _actors     = {},
-        _scripts    = {},
-    }
-    State.GetActors = function(self) return self._actors end
-    State.Execute   = function(self, Code)
-        if typeof(Code) ~= "string" then error("expected string at argument #1, got " .. typeof(Code), 2) end
-        local Fn, Err = loadstring(Code)
-        if not Fn then error(Err, 2) end
-        return Fn()
-    end
-    LuaStates[#LuaStates + 1] = State
-    return State
-end
-
-local function GetGlobalState()
-    GlobalLuaState = GlobalLuaState or NewLuaState(false)
-    return GlobalLuaState
-end
-
-AddFunction("getgamestate", function()
-    return GetGlobalState()
-end)
-
-AddFunction("getactorstates", function()
-    return LuaStates
-end)
-
-AddFunction("getluastate", function(Object)
-    if not Object then return GetGlobalState() end
-    if typeof(Object) ~= "Instance" then error("expected Instance at argument #1, got " .. typeof(Object), 2) end
-    local Cached = LuaStateCache[Object]
-    if Cached then return Cached end
-    local State
-    if Object:IsA("Actor") then
-        State = NewLuaState(true)
-        State._actors[#State._actors + 1] = Object
-    elseif Object:IsA("BaseScript") then
-        local Actor = Object:FindFirstAncestorOfClass("Actor")
-        if Actor then
-            State = LuaStateCache[Actor] or NewLuaState(true)
-            LuaStateCache[Actor] = State
-            State._actors[#State._actors + 1] = Actor
-        else
-            State = GetGlobalState()
-        end
-        State._scripts[#State._scripts + 1] = Object
-    else
-        error("expected Actor or BaseScript", 2)
-    end
-    LuaStateCache[Object] = State
-    return State
-end)
-
 AddFunction("is_parallel", function()
     return getthreadidentity() >= 8
 end)
 
 AliasFunction({"isparallel"}, "is_parallel")
 
-local ActorAddedEvent = NewBindable()
-AddFunction("on_actor_added", ActorAddedEvent)
+local NewActor = NewBindable()
+AddFunction("on_actor_added", NewActor)
 
 game.DescendantAdded:Connect(function(Object)
     if Object:IsA("Actor") then
-        ActorAddedEvent:Fire(Object)
+        NewActor:Fire(Object)
     end
 end)
 

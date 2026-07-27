@@ -20,12 +20,13 @@ local lp = game:GetService("Players").LocalPlayer
 local question = lp:WaitForChild("PlayerGui"):WaitForChild("Main"):WaitForChild("Question").Bg.QuestionTxt
 
 local function solve()
+	local Delay = getgenv().timedelay
     if question.Visible then
         local qText = question.Text
         local answer = longest(qText)
 
         if answer then
-            task.delay(getgenv().delay or 10, function()
+            task.delay(Delay or 10, function()
                 rep.Common.Library.Network.RemoteFunction:InvokeServer("S_System_NewSubmitAnswer", { answer })
                 print("Answered:", qText, "->", answer)
             end)

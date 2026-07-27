@@ -18,28 +18,11 @@ local ServiceMap = {
     MarketplaceService = "MarketplaceService",
     TeleportService = "TeleportService",
     HttpService = "HttpService",
-    GuiService = "GuiService",
-    StarterGui = "StarterGui",
     Teams = "Teams",
-    SoundService = "SoundService",
     CollectionService = "CollectionService",
     TweenService = "TweenService",
     Stats = "Stats",
-    Debris = "Debris",
-    PathfindingService = "PathfindingService",
-    InsertService = "InsertService",
     ContextActionService = "ContextActionService",
-    PhysicsService = "PhysicsService",
-    ProximityPromptService = "ProximityPromptService",
-    GroupService = "GroupService",
-    LocalizationService = "LocalizationService",
-    Chat = "Chat",
-    StarterPack = "StarterPack",
-    StarterPlayer = "StarterPlayer",
-    MaterialService = "MaterialService",
-    AssetService = "AssetService",
-    ScriptContext = "ScriptContext",
-    ContentProvider = "ContentProvider"
 }
 
 local CloneRef = (typeof(cloneref) == "function" and cloneref)

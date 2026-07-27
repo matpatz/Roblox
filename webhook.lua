@@ -4,7 +4,7 @@ local Services = loadstring(game:HttpGet(
 
 local PlaceId = game.PlaceId
 local Script = shared.script
-local Game = Services["MarketplaceService"]:GetProductInfo(place).Name
+local Game = Services["MarketplaceService"]:GetProductInfo(PlaceId).Name
 
 local Player = Services["Players"].LocalPlayer
 

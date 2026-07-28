@@ -4,7 +4,7 @@ import { handleApiError } from './errors.js';
 export function jsonResponse(res, req, status, data) {
   setCorsHeaders(res, req.headers?.origin);
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
+  res.setHeader('Cache-Control', 'no-store');
   return res.status(status).json(data);
 }
 

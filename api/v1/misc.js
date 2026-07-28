@@ -38,4 +38,5 @@ export default async function handler_fn(req, res) {
   return paginatedResponse(res, req, { data: data || [], total: count || 0, page, limit });
 }
 
+export default (req, res) => handler(req, res, handler_fn);
 export { handler_fn as handler };

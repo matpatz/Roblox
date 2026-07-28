@@ -43,4 +43,5 @@ export default async function handler_fn(req, res) {
   return successResponse(res, req, { id: data.id }, 201);
 }
 
+export default (req, res) => handler(req, res, handler_fn);
 export { handler_fn as handler };

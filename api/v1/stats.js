@@ -106,4 +106,5 @@ export default async function handler_fn(req, res) {
   });
 }
 
+export default (req, res) => handler(req, res, handler_fn);
 export { handler_fn as handler };

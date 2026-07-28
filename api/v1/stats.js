@@ -2,12 +2,14 @@ import { handler, successResponse } from '../_lib/response.js';
 import { handleOptions } from '../_lib/cors.js';
 import { getSupabase } from '../_lib/supabase.js';
 import { ApiError } from '../_lib/errors.js';
+import { rateLimit } from '../_lib/validate.js';
 
 export const config = { runtime: 'nodejs' };
 
 export default async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'GET') throw new ApiError(405, 'Method not allowed');
+  await rateLimit(req.headers['x-forwarded-for'] || 'unknown', { limit: 20, window: 60 });
 
   const supabase = getSupabase();
   const guildId = '1355796182143598804';

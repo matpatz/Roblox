@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
+    "@vercel/kv": "^3.0.0",
     "sharp": "^0.33.0"
   }
 }

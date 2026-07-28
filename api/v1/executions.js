@@ -2,7 +2,7 @@ import { handler, successResponse } from '../_lib/response.js';
 import { handleOptions } from '../_lib/cors.js';
 import { getSupabase } from '../_lib/supabase.js';
 import { ApiError } from '../_lib/errors.js';
-import { validateString } from '../_lib/validate.js';
+import { validateString, rateLimit } from '../_lib/validate.js';
 import { createHash } from 'crypto';
 
 export const config = { runtime: 'nodejs' };
@@ -10,6 +10,7 @@ export const config = { runtime: 'nodejs' };
 export default async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
+  await rateLimit(req.headers['x-forwarded-for'] || 'unknown', { limit: 20, window: 60 });
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   if (!body || typeof body !== 'object') throw new ApiError(400, 'Invalid request');

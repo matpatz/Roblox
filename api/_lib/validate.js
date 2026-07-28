@@ -1,17 +1,15 @@
+import { kv } from '@vercel/kv';
 import { ApiError } from './errors.js';
 
-const hits = new Map();
+export async function rateLimit(ip, { limit = 10, window = 60 } = {}) {
+  const bucket = Math.floor(Date.now() / (window * 1000));
+  const key = `rl:${ip}:${bucket}`;
 
-export function rateLimit(ip, { limit = 10, window = 60000 } = {}) {
-  const now = Date.now();
-  const entry = hits.get(ip);
-  if (!entry || now - entry.start > window) {
-    hits.set(ip, { start: now, count: 1 });
-    return;
+  const count = await kv.incr(key);
+  if (count === 1) {
+    await kv.expire(key, window);
   }
-  entry.count++;
-  if (entry.count > limit) throw new ApiError(429, 'Too many requests');
-  if (hits.size > 10000) hits.clear();
+  if (count > limit) throw new ApiError(429, 'Too many requests');
 }
 
 export function requireFields(body, fields) {

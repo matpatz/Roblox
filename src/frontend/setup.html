@@ -41,17 +41,8 @@ body{display:flex;align-items:center;justify-content:center;min-height:100vh;mar
   </div>
 
   <div id="s2" class="step">
-    <h1>Step 2: Seed Data</h1>
-    <p class="sub">Enter your SETUP_KEY to populate tables.</p>
-    <input type="password" id="skey" placeholder="SETUP_KEY" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #2a2a3a;background:#0a0a12;color:#e2e2f0;font-size:13px;box-sizing:border-box;margin-bottom:14px;font-family:'Inter',sans-serif">
-    <button class="btn" id="seedBtn" onclick="seed()">Seed Data</button>
-    <div id="log"></div>
-  </div>
-
-  <div id="s3" class="step">
     <h1>All Done!</h1>
     <p class="sub">Your API is ready.</p>
-    <div id="log2" style="text-align:left;font-size:13px;color:#4ecdc4;background:#0a0a12;border-radius:8px;padding:14px;margin-bottom:16px"></div>
     <a href="/stats" class="btn" style="display:block;text-decoration:none;text-align:center">View Stats</a>
   </div>
 
@@ -127,7 +118,24 @@ BEGIN
     total_executions = totals.total_executions + 1,
     updated_at = NOW();
 END;
-$$ LANGUAGE plpgsql;`;
+$$ LANGUAGE plpgsql;
+
+-- RLS
+ALTER TABLE totals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE identifiers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scripts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE games ENABLE ROW LEVEL SECURITY;
+ALTER TABLE misc ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public read" ON totals FOR SELECT USING (true);
+CREATE POLICY "Public read" ON identifiers FOR SELECT USING (true);
+CREATE POLICY "Public read" ON scripts FOR SELECT USING (true);
+CREATE POLICY "Public read" ON games FOR SELECT USING (true);
+CREATE POLICY "Public read" ON misc FOR SELECT USING (true);
+
+CREATE POLICY "Insert" ON scripts FOR INSERT WITH CHECK (true);
+CREATE POLICY "Insert" ON games FOR INSERT WITH CHECK (true);
+CREATE POLICY "Insert" ON misc FOR INSERT WITH CHECK (true);`;
 
 document.getElementById('sqlCode').textContent = SQL;
 
@@ -141,42 +149,6 @@ function copySql() {
     var b = document.querySelector('.copy-btn');
     b.textContent = 'Copied!';
     setTimeout(function(){b.textContent='Copy SQL'},1500);
-  });
-}
-
-function seed() {
-  var btn = document.getElementById('seedBtn');
-  var log = document.getElementById('log');
-  var skey = document.getElementById('skey').value.trim();
-  if (!skey) { alert('Enter your SETUP_KEY'); return; }
-  btn.disabled = true;
-  btn.textContent = 'Seeding...';
-  log.style.display = 'block';
-  log.className = '';
-  log.textContent = 'Seeding data...';
-
-  fetch('/api/v1/seed', { method: 'POST', headers: { 'X-Setup-Key': skey } })
-  .then(function(r){return r.json()})
-  .then(function(d){
-    if (d.error) {
-      log.className = 'err';
-      log.textContent = 'Error: ' + d.error.message;
-      btn.disabled = false;
-      btn.textContent = 'Retry Seed';
-    } else {
-      log.className = 'ok';
-      var r = d.data;
-      log.textContent = 'Scripts: ' + r.scripts + '\nGames: ' + r.games + '\nMisc: ' + r.misc;
-      document.getElementById('log2').innerHTML =
-        '<b>Scripts:</b> ' + r.scripts + '<br><b>Games:</b> ' + r.games + '<br><b>Misc:</b> ' + r.misc;
-      setTimeout(function(){go(3)}, 800);
-    }
-  })
-  .catch(function(e){
-    log.className='err';
-    log.textContent='Failed: '+e.message;
-    btn.disabled=false;
-    btn.textContent='Retry Seed';
   });
 }
 </script>

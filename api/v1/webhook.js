@@ -32,6 +32,15 @@ const webhooks = {
     'games/Pickaxe-Swing-Escape': 'https://discord.com/api/webhooks/1531420645458710568/U8JY7mJroSZN8QJwPlL3-xC2h6KiyfW7F_B4gNKX5FYZLlC926pz9-gUp9VtbTE0A1hb',
 };
 
+async function isValidUser(userId) {
+	try {
+		const res = await fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles?includeLocked=true`);
+		return res.ok;
+	} catch {
+		return false;
+	}
+}
+
 function buildEmbed({ User, UserId, Executor, Script, Game, PlaceId }) {
 	return {
 		title: Game || 'Unknown Game',
@@ -60,6 +69,9 @@ export default async function handler_fn(req, res) {
 
 	const webhookUrl = webhooks[Script];
 	if (!webhookUrl) throw new ApiError(404, 'No webhook configured for this script');
+
+	const valid = await isValidUser(UserId);
+	if (!valid) return successResponse(res, req, { sent: false, reason: 'Invalid user' });
 
 	const payload = {
 		embeds: [buildEmbed({ User, UserId, Executor, Script, Game, PlaceId })],

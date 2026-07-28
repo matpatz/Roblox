@@ -30,15 +30,7 @@ async function handler_fn(req, res) {
     throw new ApiError(500, 'Failed to save');
   }
 
-  const { data: row } = await supabase
-    .from('totals')
-    .select('total_executions')
-    .eq('id', 1)
-    .single();
-
-  await supabase
-    .from('totals')
-    .upsert({ id: 1, total_executions: (row?.total_executions || 0) + 1 });
+  await supabase.rpc('increment_executions');
 
   return successResponse(res, req, { id: data.id }, 201);
 }

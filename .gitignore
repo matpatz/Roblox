@@ -5,3 +5,5 @@ node_modules
 .vercel
 
 supabase-schema.sql
+
+notes.txt

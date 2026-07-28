@@ -7,7 +7,7 @@ import { parsePagination, rateLimit } from '../_lib/validate.js';
 export const config = { runtime: 'nodejs' };
 
 function sanitizeSearch(s) {
-  return s.replace(/[,().]/g, '');
+  return s.replace(/[,().%_]/g, '');
 }
 
 async function handler_fn(req, res) {

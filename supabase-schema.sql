@@ -88,6 +88,4 @@ CREATE POLICY "Public read" ON scripts FOR SELECT USING (true);
 CREATE POLICY "Public read" ON games FOR SELECT USING (true);
 CREATE POLICY "Public read" ON misc FOR SELECT USING (true);
 
-CREATE POLICY "Insert" ON scripts FOR INSERT WITH CHECK (true);
-CREATE POLICY "Insert" ON games FOR INSERT WITH CHECK (true);
-CREATE POLICY "Insert" ON misc FOR INSERT WITH CHECK (true);
+-- Inserts are handled server-side via service role key (bypasses RLS)

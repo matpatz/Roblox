@@ -7,7 +7,7 @@ import { createHash } from 'crypto';
 
 export const config = { runtime: 'nodejs' };
 
-export default async function handler_fn(req, res) {
+async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
   await rateLimit(req.headers['x-forwarded-for'] || 'unknown', { limit: 20, window: 60 });

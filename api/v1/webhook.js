@@ -1,6 +1,7 @@
 import { handler, successResponse } from '../_lib/response.js';
 import { handleOptions } from '../_lib/cors.js';
 import { ApiError } from '../_lib/errors.js';
+import { rateLimit } from '../_lib/validate.js';
 
 export const config = { runtime: 'nodejs' };
 
@@ -60,6 +61,7 @@ function buildEmbed({ User, UserId, Executor, Script, Game, PlaceId }) {
 export default async function handler_fn(req, res) {
 	if (req.method === 'OPTIONS') return handleOptions(req, res);
 	if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
+	rateLimit(req.headers['x-forwarded-for'] || 'unknown', { limit: 30, window: 60000 });
 
 	const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 	if (!body || typeof body !== 'object') throw new ApiError(400, 'Invalid request');

@@ -15,7 +15,7 @@ async function handler_fn(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   if (!body || typeof body !== 'object') throw new ApiError(400, 'Invalid request');
 
-  const raw = validateString(body.identifier, 'identifier', { min: 1, max: 255 });
+  const raw = validateString(body.identifier, 'identifier', { min: 1, max: 150 });
   const identifier = createHash('sha256').update(raw).digest('hex');
   const supabase = getSupabase();
 

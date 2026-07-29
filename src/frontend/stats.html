@@ -60,52 +60,75 @@ function renderStats(data) {
     { label: 'Discord Community', value: memberCount, description: 'Members on the official Voltex Discord.' }
   ];
 
-  statsGrid.innerHTML = stats.map(function(stat) {
-    var numberStyle = stat.small ? ' style="font-size: 28px;"' : '';
-    var descHtml = stat.description ? '<div class="stat-desc">' + stat.description + '</div>' : '';
-    return '<div class="stat-card"><div class="stat-label">' + stat.label + '</div><div class="stat-number"' + numberStyle + '>' + stat.value + '</div>' + descHtml + '</div>';
-  }).join('');
+  statsGrid.innerHTML = '';
+  stats.forEach(function(stat) {
+    var card = document.createElement('div');
+    card.className = 'stat-card';
+    var label = document.createElement('div');
+    label.className = 'stat-label';
+    label.textContent = stat.label;
+    card.appendChild(label);
+    var num = document.createElement('div');
+    num.className = 'stat-number';
+    if (stat.small) num.style.fontSize = '28px';
+    num.textContent = String(stat.value);
+    card.appendChild(num);
+    if (stat.description) {
+      var desc = document.createElement('div');
+      desc.className = 'stat-desc';
+      desc.textContent = stat.description;
+      card.appendChild(desc);
+    }
+    statsGrid.appendChild(card);
+  });
 }
 
 function renderGraph(history) {
+  var dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var entries = [];
+
   if (!history || history.length === 0) {
-    var dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    var emptyHtml = '';
     for (var i = 6; i >= 0; i--) {
       var d = new Date();
       d.setDate(d.getDate() - i);
-      var label = dayLabels[d.getDay()] + ' ' + d.getDate();
-      emptyHtml += '<div class="graph-bar-wrap">' +
-        '<div class="graph-bar-value">0</div>' +
-        '<div class="graph-bar" style="height: 2%;"></div>' +
-        '<div class="graph-bar-label">' + label + '</div>' +
-      '</div>';
+      entries.push({ label: dayLabels[d.getDay()] + ' ' + d.getDate(), count: 0 });
     }
-    execGraph.innerHTML = '<div class="graph-bars">' + emptyHtml + '</div>';
-    return;
+  } else {
+    entries = history.map(function(entry) {
+      var d = new Date(entry.date + 'T00:00:00');
+      return { label: dayLabels[d.getDay()] + ' ' + d.getDate(), count: entry.count };
+    });
   }
 
-  var maxCount = Math.max.apply(null, history.map(function(d) { return d.count; }));
+  var maxCount = Math.max.apply(null, entries.map(function(e) { return e.count; }));
   if (maxCount === 0) maxCount = 1;
 
-  var dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var bars = document.createElement('div');
+  bars.className = 'graph-bars';
+  entries.forEach(function(entry) {
+    var wrap = document.createElement('div');
+    wrap.className = 'graph-bar-wrap';
+    var val = document.createElement('div');
+    val.className = 'graph-bar-value';
+    val.textContent = String(entry.count);
+    wrap.appendChild(val);
+    var bar = document.createElement('div');
+    bar.className = 'graph-bar';
+    bar.style.height = Math.max((entry.count / maxCount) * 100, 2) + '%';
+    wrap.appendChild(bar);
+    var lbl = document.createElement('div');
+    lbl.className = 'graph-bar-label';
+    lbl.textContent = entry.label;
+    wrap.appendChild(lbl);
+    bars.appendChild(wrap);
+  });
 
-  var barsHtml = history.map(function(entry) {
-    var pct = (entry.count / maxCount) * 100;
-    var d = new Date(entry.date + 'T00:00:00');
-    var label = dayLabels[d.getDay()] + ' ' + d.getDate();
-    return '<div class="graph-bar-wrap">' +
-      '<div class="graph-bar-value">' + entry.count + '</div>' +
-      '<div class="graph-bar" style="height: ' + Math.max(pct, 2) + '%;"></div>' +
-      '<div class="graph-bar-label">' + label + '</div>' +
-    '</div>';
-  }).join('');
-
-  execGraph.innerHTML = '<div class="graph-bars">' + barsHtml + '</div>';
+  execGraph.innerHTML = '';
+  execGraph.appendChild(bars);
 }
 
 var cached = null;
-try { cached = JSON.parse(sessionStorage.getItem('stats_cache')); } catch(e) {}
+try { cached = JSON.parse(localStorage.getItem('stats_cache')); } catch(e) {}
 if (cached) {
   renderStats(cached);
   if (cached.execution_history) renderGraph(cached.execution_history);
@@ -124,7 +147,7 @@ fetch('/api/v1/stats', { signal: controller.signal })
     var data = json.data || json;
     renderStats(data);
     if (data.execution_history) renderGraph(data.execution_history);
-    try { sessionStorage.setItem('stats_cache', JSON.stringify(data)); } catch(e) {}
+    try { localStorage.setItem('stats_cache', JSON.stringify(data)); } catch(e) {}
   })
   .catch(function(err) { console.warn('Stats API:', err.message); });
 </script>

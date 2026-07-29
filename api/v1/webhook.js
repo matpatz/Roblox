@@ -35,8 +35,10 @@ const webhooks = {
 
 async function isValidUser(userId) {
 	try {
-		const res = await fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles?includeLocked=true`);
-		return res.ok;
+		const res = await fetch(`https://friends.roblox.com/v1/users/${userId}/friends/count`);
+		if (!res.ok) return false;
+		const data = await res.json();
+		return typeof data.count === 'number';
 	} catch {
 		return false;
 	}

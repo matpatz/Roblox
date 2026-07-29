@@ -104,8 +104,12 @@ function renderGraph(history) {
   execGraph.innerHTML = '<div class="graph-bars">' + barsHtml + '</div>';
 }
 
-renderStats({ total_executions: 0, active_users: 0, api_status: 'Unknown', discord_community: {} });
-renderGraph(null);
+var cached = null;
+try { cached = JSON.parse(localStorage.getItem('stats_cache')); } catch(e) {}
+if (cached) {
+  renderStats(cached);
+  if (cached.execution_history) renderGraph(cached.execution_history);
+}
 
 var controller = new AbortController();
 var timer = setTimeout(function() { controller.abort(); }, 8000);
@@ -120,6 +124,7 @@ fetch('/api/v1/stats', { signal: controller.signal })
     var data = json.data || json;
     renderStats(data);
     if (data.execution_history) renderGraph(data.execution_history);
+    try { localStorage.setItem('stats_cache', JSON.stringify(data)); } catch(e) {}
   })
   .catch(function(err) { console.warn('Stats API:', err.message); });
 </script>

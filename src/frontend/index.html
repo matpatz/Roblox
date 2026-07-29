@@ -50,6 +50,7 @@ fetch('/api/v1/stats')
   .then(function(d) {
     var data = d.data || d;
     document.getElementById('execCount').textContent = data.executions_last_hour || 0;
+    try { localStorage.setItem('stats_cache', JSON.stringify(data)); } catch(e) {}
   })
   .catch(function() {});
 </script>

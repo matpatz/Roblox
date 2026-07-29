@@ -10,7 +10,7 @@ export const config = { runtime: 'nodejs' };
 async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
-  await rateLimit(req.headers['x-forwarded-for'] || 'unknown', { limit: 20, window: 60 });
+  await rateLimit(req, { limit: 20, window: 60 });
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   if (!body || typeof body !== 'object') throw new ApiError(400, 'Invalid request');

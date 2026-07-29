@@ -1,7 +1,26 @@
 import { kv } from '@vercel/kv';
 import { ApiError } from './errors.js';
 
-export async function rateLimit(ip, { limit = 10, window = 60 } = {}) {
+const IP_RE = /^\d{1,3}(?:\.\d{1,3}){3}$/;
+
+function extractIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  const raw = Array.isArray(forwarded) ? forwarded[0] : (forwarded || '');
+  const leftmost = raw.split(',')[0].trim();
+  if (leftmost && IP_RE.test(leftmost)) return leftmost;
+
+  const realIp = req.headers['x-real-ip'];
+  if (realIp && IP_RE.test(realIp)) return realIp;
+
+  const remote = req.socket?.remoteAddress || '';
+  const cleaned = remote.replace(/^::ffff:/, '');
+  if (cleaned && IP_RE.test(cleaned)) return cleaned;
+
+  return 'unknown';
+}
+
+export async function rateLimit(req, { limit = 10, window = 60 } = {}) {
+  const ip = extractIp(req);
   const bucket = Math.floor(Date.now() / (window * 1000));
   const key = `rl:${ip}:${bucket}`;
 

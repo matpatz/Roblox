@@ -9,7 +9,7 @@ export const config = { runtime: 'nodejs' };
 async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'GET') throw new ApiError(405, 'Method not allowed');
-  await rateLimit(req.headers['x-forwarded-for'] || 'unknown', { limit: 20, window: 60 });
+  await rateLimit(req, { limit: 20, window: 60 });
 
   const supabase = getSupabase();
   const guildId = '1355796182143598804';

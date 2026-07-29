@@ -82,10 +82,29 @@ ALTER TABLE scripts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE games ENABLE ROW LEVEL SECURITY;
 ALTER TABLE misc ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Public read" ON totals FOR SELECT USING (true);
-CREATE POLICY "Public read" ON identifiers FOR SELECT USING (true);
-CREATE POLICY "Public read" ON scripts FOR SELECT USING (true);
-CREATE POLICY "Public read" ON games FOR SELECT USING (true);
-CREATE POLICY "Public read" ON misc FOR SELECT USING (true);
+DO $$ BEGIN
+  CREATE POLICY "Public read" ON totals FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  CREATE POLICY "Public read" ON identifiers FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  CREATE POLICY "Public read" ON scripts FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  CREATE POLICY "Public read" ON games FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  CREATE POLICY "Public read" ON misc FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DROP POLICY IF EXISTS "Insert" ON scripts;
+DROP POLICY IF EXISTS "Insert" ON games;
+DROP POLICY IF EXISTS "Insert" ON misc;
 
 -- Inserts are handled server-side via service role key (bypasses RLS)

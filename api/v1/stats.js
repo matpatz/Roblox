@@ -3,107 +3,85 @@ import { handleOptions } from '../_lib/cors.js';
 import { getSupabase } from '../_lib/supabase.js';
 import { ApiError } from '../_lib/errors.js';
 import { rateLimit } from '../_lib/validate.js';
+import { kv } from '@vercel/kv';
 
 export const config = { runtime: 'nodejs' };
+
+const CACHE_KEY = 'stats:cache';
+const CACHE_TTL = 60;
 
 async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'GET') throw new ApiError(405, 'Method not allowed');
   await rateLimit(req, { limit: 20, window: 60 });
 
+  const cached = await kv.get(CACHE_KEY);
+  if (cached) return successResponse(res, req, cached);
+
   const supabase = getSupabase();
   const guildId = '1355796182143598804';
 
-  let discordCommunity = { presence_count: 0, member_count: 0 };
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    const response = await fetch(
-      `https://discord.com/api/v10/guilds/${guildId}?with_counts=true`,
-      {
-        signal: controller.signal,
-        headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` }
-      }
-    );
-    clearTimeout(timeout);
-    if (response.ok) {
-      const data = await response.json();
-      discordCommunity = {
-        presence_count: data.approximate_presence_count || 0,
-        member_count: data.approximate_member_count || 0
-      };
-    }
-  } catch {}
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const oneHourAgo = new Date();
+  oneHourAgo.setHours(oneHourAgo.getHours() - 1);
 
-  let totalExecutions = 0;
-  try {
-    const { data } = await supabase
-      .from('totals')
-      .select('total_executions')
-      .eq('id', 1)
-      .single();
-    totalExecutions = data?.total_executions || 0;
-  } catch {}
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
 
-  let activeUsers = 0;
-  try {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const { data } = await supabase
-      .from('identifiers')
-      .select('identifier')
-      .gte('added_at', thirtyDaysAgo.toISOString())
-      .range(0, 99999);
-    if (data) {
-      activeUsers = new Set(data.map(u => u.identifier)).size;
-    }
-  } catch {}
+  const [discordResult, totalsResult, activeResult, hourlyResult, historyResult] = await Promise.allSettled([
+    fetch(`https://discord.com/api/v10/guilds/${guildId}?with_counts=true`, {
+      headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` }
+    }).then(r => r.ok ? r.json() : null),
+    supabase.from('totals').select('total_executions').eq('id', 1).single(),
+    supabase.from('identifiers').select('identifier', { count: 'exact' })
+      .gte('added_at', thirtyDaysAgo.toISOString()),
+    supabase.from('identifiers').select('*', { count: 'exact', head: true })
+      .gte('added_at', oneHourAgo.toISOString()),
+    supabase.from('identifiers').select('added_at')
+      .gte('added_at', sevenDaysAgo.toISOString())
+  ]);
 
-  let executionsLastHour = 0;
-  try {
-    const oneHourAgo = new Date();
-    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
-    const { count } = await supabase
-      .from('identifiers')
-      .select('*', { count: 'exact', head: true })
-      .gte('added_at', oneHourAgo.toISOString());
-    executionsLastHour = count || 0;
-  } catch {}
+  const discordCommunity = discordResult.status === 'fulfilled' && discordResult.value
+    ? { presence_count: discordResult.value.approximate_presence_count || 0, member_count: discordResult.value.approximate_member_count || 0 }
+    : { presence_count: 0, member_count: 0 };
+
+  const totalExecutions = totalsResult.status === 'fulfilled' ? totalsResult.value?.data?.total_executions || 0 : 0;
+
+  const activeUsers = activeResult.status === 'fulfilled' && activeResult.value?.data
+    ? new Set(activeResult.value.data.map(u => u.identifier)).size
+    : 0;
+
+  const executionsLastHour = hourlyResult.status === 'fulfilled' ? hourlyResult.value?.count || 0 : 0;
 
   let executionHistory = [];
-  try {
-    const days = [];
+  if (historyResult.status === 'fulfilled' && historyResult.value?.data) {
+    const counts = {};
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      const next = new Date(d);
-      next.setDate(next.getDate() + 1);
-      days.push({ date: key, start: d.toISOString(), end: next.toISOString() });
+      counts[d.toISOString().slice(0, 10)] = 0;
     }
-    const results = await Promise.all(
-      days.map(day =>
-        supabase
-          .from('identifiers')
-          .select('*', { count: 'exact', head: true })
-          .gte('added_at', day.start)
-          .lt('added_at', day.end)
-      )
-    );
-    executionHistory = days.map((day, i) => ({
-      date: day.date,
-      count: results[i].count || 0
-    }));
-  } catch {}
+    for (const row of historyResult.value.data) {
+      const day = row.added_at.slice(0, 10);
+      if (day in counts) counts[day]++;
+    }
+    executionHistory = Object.entries(counts).map(([date, count]) => ({ date, count }));
+  }
 
-  return successResponse(res, req, {
+  const payload = {
     total_executions: totalExecutions,
     active_users: activeUsers,
     executions_last_hour: executionsLastHour,
     api_status: 'Operational',
     discord_community: discordCommunity,
     execution_history: executionHistory
-  });
+  };
+
+  await kv.set(CACHE_KEY, payload, { ex: CACHE_TTL });
+
+  return successResponse(res, req, payload);
 }
 
 export default (req, res) => handler(req, res, handler_fn);

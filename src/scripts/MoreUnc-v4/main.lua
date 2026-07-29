@@ -1,38 +1,19 @@
 local StartTime = tick()
 
-local CCClosures, CustomClosures, DebugOverride =
-        {}, {}, {}
+local CustomClosures = {}
+local fake_newcclosure = function(Function, Name)
+    CustomClosures[Function] = true
 
-local MakeCClosure
-do
-        -- this is not a C closure btw
-    MakeCClosure = function(Func)
-        local Wrapper = function(...)
-            local Args = table.pack(...)
-            local Thread = coroutine.create(function()
-                return Func(table.unpack(Args, 1, Args.n))
-            end)
-            local Ok, Result = coroutine.resume(Thread)
-            if not Ok then
-                error(Result, 2)
-            end
-            return Result
-        end
-        CCClosures[Wrapper] = true
-        CustomClosures[Func] = true
-        DebugOverride[Wrapper] = { source = "[C]", short_src = "[C]" }
-        return Wrapper
-    end
-
-    MakeCClosure = newcclosure and newcclosure or MakeCClosure
+    return Function
 end
+newcclosure = newcclosure and newcclosure or fake_newcclosure
 
 local Functions = {}
 local AddFunction = function(Name, Func)
     if typeof(Func) ~= "function" then
         Functions[Name] = Func
     else
-        Functions[Name] = MakeCClosure(Func)
+        Functions[Name] = newcclosure(Func)
     end
 end
 
@@ -55,20 +36,20 @@ local IndexFunction = function(Name)
 end
 
 -- mega op undetected 100%%%
-local function MakeCloneRef(Object)
+local function cloneref(Object)
     if not setmetatable then
         return Object
     end
     local Proxy = {}
     return setmetatable(Proxy, {
-        __index    = Object,
+        __index = Object,
         __newindex = function(_, Key, Value) Object[Key] = Value end,
         __tostring = function() return tostring(Object) end,
-        __eq       = function() return false end,
+        __eq = function() return false end,
     })
 end
 
-local cloneref = cloneref and cloneref or MakeCloneRef
+local cloneref = cloneref and cloneref or cloneref
 
 local Services = {
     CollectionService    = cloneref(game:GetService("CollectionService")),
@@ -77,7 +58,7 @@ local Services = {
     UGCValidationService = cloneref(game:GetService("UGCValidationService")),
     RbxAnalyticsService  = cloneref(game:GetService("RbxAnalyticsService")),
     ReflectionService    = cloneref(game:GetService("ReflectionService")),
-    CoreGui              = gethui and gethui() or cloneref(game:GetService("CoreGui")),
+    CoreGui              = gethui and gethui() or cloneref(game:GetService("CoreGui")) or game.Players,LocalPlayer,PlayerGui,
     ReplicatedStorage    = cloneref(game:GetService("ReplicatedStorage")),
     Stats                = cloneref(game:GetService("Stats")),
     CorePackages         = cloneref(game:GetService("CorePackages")),
@@ -86,104 +67,6 @@ local Services = {
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
-
--- Terminal (WebSocket-backed PowerShell/CMD bridge)
-
-local IsTerminalRunning = false
-local PsSocket, CmdSocket
-
-AddFunction("setup", function()
-    IsTerminalRunning = true
-    PsSocket  = WebSocket.connect("ws://localhost:8080")
-    CmdSocket = WebSocket.connect("ws://localhost:8081")
-    PsSocket.OnMessage:Connect(function(Msg) print("[PS]", Msg) end)
-    CmdSocket.OnMessage:Connect(function(Msg) print("[CMD]", Msg) end)
-end)
-
-local AllowTerminal = function()
-    return IsTerminalRunning
-end
-
-AddFunction("powerexec", function(Command)
-    if not AllowTerminal() then return end
-    PsSocket:Send(Command)
-end)
-
-AddFunction("termexec", function(Command)
-    if not AllowTerminal() then return end
-    PsSocket:Send(Command)
-end)
-
-AddFunction("cpexec", function(Command)
-    if not AllowTerminal() then return end
-    CmdSocket:Send(Command)
-end)
-
---[[
-AddFunction("getenv", function(Var)
-    if not AllowTerminal() then return nil end
-    local Result, Done = nil, false
-    local Conn
-    Conn = PsSocket.OnMessage:Connect(function(Msg)
-        Conn:Disconnect()
-        Result = Msg:gsub("%s+$", "")
-        Done = true
-    end)
-    PsSocket:Send(string.format("[System.Environment]::GetEnvironmentVariable('%s')", Var))
-    repeat task.wait() until Done
-    return Result
-end)
-]]
-
-AddFunction("downloadLune", function()
-    local Steps = {
-        "irm https://github.com/rojo-rbx/rokit/releases/latest/download/rokit-windows.exe -OutFile rokit.exe",
-        ".\\rokit.exe self-install",
-        "rokit add --global lune-org/lune",
-        "lune --version",
-    }
-    local Index = 1
-    PsSocket.OnMessage:Connect(function()
-        Index += 1
-        if Steps[Index] then
-            PsSocket:Send(Steps[Index])
-        end
-    end)
-    PsSocket:Send(Steps[1])
-end)
-
-AddFunction("islune", function()
-    if not AllowTerminal() then return false end
-    local Result, Done = false, false
-    local Conn
-    Conn = PsSocket.OnMessage:Connect(function(Msg)
-        Conn:Disconnect()
-        Result = Msg ~= nil and Msg:gsub("%s", "") ~= ""
-        Done = true
-    end)
-    PsSocket:Send("Get-Command lune -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source")
-    repeat task.wait() until Done
-    return Result
-end)
-
-local RandomStringLib = loadstring(game:HttpGet("https://github.com/daily3014/rbx-cryptography/raw/main/src/Utilities/RandomString.luau"))()
-local RandomString = function(Length)
-    if Length ~= nil and type(Length) ~= "number" then
-        error("expected number or nil at argument #1, got " .. type(Length), 2)
-    end
-    return RandomStringLib(Length or 16, false)
-end
-
-AddFunction("lune", function(Code)
-    if type(Code) ~= "string" then
-        error("expected string at argument #1, got " .. type(Code), 2)
-    end
-    local Filename = RandomString(6)
-    PsSocket:Send(string.format("Set-Content -Path '%s.luau' -Value '%s'", Filename, Code:gsub("'", "''")))
-    task.delay(0.5, function()
-        PsSocket:Send(string.format("lune run %s.luau", Filename))
-    end)
-end)
 
 -- Cache
 
@@ -246,12 +129,21 @@ AddFunction("setstackhidden", function(Func, Hidden)
     StackHidden[Func] = Hidden
 end)
 
-local HookedFunctions = {}
-for _, Value in next, getgenv() do
-    if typeof(Value) == "function" then
-        HookedFunctions[Value] = true
-    end
+-- setstackhidden is SUPPOSED to do a lot more than this
+if hookfunction then
+    local OldTraceback
+    OldTraceback = hookfunction(debug.traceback, function(...)
+        local Tb = OldTraceback(...)
+        for Func, Hidden in next, StackHidden do
+            if Hidden then
+                Tb = Tb:gsub(".-" .. tostring(Func) .. ".-\n", "")
+            end
+        end
+        return Tb
+    end)
 end
+
+local HookedFunctions = {}
 
 AddFunction("isfunctionhooked", function(Func)
     if typeof(Func) ~= "function" then error("expected function at argument #1, got " .. typeof(Func), 2) end
@@ -270,28 +162,15 @@ AddFunction("hookfunction", function(Func, Hook)
     return Hooked, Old
 end)
 
-AddFunction("hiddenhook", function(Func, Hook)
-    Functions["hookfunction"](Func, Hook)
-    HookedFunctions[Func] = false
-end)
-
-AddFunction("secrethook", function(Func, Hook)
-    Functions["hiddenhook"](Func, Hook)
-end)
-
-AddFunction("restorefunction", function(Func, Hook)
+AddFunction("restorefunction", function(Func)
     if typeof(Func) ~= "function" then error("expected function at argument #1, got " .. typeof(Func), 2) end
-        if typeof(Hook) ~= "function" then error("expected function at argument #1, got " .. typeof(Hook), 2) end
+
     HookedFunctions[Func] = nil
-    return Hook
 end)
 
-AliasFunction({"getoriginalfunction"}, function(Func, Hook)
-    return restorefunction(Func, Hook)
-end)
-
-AddFunction("securefunction", function(Func)
+AddFunction("securefunction", function(Function)
     if typeof(Func) ~= "function" then error("expected function at argument #1, got " .. typeof(Func), 2) end
+    setstackhidden(Function, true)
 end)
 
 AddFunction("iscclosure", function(Func)
@@ -299,8 +178,13 @@ AddFunction("iscclosure", function(Func)
     return debug.info(Func, "s") == "[C]"
 end)
 
-AddFunction("newlclosure", function(Func)
-    return function() return Func() end
+AddFunction("newlclosure", function(Function)
+    CustomClosures[Function] = true
+    
+    local Result = function()
+        return Function()
+    end
+    return Result
 end)
 
 AddFunction("islclosure", function(Func)
@@ -311,24 +195,35 @@ end)
 AddFunction("isexecutorclosure", function(Func)
     if typeof(Func) ~= "function" then error("expected function at argument #1, got " .. typeof(Func), 2) end
     for _, Value in next, getgenv() do
-        if Value == Func then return true end
+        if Value == Func then
+            return true
+        end
     end
     return false
 end)
 
 AliasFunction({"checkclosure", "isourclosure"}, "isexecutorclosure")
 
-AddFunction("newcclosure", function(Func)
-    if typeof(Func) ~= "function" then error("expected function at argument #1, got " .. typeof(Func), 2) end
-    return MakeCClosure(Func)
+AddFunction("newcclosure", function(Function)
+    if typeof(Function) ~= "function" then error("expected function at argument #1, got " .. typeof(Function), 2) end
+    return newcclosure(Function)
 end)
 
-AddFunction("isnewcclosure", function(Func)
-        if typeof(Func) ~= "function" then error("expected function at argument #1, got " .. typeof(Func), 2) end
-    return CustomClosures[Func] == true
+-- would fail if not using the custom newcclosure, but that would never happen, probbaly
+AddFunction("isnewcclosure", function(Function)
+    if typeof(Function) ~= "function" then error("expected function at argument #1, got " .. typeof(Function), 2) end
+    return CustomClosures[Function] == true
 end)
 
 -- RConsole
+
+local RandomStringLib = loadstring(game:HttpGet("https://github.com/daily3014/rbx-cryptography/raw/main/src/Utilities/RandomString.luau"))()
+local RandomString = function(Length)
+    if Length ~= nil and type(Length) ~= "number" then
+        error("expected number or nil at argument #1, got " .. type(Length), 2)
+    end
+    return RandomStringLib(Length or 16, false)
+end
 
 local RConsoleGui = Instance.new("ScreenGui")
 RConsoleGui.Name = RandomString(6)
@@ -878,7 +773,6 @@ end
 DebugLib.setinfo = function(Func, Info)
     if typeof(Func) ~= "function" then error("expected function at argument #1, got " .. typeof(Func), 2) end
     if typeof(Info) ~= "table" then error("expected table at argument #2, got " .. typeof(Info), 2) end
-    DebugOverride[Func] = Info
 end
 
 DebugLib.getinfo = function(Target)
@@ -953,7 +847,9 @@ DebugLib.getcallstack = function()
     local Stack, Level = {}, 1
     while true do
         local Ok, Info = pcall(debug.getinfo, Level + 1)
-        if not Ok or not Info then break end
+        if not Ok or not Info then
+            break
+        end
         Stack[#Stack + 1] = {
             func   = Info.func,
             name   = Info.name,
@@ -963,19 +859,6 @@ DebugLib.getcallstack = function()
         Level += 1
     end
     return Stack
-end
-
-if hookfunction then
-    local OldTraceback
-    OldTraceback = hookfunction(debug.traceback, function(...)
-        local Tb = OldTraceback(...)
-        for Func, Hidden in next, StackHidden do
-            if Hidden then
-                Tb = Tb:gsub(".-" .. tostring(Func) .. ".-\n", "")
-            end
-        end
-        return Tb
-    end)
 end
 
 for Key, Value in next, DebugLib do
@@ -1382,20 +1265,7 @@ end)
 local ExecutorName = (identifyexecutor and select(1, identifyexecutor())) or "unknown"
 local WorkspaceRoot = ExecutorName .. "/workspace"
 
-local VirtualFiles, VirtualFolders = {}, {}
-
-local function NormalizePath(Path)
-    Path = tostring(Path or ""):gsub("\\", "/"):gsub("^/", "")
-    Path = Path:gsub("^%.%./", ""):gsub("/%.%./", "/")
-    if not Path:find(WorkspaceRoot, 1, true) then
-        Path = WorkspaceRoot .. "/" .. Path
-    end
-    return Path
-end
-
-local function ParentPath(Path)
-    return Path:match("(.+)/[^/]+$") or WorkspaceRoot
-end
+local Files, Folders = {}, {}
 
 AddFunction("writefile", function(Path, Data)
     if type(Path) ~= "string" then error("expected string at argument #1, got " .. type(Path), 2) end
@@ -1411,80 +1281,56 @@ end)
 AddFunction("appendfile", function(Path, Data)
     if type(Path) ~= "string" then error("expected string at argument #1, got " .. type(Path), 2) end
     if type(Data) ~= "string" then error("expected string at argument #2, got " .. type(Data), 2) end
-    Path = NormalizePath(Path)
-    VirtualFiles[Path] = (VirtualFiles[Path] or "") .. Data
-    VirtualFolders[ParentPath(Path)] = true
-    if AllowTerminal() then
-        PsSocket:Send(string.format("Add-Content -Path '%s' -Value '%s'", Path, Data:gsub("'", "''")))
-    end
+
+    Files[Path] = Data
 end)
 
 AddFunction("readfile", function(Path)
     if type(Path) ~= "string" then error("expected string at argument #1, got " .. type(Path), 2) end
-    Path = NormalizePath(Path)
-    if VirtualFiles[Path] then return VirtualFiles[Path] end
-    if AllowTerminal() then
-        PsSocket:Send(string.format("Get-Content -Path '%s' -Raw", Path))
+    local Data = Files[Path]
+
+    if not Data then
+        error("file does not exist")
     end
-    error("file does not exist in virtual fs: " .. Path, 2)
+    return Data
 end)
 
 AddFunction("isfile", function(Path)
     if type(Path) ~= "string" then error("expected string at argument #1, got " .. type(Path), 2) end
-    Path = NormalizePath(Path)
-    return VirtualFiles[Path] ~= nil
+    local Data = Files[Path]
+
+    return Data ~= nil
 end)
 
 AddFunction("makefolder", function(Path)
     if type(Path) ~= "string" then error("expected string at argument #1, got " .. type(Path), 2) end
-    Path = NormalizePath(Path)
-    VirtualFolders[Path] = true
-    if AllowTerminal() then
-        PsSocket:Send(string.format("New-Item -ItemType Directory -Force -Path '%s'", Path))
-    end
+    Folders[Path] = Path
 end)
 
 AddFunction("isfolder", function(Path)
     if type(Path) ~= "string" then error("expected string at argument #1, got " .. type(Path), 2) end
-    Path = NormalizePath(Path)
-    return VirtualFolders[Path] == true
+    return Folders[Path] ~= nil
 end)
 
 AddFunction("delfile", function(Path)
     if type(Path) ~= "string" then error("expected string at argument #1, got " .. type(Path), 2) end
-    Path = NormalizePath(Path)
-    if VirtualFiles[Path] == nil then error("file does not exist: " .. Path, 2) end
-    VirtualFiles[Path] = nil
-    if AllowTerminal() then
-        PsSocket:Send(string.format("Remove-Item -Path '%s' -Force", Path))
-    end
+    Files[Path] = nil
 end)
 
 AddFunction("delfolder", function(Path)
     if type(Path) ~= "string" then error("expected string at argument #1, got " .. type(Path), 2) end
-    Path = NormalizePath(Path)
-    for F in next, VirtualFiles do
-        if F:sub(1, #Path) == Path then VirtualFiles[F] = nil end
-    end
-    for F in next, VirtualFolders do
-        if F:sub(1, #Path) == Path then VirtualFolders[F] = nil end
-    end
-    if AllowTerminal() then
-        PsSocket:Send(string.format("Remove-Item -Path '%s' -Recurse -Force", Path))
-    end
+    Folders[Path] = nil
 end)
 
 AddFunction("listfiles", function(Path)
     if type(Path) ~= "string" then error("expected string at argument #1, got " .. type(Path), 2) end
     Path = NormalizePath(Path)
-    local Out = {}
-    for F in next, VirtualFiles do
-        if F:sub(1, #Path) == Path then Out[#Out + 1] = F end
+    local Result = {}
+
+    for File in next, VirtualFolders do
+        Result[#Result + 1] = File
     end
-    for F in next, VirtualFolders do
-        if F ~= "" and F:sub(1, #Path) == Path then Out[#Out + 1] = F end
-    end
-    return Out
+    return Result
 end)
 
 -- Input
@@ -1493,8 +1339,12 @@ local UserInputService = Services.UserInputService
 local VirtualInput = Services.VirtualInputManager
 
 local RobloxActive = false
-UserInputService.WindowFocused:Connect(function() RobloxActive = true end)
-UserInputService.WindowFocusReleased:Connect(function() RobloxActive = false end)
+UserInputService.WindowFocused:Connect(function()
+    RobloxActive = true
+end)
+UserInputService.WindowFocusReleased:Connect(function()
+    RobloxActive = false
+end)
 
 AddFunction("isrbxactive", function()
     return RobloxActive
@@ -2782,11 +2632,13 @@ for Name, Func in next, Functions do
         warn("skipping bad entry: " .. tostring(Name))
         continue
     end
-    if getgenv()[Name] then continue end
+    if getgenv()[Name] then
+        continue
+    end
     Added += 1
     getgenv().loaded[#getgenv().loaded + 1] = { name = Name, func = Func }
     print("Adding:", Name, tostring(Func) .. "\t #" .. Added)
-    getgenv()[Name] = Func
+    getgenv()[Name] = Func; HookedFunctions[Func] = true
 end
 
 print(string.format(

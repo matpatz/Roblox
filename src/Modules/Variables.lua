@@ -38,15 +38,7 @@ if getgenv().PlayerHelper then
     end)
 end
 
-return setmetatable(Services, {
-    __index = function(_, Key)
-        error(
-            ("[Services] Unknown index -> %s")
-                :format(tostring(Key)),
-            2
-        )
-    end
-})
+return Services
 
 -- Usage:
 

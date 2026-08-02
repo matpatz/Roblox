@@ -124,7 +124,7 @@ function ESP.new()
     local Connections = {}
 
     local FrameCount = 0
-    local UpdateInterval = 2
+    local UpdateInterval = 5
     local ViewportSize = Camera.ViewportSize
 
     local White = Color3.fromRGB(255, 255, 255)

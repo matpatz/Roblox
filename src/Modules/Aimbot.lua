@@ -79,3 +79,5 @@ function aimbot.GetClosest(PlayerRoot: BasePart, Range: number, Targets: { Playe
 
 	return Closest
 end
+
+return aimbot

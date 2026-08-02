@@ -9,34 +9,37 @@ end
 function aimbot.GetTargets(PlayerRoot: BasePart, Range: number, EntityList): { Player }
 	local Targets = {}
 
-	for _, Object in next, Players:GetPlayers() do
-        if Object == Player then
-            continue
-        end
-		local Character = Object.Character
-		if not Character then
-			continue
-		end
+	if #EntityList ~= 0 then
+		for _, Object in next, EntityList do
+			local TargetRoot = Object:WaitForChild("HumanoidRootPart", 2)
+			if not TargetRoot then
+				continue
+			end
 
-		local TargetRoot = Character:WaitForChild("HumanoidRootPart", 2)
-		if not TargetRoot then
-			continue
+			table.insert(Targets, Object)
 		end
+	else
+		for _, Object in next, Players:GetPlayers() do
+			if Object == Player then
+				continue
+			end
+			local Character = Object.Character
+			if not Character then
+				continue
+			end
 
-		if aimbot.Range(PlayerRoot, TargetRoot) > Range and Range or 200 then
-			continue
+			local TargetRoot = Character:WaitForChild("HumanoidRootPart", 2)
+			if not TargetRoot then
+				continue
+			end
+
+			if aimbot.Range(PlayerRoot, TargetRoot) > Range then
+				continue
+			end
+
+			table.insert(Targets, Object)
 		end
-
-		table.insert(Targets, Object)
 	end
-    for _, Object in next, EntityList or {} do
-        local TargetRoot = Object:WaitForChild("HumanoidRootPart", 2)
-        if not TargetRoot then
-            continue
-        end
-
-        table.insert(Targets, Object)
-    end
 
 	return Targets
 end

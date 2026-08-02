@@ -4,39 +4,21 @@ until game:IsLoaded()
 
 local Game = game
 
-local ServiceMap = {
-    Players = "Players",
-    Workspace = "Workspace",
-    RunService = "RunService",
-    CoreGui = "CoreGui",
-    UserInputService = "UserInputService",
-    ReplicatedStorage = "ReplicatedStorage",
-    Lighting = "Lighting",
-    VirtualInputManager = "VirtualInputManager",
-    TextChatService = "TextChatService",
-    RbxAnalyticsService = "RbxAnalyticsService",
-    MarketplaceService = "MarketplaceService",
-    TeleportService = "TeleportService",
-    HttpService = "HttpService",
-    Teams = "Teams",
-    CollectionService = "CollectionService",
-    TweenService = "TweenService",
-    Stats = "Stats",
-    ContextActionService = "ContextActionService",
-}
-
-local CloneRef = (typeof(cloneref) == "function" and cloneref)
-    or function(Object)
-        return Object
-    end
+local Cache = {}
 
 local Services = {}
+setmetatable(Services, {
+	__index = function(_, Index)
+		local Cached = Cache[Index]
+		if Cached then
+			return Cached
+		end
+		local Service = cloneref(game:GetService(Index))
+		Cache[Index] = Service
 
-for VariableName, ServiceName in next, ServiceMap do
-    Services[VariableName] = CloneRef(
-        Game:GetService(ServiceName)
-    )
-end
+		return Cache[Index]
+	end
+})
 
 if getgenv().PlayerHelper then
     local Player = Services.Players.LocalPlayer
@@ -56,15 +38,7 @@ if getgenv().PlayerHelper then
     end)
 end
 
-return setmetatable(Services, {
-    __index = function(_, Key)
-        error(
-            ("[Services] Unknown index -> %s")
-                :format(tostring(Key)),
-            2
-        )
-    end
-})
+return Services
 
 -- Usage:
 

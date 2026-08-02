@@ -1,27 +1,48 @@
 repeat
 	task.wait()
-until getrenv().require and game
+until
+	getrenv().require and game:GetService("Players").LocalPlayer ~= nil
 
-local players = game:GetService("Players")
-local lp = players.LocalPlayer
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
 local aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot.lua"))()
 
+repeat
+	task.wait()
+until
+	aimbot
+
+print(aimbot, "aimbotttt")
+
 local function GetTarget()
-	local Character = lp.Character
-	if not Character then
-		print("no Character")
-		return
+	if not LocalPlayer then
+		print("no lp", LocalPlayer)
+		return nil
 	end
-	local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart", 5)
+
+	local Character = LocalPlayer.Character
+	if not Character then
+		print("no character")
+		return nil
+	end
+	
+	local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
 	if not HumanoidRootPart then
 		print("no hrp")
-		return
+		return nil
 	end
 	
 	local Targets = aimbot.GetTargets(HumanoidRootPart, 250, {})
-	local ClosestTarget = aimbot.GetClosest(HumanoidRootPart, Targets)
-	
+	if not Targets or #Targets == 0 then
+		print("no targets??")
+		return nil
+	end
+	local ClosestTarget = aimbot.GetClosest(HumanoidRootPart, 250, Targets)
+	if not ClosestTarget then
+		print("no closest target")
+	end
+
 	return ClosestTarget
 end
 
@@ -36,10 +57,21 @@ old = hookfunction(getrenv().require, function(Module)
 	result = function(cfg,cf,ray,hit,pass)
 		local Target = GetTarget()
 		if not Target then
+			print("no target")
 			return old_projectile(cfg,cf,ray,hit,pass)
 		end
-		cf = CFrame.lookAt(cf.Position, Target.HumanoidRootPart.Position)
-
+		local Character = Target.Character
+		if not Character then
+			print("no target character")
+			return old_projectile(cfg,cf,ray,hit,pass)
+		end
+		local HumanoidRootPart = Target.Character:FindFirstChild("HumanoidRootPart")
+		if not HumanoidRootPart then
+			print("no target hrp")
+			return old_projectile(cfg,cf,ray,hit,pass)
+		end
+		
+		cf = CFrame.lookAt(cf.Position, HumanoidRootPart.Position)
 		return old_projectile(cfg,cf,ray,hit,pass)
 	end
 

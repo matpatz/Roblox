@@ -6,4 +6,8 @@ node_modules
 
 supabase-schema.sql
 
-notes.txt
+**/Scripts/
+development.lua
+tests
+
+TODO

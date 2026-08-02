@@ -60,3 +60,22 @@ function aimbot.Raycast(Origin: Vector3, Target: Model): Vector3?
 
 	return Origin + Direction
 end
+
+function aimbot.GetClosest(PlayerRoot: BasePart, Range: number, Targets: { Player }): Player?
+	local Closest = nil
+
+	for _, Target in next, Targets do
+		local TargetRoot = Target:FindFirstChild("HumanoidRootPart")
+		if not TargetRoot then
+			continue
+		end
+
+		local Distance = aimbot.Range(PlayerRoot, TargetRoot)
+		if Distance < Range then
+			Range = Distance
+			Closest = Target
+		end
+	end
+
+	return Closest
+end

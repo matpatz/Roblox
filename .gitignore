@@ -1,13 +1,12 @@
 .history
-.env
-.env.*
-node_modules
 .vercel
 
 supabase-schema.sql
 
+# development stuff
 **/Scripts/
-development.lua
+**/source/
+# tests
 tests
 
 TODO

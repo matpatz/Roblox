@@ -13,8 +13,12 @@ function aimbot.GetTargets(PlayerRoot: BasePart, Range: number, EntityList): { P
         if Object == Player then
             continue
         end
+		local Character = Object.Character
+		if not Character then
+			continue
+		end
 
-		local TargetRoot = Object:WaitForChild("Character", 2):WaitForChild("HumanoidRootPart", 2)
+		local TargetRoot = Character:WaitForChild("HumanoidRootPart", 2)
 		if not TargetRoot then
 			continue
 		end

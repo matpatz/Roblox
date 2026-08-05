@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Script Key</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="logo-row">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M7 21h10M12 21V3m0 0l-4 4m4-4l4 4"/></svg>
+      </div>
+      <h1>Script Key</h1>
+    </div>
+
+    <div id="status" class="loading">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      Complete the Linkvertise ad above to get a hash, then refresh
+    </div>
+
+    <div id="key" class="empty">Key will appear here</div>
+
+    <button id="generateBtn" disabled>
+      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Generate Key
+    </button>
+
+    <button id="copyBtn" style="display:none">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      Copy Key
+    </button>
+
+    <div id="debug"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

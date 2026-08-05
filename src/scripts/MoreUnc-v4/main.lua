@@ -1056,10 +1056,10 @@ local DrawingUI do
 end
 
 local function ApplyDrawingBase(Object, State)
-    Object.Visible              = State.Visible
-    Object.ZIndex               = math.clamp(State.ZIndex, -2^31, 2^31)
+    Object.Visible = State.Visible
+    Object.ZIndex = math.clamp(State.ZIndex, -2^31, 2^31)
     Object.BackgroundTransparency = 1 - State.Transparency
-    Object.BackgroundColor3     = State.Color
+    Object.BackgroundColor3 = State.Color
 end
 
 local function MakeDrawingProxy(State, Update, ReadOnly)
@@ -1086,12 +1086,12 @@ DrawingTypes.Line = function(State, Object)
         local From, To = State.From, State.To
         local DX, DY = To.X - From.X, To.Y - From.Y
         local Length = math.sqrt(DX^2 + DY^2)
-        Object.Size             = UDim2.fromOffset(Length, State.Thickness)
-        Object.Position         = UDim2.fromOffset(From.X, From.Y)
-        Object.Rotation         = math.deg(math.atan2(DY, DX))
+        Object.Size = UDim2.fromOffset(Length, State.Thickness)
+        Object.Position = UDim2.fromOffset(From.X, From.Y)
+        Object.Rotation = math.deg(math.atan2(DY, DX))
         Object.BackgroundColor3 = State.Color
-        Object.Visible          = State.Visible
-        Object.ZIndex           = math.clamp(State.ZIndex, -2^31, 2^31)
+        Object.Visible = State.Visible
+        Object.ZIndex = math.clamp(State.ZIndex, -2^31, 2^31)
     end
     State.From        = Vector2.zero
     State.To          = Vector2.zero
@@ -1681,7 +1681,7 @@ game.DescendantRemoving:Connect(function(Script)
     if not Script:IsA("LuaSourceContainer") then
         return
     end
-    
+
 	Scripts.Compiled[Script] = nil
     if Script.Enabled then
 		Scripts.Active[Script] = nil

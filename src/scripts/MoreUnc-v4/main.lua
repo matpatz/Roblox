@@ -36,7 +36,7 @@ local IndexFunction = function(Name)
 end
 
 -- mega op undetected 100%%%
-local function cloneref(Object)
+local function _cloneref(Object)
     if not setmetatable then
         return Object
     end
@@ -49,21 +49,21 @@ local function cloneref(Object)
     })
 end
 
-local cloneref = cloneref and cloneref or cloneref
+local cloneref = cloneref and cloneref or _cloneref
 
 local Services = {
-    CollectionService    = cloneref(game:GetService("CollectionService")),
-    VirtualInputManager  = cloneref(game:GetService("VirtualInputManager")),
-    UserInputService     = cloneref(game:GetService("UserInputService")),
+    CollectionService = cloneref(game:GetService("CollectionService")),
+    VirtualInputManager = cloneref(game:GetService("VirtualInputManager")),
+    UserInputService = cloneref(game:GetService("UserInputService")),
     UGCValidationService = cloneref(game:GetService("UGCValidationService")),
-    RbxAnalyticsService  = cloneref(game:GetService("RbxAnalyticsService")),
-    ReflectionService    = cloneref(game:GetService("ReflectionService")),
-    CoreGui              = gethui and gethui() or cloneref(game:GetService("CoreGui")) or game.Players,LocalPlayer,PlayerGui,
-    ReplicatedStorage    = cloneref(game:GetService("ReplicatedStorage")),
-    Stats                = cloneref(game:GetService("Stats")),
-    CorePackages         = cloneref(game:GetService("CorePackages")),
-    RunService           = cloneref(game:GetService("RunService")),
-    Players              = cloneref(game:GetService("Players")),
+    RbxAnalyticsService = cloneref(game:GetService("RbxAnalyticsService")),
+    ReflectionService = cloneref(game:GetService("ReflectionService")),
+    CoreGui = gethui and gethui() or cloneref(game:GetService("CoreGui")) or game.Players.LocalPlayer.PlayerGui,
+    ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage")),
+    Stats = cloneref(game:GetService("Stats")),
+    CorePackages = cloneref(game:GetService("CorePackages")),
+    RunService = cloneref(game:GetService("RunService")),
+    Players = cloneref(game:GetService("Players")),
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
@@ -1262,20 +1262,12 @@ end)
 
 -- File System
 
-local ExecutorName = (identifyexecutor and select(1, identifyexecutor())) or "unknown"
-local WorkspaceRoot = ExecutorName .. "/workspace"
-
 local Files, Folders = {}, {}
 
 AddFunction("writefile", function(Path, Data)
     if type(Path) ~= "string" then error("expected string at argument #1, got " .. type(Path), 2) end
     if type(Data) ~= "string" then error("expected string at argument #2, got " .. type(Data), 2) end
-    Path = NormalizePath(Path)
-    VirtualFiles[Path] = Data
-    VirtualFolders[ParentPath(Path)] = true
-    if AllowTerminal() then
-        PsSocket:Send(string.format("Set-Content -Path '%s' -Value '%s'", Path, Data:gsub("'", "''")))
-    end
+    Files[Path] = Data
 end)
 
 AddFunction("appendfile", function(Path, Data)
@@ -1646,67 +1638,67 @@ end)
 
 AddFunction("getinstances", function()
     local Descendants = game:GetDescendants()
-    local Out = table.create(#Descendants + 1)
-    for Index, Obj in next, Descendants do
-        Out[Index] = Obj
-    end
-    Out[#Out + 1] = game
-    return Out
+	return Descendants
 end)
 
 AliasFunction({"getobjects"}, "getinstances")
 
-local KnownObjects = {}
-for _, Object in next, game:GetDescendants() do
-    KnownObjects[Object] = true
-end
-
 AddFunction("getnilinstances", function()
-    local Nils = {}
-    for Object in next, KnownObjects do
-        if Object.Parent == nil then
-            Nils[#Nils + 1] = Object
-        end
-    end
-    return Nils
+	return {}
 end)
 
-AddFunction("getnilinstance", function(Search)
-    for _, Item in next, getnilinstances() do
-        if Item == Search then return Item end
+AddFunction("getnilinstance", function(DebugId: string): LuaSourceContainer?
+    for _, Instance in next, getnilinstances() do
+		if Instance:GetDebugId() ~= DebugId then
+			continue
+		end
+		return Instance
     end
 end)
 
-local function IsScript(Object, IncludeModules)
-    if IncludeModules then
-        return Object:IsA("LocalScript") or Object:IsA("ModuleScript")
-    end
-    return Object:IsA("LocalScript")
-end
+local Scripts = {
+	Active = {},
+	Other = {},
 
-local ScriptList = {}
-game.DescendantAdded:Connect(function(Object)
-    KnownObjects[Object] = true
-    if IsScript(Object, true) then
-        ScriptList[#ScriptList + 1] = Object
+    Compiled = {}
+}
+
+game.DescendantAdded:Connect(function(Script)
+    if not Script:IsA("LuaSourceContainer") then
+        return
     end
+
+    Scripts.Compiled[Script] = true
+    table.insert(Scripts.Compiled, Script)
+	if Script.Enabled then
+		table.insert(Scripts.Active, Script)
+		return
+	end
+	table.insert(Scripts.Other, Script)
 end)
 
-game.DescendantRemoving:Connect(function(Object)
-    KnownObjects[Object] = nil
-    for Index, Script in next, ScriptList do
-        if Script == Object then
-            table.remove(ScriptList, Index)
-            break
-        end
+game.DescendantRemoving:Connect(function(Script)
+    if not Script:IsA("LuaSourceContainer") then
+        return
     end
+    
+	Scripts.Compiled[Script] = nil
+    if Script.Enabled then
+		Scripts.Active[Script] = nil
+		return
+	end
+	Scripts.Other[Script] = nil
 end)
 
 local NonScriptableProperties = {}
 
 AddFunction("isscriptable", function(Object, Property)
-    if typeof(Object) ~= "Instance" then error("expected Instance at argument #1, got " .. typeof(Object), 2) end
-    if typeof(Property) ~= "string" then error("expected string at argument #2, got " .. typeof(Property), 2) end
+    if typeof(Object) ~= "Instance" then
+        error("expected Instance at argument #1, got " .. typeof(Object), 2)
+    end
+    if typeof(Property) ~= "string" then
+        error("expected string at argument #2, got " .. typeof(Property), 2)
+    end
     for _, Item in next, getproperties(Object) do
         if Item:match(Property) then
             for _, Entry in next, NonScriptableProperties do
@@ -1721,13 +1713,19 @@ AddFunction("isscriptable", function(Object, Property)
 end)
 
 AddFunction("setscriptable", function(Object, Property, Value)
-    if typeof(Object) ~= "Instance" then error("expected Instance at argument #1, got " .. typeof(Object), 2) end
-    if typeof(Property) ~= "string" then error("expected string at argument #2, got " .. typeof(Property), 2) end
+    if typeof(Object) ~= "Instance" then
+        error("expected Instance at argument #1, got " .. typeof(Object), 2)
+    end
+    if typeof(Property) ~= "string" then
+        error("expected string at argument #2, got " .. typeof(Property), 2)
+    end
     NonScriptableProperties[#NonScriptableProperties + 1] = { object = Object, property = Property, value = Value }
 end)
 
 AddFunction("setrbxclipboard", function(Data)
-    if typeof(Data) ~= "string" then error("expected string at argument #1, got " .. typeof(Data), 2) end
+    if typeof(Data) ~= "string" then
+        error("expected string at argument #1, got " .. typeof(Data), 2)
+    end
 end)
 
 -- dont replace with Services.
@@ -1759,14 +1757,18 @@ AddFunction("getrendersteppedlist", function(IncludeExecutor)
 end)
 
 AddFunction("replicatesignal", function(Signal)
-    if not (typeof(Signal) == "RBXScriptSignal") then error("expected RBXScriptSignal, got " .. typeof(Signal), 2) end
+    if not (typeof(Signal) == "RBXScriptSignal") then
+        error("expected RBXScriptSignal, got " .. typeof(Signal), 2)
+    end
     firesignal(Signal)
 end)
 
 -- Metatable
 
 AddFunction("getrawmetatable", function(Object)
-    if type(Object) ~= "table" and typeof(Object) ~= "userdata" then error("expected table or userdata at argument #1, got " .. typeof(Object), 2) end
+    if type(Object) ~= "table" and typeof(Object) ~= "userdata" then
+        error("expected table or userdata at argument #1, got " .. typeof(Object), 2)
+    end
     local MT = getmetatable(Object)
     if type(MT) == "table" and MT.__metatable ~= nil then
         local Copy = {}
@@ -1781,14 +1783,22 @@ end)
 
 -- Fake
 AddFunction("setrawmetatable", function(Object, MT)
-    if type(Object) ~= "table" and typeof(Object) ~= "userdata" then error("expected table or userdata at argument #1, got " .. typeof(Object), 2) end
-    if type(MT) ~= "table" then error("expected table at argument #2, got " .. type(MT), 2) end
+    if type(Object) ~= "table" and typeof(Object) ~= "userdata" then
+        error("expected table or userdata at argument #1, got " .. typeof(Object), 2)
+    end
+    if type(MT) ~= "table" then
+        error("expected table at argument #2, got " .. type(MT), 2)
+    end
     return setmetatable(Object, MT)
 end)
 
 AddFunction("hookmetamethod", function(Object, Method, Hook)
-    if typeof(Method) ~= "string" then error("expected string at argument #2, got " .. typeof(Method), 2) end
-    if typeof(Hook) ~= "function" then error("expected function at argument #3, got " .. typeof(Hook), 2) end
+    if typeof(Method) ~= "string" then
+        error("expected string at argument #2, got " .. typeof(Method), 2)
+    end
+    if typeof(Hook) ~= "function" then
+        error("expected function at argument #3, got " .. typeof(Hook), 2)
+    end
     if not getrawmetatable then return Object end
     local MT  = getrawmetatable(Object)
     local Old = MT[Method]
@@ -1808,12 +1818,16 @@ AddFunction("getnamecallmethod", function()
 end)
 
 AddFunction("setnamecallmethod", function(Method)
-    if typeof(Method) ~= "string" then error("expected string at argument #1, got " .. typeof(Method), 2) end
+    if typeof(Method) ~= "string" then
+        error("expected string at argument #1, got " .. typeof(Method), 2)
+    end
     NamecallMethod = Method
 end)
 
 AddFunction("isreadonly", function(Object)
-    if typeof(Object) ~= "table" then error("expected table at argument #1, got " .. typeof(Object), 2) end
+    if typeof(Object) ~= "table" then
+        error("expected table at argument #1, got " .. typeof(Object), 2)
+    end
     return table.isfrozen(Object)
 end)
 
@@ -1839,18 +1853,26 @@ local function GuardTable(Table, ReadOnly)
 end
 
 AddFunction("setreadonly", function(Object, ReadOnly)
-    if typeof(Object) ~= "table" then error("expected table at argument #1, got " .. typeof(Object), 2) end
-    if not (type(ReadOnly) == "boolean") then error("expected boolean for readonly, got " .. type(ReadOnly), 2) end
+    if typeof(Object) ~= "table" then
+        error("expected table at argument #1, got " .. typeof(Object), 2)
+    end
+    if not (type(ReadOnly) == "boolean") then
+        error("expected boolean for readonly, got " .. type(ReadOnly), 2)
+    end
     return GuardTable(Object, ReadOnly)
 end)
 
 AddFunction("makereadonly", function(Object)
-    if typeof(Object) ~= "table" then error("expected table at argument #1, got " .. typeof(Object), 2) end
+    if typeof(Object) ~= "table" then
+        error("expected table at argument #1, got " .. typeof(Object), 2)
+    end
     return GuardTable(Object, true)
 end)
 
 AddFunction("makewriteable", function(Object)
-    if typeof(Object) ~= "table" then error("expected table at argument #1, got " .. typeof(Object), 2) end
+    if typeof(Object) ~= "table" then
+        error("expected table at argument #1, got " .. typeof(Object), 2)
+    end
     return GuardTable(Object, false)
 end)
 
@@ -1888,7 +1910,9 @@ end)
 
 local Hwid = crypt.hash(Services.RbxAnalyticsService:GetClientId(), "sha3-512")
 AddFunction("sethwid", function(Input)
-    if Input ~= nil and type(Input) ~= "string" then error("expected string or nil at argument #1, got " .. type(Input), 2) end
+    if Input ~= nil and type(Input) ~= "string" then
+        error("expected string or nil at argument #1, got " .. type(Input), 2)
+    end
     Hwid = Input
 end)
 
@@ -1905,22 +1929,30 @@ do
     local RLELib = loadstring(game:HttpGet(Base .. "rle/main.luau"))()
 
     AddFunction("lz4compress", function(Data)
-        if typeof(Data) ~= "string" then error("expected string at argument #1, got " .. typeof(Data), 2) end
+        if typeof(Data) ~= "string" then
+            error("expected string at argument #1, got " .. typeof(Data), 2)
+        end
         return LZ4Lib.compress(Data)
     end)
 
     AddFunction("lz4decompress", function(Data)
-        if typeof(Data) ~= "string" then error("expected string at argument #1, got " .. typeof(Data), 2) end
+        if typeof(Data) ~= "string" then
+            error("expected string at argument #1, got " .. typeof(Data), 2)
+        end
         return LZ4Lib.decompress(Data)
     end)
 
     AddFunction("rlecompress", function(Data)
-        if typeof(Data) ~= "string" then error("expected string at argument #1, got " .. typeof(Data), 2) end
+        if typeof(Data) ~= "string" then
+            error("expected string at argument #1, got " .. typeof(Data), 2)
+        end
         return StringFromBuf(RLELib.encode(Data))
     end)
 
     AddFunction("rledecompress", function(Data)
-        if typeof(Data) ~= "string" then error("expected string at argument #1, got " .. typeof(Data), 2) end
+        if typeof(Data) ~= "string" then
+            error("expected string at argument #1, got " .. typeof(Data), 2)
+        end
         return RLELib.decode(BufFromString(Data))
     end)
 end
@@ -1929,16 +1961,14 @@ local MessageBoxContainer = Instance.new("Folder", Services.CoreGui)
 MessageBoxContainer.Name = RandomString(6)
 
 AddFunction("messagebox", function(Text, Caption, Flags)
-    if typeof(Text) ~= "string" then error("expected string at argument #1, got " .. typeof(Text), 2) end
-    if typeof(Caption) ~= "string" then error("expected string at argument #2, got " .. typeof(Caption), 2) end
-    if typeof(Flags) ~= "number" then error("expected number at argument #3, got " .. typeof(Flags), 2) end
-
-    if AllowTerminal() then
-        powerexec(string.format(
-            [[powershell -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('%s','%s',%d) | Out-Null"]],
-            Text:gsub("'", "''"), Caption:gsub("'", "''"), Flags
-        ))
-        return
+    if typeof(Text) ~= "string" then
+        error("expected string at argument #1, got " .. typeof(Text), 2)
+    end
+    if typeof(Caption) ~= "string" then
+        error("expected string at argument #2, got " .. typeof(Caption), 2)
+    end
+    if typeof(Flags) ~= "number" then
+        error("expected number at argument #3, got " .. typeof(Flags), 2)
     end
 
     local Gui = Instance.new("ScreenGui")
@@ -2039,7 +2069,9 @@ AliasFunction({"messageboxasync"}, "messagebox")
 local TeleportQueue = ""
 
 AddFunction("queue_on_teleport", function(Code)
-    if typeof(Code) ~= "string" then error("expected string at argument #1, got " .. typeof(Code), 2) end
+    if typeof(Code) ~= "string" then
+        error("expected string at argument #1, got " .. typeof(Code), 2)
+    end
     TeleportQueue = Code
 end)
 
@@ -2052,10 +2084,14 @@ AddFunction("reset_queuedteleport", function()
 end)
 
 AddFunction("request", function(Options)
-    if typeof(Options) ~= "table" then error("expected table at argument #1, got " .. typeof(Options), 2) end
-    local URL    = Options.Url
-    if not (type(URL) == "string" and #URL > 0) then error("expected non-empty string for Url", 2) end
-    local Method = (Options.Method or "GET"):upper()
+    if typeof(Options) ~= "table" then
+        error("expected table at argument #1, got " .. typeof(Options), 2)
+    end
+    local URL = Options.Url
+    if not (type(URL) == "string" and #URL > 0) then
+        error("expected non-empty string for Url", 2)
+    end
+    local Method = (Options.Method or "GET")
     local Body   = Options.Body or ""
     local Ok, Result = pcall(function()
         if Method == "GET" then
@@ -2301,15 +2337,9 @@ end)
 
 AliasFunction({"saveplace"}, "saveinstance")
 
-for _, Object in next, game:GetDescendants() do
-    if IsScript(Object, true) then
-        ScriptList[#ScriptList + 1] = Object
-    end
-end
-
 AddFunction("getrunningscripts", function()
     local Out = {}
-    for _, Script in next, ScriptList do
+    for _, Script in next, Scripts.Active do
         if IsScript(Script, false) then
             Out[#Out + 1] = Script
         end
@@ -2318,15 +2348,16 @@ AddFunction("getrunningscripts", function()
 end)
 
 AddFunction("getscripts", function()
-    return ScriptList
+    return Scripts.Compiled
 end)
 
 AddFunction("getloadedmodules", function()
     local Modules = {}
-    for _, Script in next, ScriptList do
-        if Script:IsA("ModuleScript") then
-            Modules[#Modules + 1] = Script
+    for _, Script in next, Scripts.Compiled do
+        if not Script:IsA("ModuleScript") then
+            continue
         end
+        Modules[#Modules + 1] = Script
     end
     return Modules
 end)
@@ -2340,49 +2371,45 @@ end)
 AliasFunction({"isloadedmodule"}, "isrequired")
 
 AddFunction("getdeletedactors", function()
-    local DeletedActors = {}
+    local Actors = {}
     for _, Item in next, getnilinstances() do
-        if Item:IsA("Actor") then
-            DeletedActors[#DeletedActors + 1] = Item
+        if not Item:IsA("Actor") then
+            continue
         end
+        Actors[#Actors + 1] = Item
     end
-    return DeletedActors
+    
+    return Actors
 end)
 
-local function IsRemote(Object)
-    return Object:IsA("RemoteEvent") or Object:IsA("RemoteFunction")
-end
-
-local Remotes = {}
-for _, Object in next, game:GetDescendants() do
-    if IsRemote(Object) then
-        Remotes[#Remotes + 1] = Object
-    end
-end
-
-game.DescendantAdded:Connect(function(Object)
-    if IsRemote(Object) then
-        Remotes[#Remotes + 1] = Object
-    end
-end)
-
-AddFunction("getremotes", function()
-    return Remotes
-end)
+local Old_Namecalls = {}
 
 AddFunction("hookremote", function(Remote, Hook)
-    if typeof(Remote) ~= "Instance" then error("expected Instance at argument #1, got " .. typeof(Remote), 2) end
-    if not (Remote:IsA("RemoteEvent") or Remote:IsA("RemoteFunction")) then error("expected RemoteEvent or RemoteFunction", 2) end
-    if typeof(Hook) ~= "function" then error("expected function at argument #2, got " .. typeof(Hook), 2) end
-    local OldNamecall
-    OldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    if typeof(Remote) ~= "Instance" then
+        error("expected Instance at argument #1, got " .. typeof(Remote), 2)
+    end
+    if not (Remote:IsA("BaseRemote")) then
+        error("Expected BaseRemote", 2)
+    end
+    if typeof(Hook) ~= "function" then
+        error("expected function at argument #2, got " .. typeof(Hook), 2)
+    end
+    local Id = Remote:GetDebugId()
+    table.insert(Old_Namecalls, Id)
+    
+    local NameCall = Old_Namecalls[Id]
+    --if NameCall then
+    --    return NameCall
+    --end
+
+    NameCall = hookmetamethod(game, "__namecall", function(self, ...)
         local Method = getnamecallmethod()
         if self == Remote and (Method == "FireServer" or Method == "InvokeServer") then
             return Hook(...)
         end
-        return OldNamecall(self, ...)
+        return NameCall(self, ...)
     end)
-    return OldNamecall
+    return NameCall
 end)
 
 -- Fake
@@ -2391,7 +2418,9 @@ AddFunction("getreg", function()
 end)
 -- Fake
 AddFunction("getgc", function(IncludeTables)
-    if IncludeTables ~= nil and type(IncludeTables) ~= "boolean" then error("expected boolean or nil at argument #1, got " .. type(IncludeTables), 2) end
+    if IncludeTables == nil then
+        IncludeTables = false
+    end
     return {}
 end)
 
@@ -2498,7 +2527,7 @@ AddFunction("getrenv", function()
 end)
 
 AddFunction("getgenv", function()
-    return getfenv(0)
+    return getfenv(1)
 end)
 
 AddFunction("getsenv", function(Script)
@@ -2509,16 +2538,17 @@ end)
 
 local function GetThreadIdentity()
     local function Try(F)
-        return function() return select(1, pcall(F)) end
+        return function() return pcall(F) end
     end
     local Checks = {
         Try(function() return game.Name end),
-        Try(function() return Services.CoreGui.Name end),
+        Try(function() return game.CoreGui.Name end),
         Try(function() return game.DataCost end),
         Try(function() return Instance.new("Player") end),
-        Try(function() return Services.CorePackages.Name end),
+        Try(function() return game.CorePackages.Name end),
         Try(function() return Instance.new("SurfaceAppearance") end),
         Try(function() Instance.new("MeshPart").MeshId = "" end),
+        Try(function() return game.CoreGui:GetChildren() end),
     }
     for Index, Check in next, Checks do
         if not Check() then return Index - 1 end
@@ -2549,7 +2579,7 @@ local function NewBindable()
     return Instance.new("BindableEvent")
 end
 
-local ActorThreads, CommunicationChannels = {}, {}
+local CommunicationChannels = {}
 
 AddFunction("create_comm_channel", function()
     local ID      = math.random(1, 99999)
@@ -2563,12 +2593,16 @@ AddFunction("get_comm_channel", function(ID)
     return CommunicationChannels[ID]
 end)
 
+local ActorThreads = {}
+
 AddFunction("run_on_actor", function(Actor, ScriptSource, ...)
     if not (typeof(Actor) == "Instance" and Actor:IsA("Actor")) then error("expected Actor, got " .. typeof(Actor), 2) end
     if typeof(ScriptSource) ~= "string" then error("expected string at argument #2, got " .. typeof(ScriptSource), 2) end
     local Thread = task.spawn(function(...)
         local Fn, Err = loadstring(ScriptSource)
-        if not Fn then error(Err, 2) end
+        if not Fn then
+            error(Err, 2)
+        end
         setfenv(Fn, getgenv())
         Fn(...)
     end)
@@ -2594,30 +2628,34 @@ AliasFunction({"isparallel"}, "is_parallel")
 local NewActor = NewBindable()
 AddFunction("on_actor_added", NewActor)
 
-game.DescendantAdded:Connect(function(Object)
-    if Object:IsA("Actor") then
-        NewActor:Fire(Object)
+game.DescendantAdded:Connect(function(Actor)
+    if not Actor:IsA("Actor") then
+        return
     end
+    NewActor:Fire(Actor)
 end)
 
 AddFunction("run_on_thread", function(Thread, ScriptSource, ...)
     if not (type(Thread) == "thread") then error("expected thread, got " .. type(Thread), 2) end
     if typeof(ScriptSource) ~= "string" then error("expected string at argument #2, got " .. typeof(ScriptSource), 2) end
     local Fn, Err = loadstring(ScriptSource)
-    if not Fn then error(Err, 2) end
+    if not Fn then
+        error(Err, 2)
+    end
     setfenv(Fn, getgenv())
     local T = task.spawn(function(...)
         coroutine.resume(Thread, Fn, ...)
     end, ...)
-    ActorThreadList[#ActorThreadList + 1] = T
+    ActorThreads[#ActorThreads + 1] = T
 end)
 
 AddFunction("getactorthreads", function()
     local Alive = {}
-    for _, Thread in next, ActorThreadList do
-        if coroutine.status(Thread) ~= "dead" then
-            Alive[#Alive + 1] = Thread
+    for _, Thread in next, ActorThreads do
+        if coroutine.status(Thread) == "dead" then
+           continue
         end
+        Alive[#Alive + 1] = Thread
     end
     return Alive
 end)

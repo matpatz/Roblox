@@ -5,7 +5,7 @@ const copyBtn = document.getElementById('copyBtn');
 const debugEl = document.getElementById('debug');
 
 // src/frontend/key-system/ → root = ../../..
-const API_URL = '../../../api/v1/key-system/generate-key.js';
+const API_URL = '/api/v1/key-system/generate-key.js';
 
 const urlParams = new URLSearchParams(window.location.search);
 const hash = urlParams.get('hash');

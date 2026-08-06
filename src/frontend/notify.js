@@ -18,7 +18,7 @@
     }, 250);
   }
 
-  function notify(type, message, duration) {
+  function notify(type, message, time) {
     var box = ensure();
     var el = document.createElement('div');
     el.className = 'notify-item ' + (type || '');
@@ -27,10 +27,10 @@
     requestAnimationFrame(function () {
       el.classList.add('show');
     });
-    if (duration !== 0) {
+    if (time !== 0) {
       setTimeout(function () {
         close(el);
-      }, typeof duration === 'number' ? duration : 4000);
+      }, typeof time === 'number' ? time * 1000 : 4000);
     }
     return el;
   }

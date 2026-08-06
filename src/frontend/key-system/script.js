@@ -4,23 +4,24 @@ const copyBtn = document.getElementById('copyBtn');
 const debugEl = document.getElementById('debug');
 
 const API_URL = '/api/v1/key-system/generate-key';
+const NOTIFY_TIME = 10;
 
 const urlParams = new URLSearchParams(window.location.search);
 const hash = urlParams.get('hash');
 
 if (hash && hash.length === 64) {
-  notify('success', 'Hash verified, click to generate your key');
+  notify('success', 'Hash verified, click to generate your key', NOTIFY_TIME);
   generateBtn.disabled = false;
   debugEl.textContent = `Hash: ${hash.slice(0, 12)}...${hash.slice(-12)}`;
 } else {
-  notify('error', 'No valid hash found. Complete the Linkvertise ad first.');
+  notify('error', 'No valid hash found. Complete the Linkvertise ad first.', NOTIFY_TIME);
 }
 
 generateBtn.addEventListener('click', async () => {
   if (!hash || hash.length !== 64) return;
 
   generateBtn.disabled = true;
-  const loadingNotify = notify('loading', 'Verifying ad and generating key...', 0);
+  const loadingNotify = notify('loading', 'Verifying ad and generating key...', NOTIFY_TIME);
   keyEl.className = 'empty';
   keyEl.textContent = 'Generating...';
 
@@ -41,10 +42,10 @@ generateBtn.addEventListener('click', async () => {
     if (!response.ok || data.error) {
       const err = data.error || {};
       if (response.status === 429 || err.status === 429) {
-        notify('error', err.message || 'Daily limit reached');
+        notify('error', err.message || 'Daily limit reached', NOTIFY_TIME);
         debugEl.textContent = 'You can generate up to 2 keys per day per IP.';
       } else {
-        notify('error', err.message || 'Something went wrong');
+        notify('error', err.message || 'Something went wrong', NOTIFY_TIME);
         debugEl.textContent = 'Try again. If the issue persists, contact support.';
       }
       keyEl.className = 'empty';
@@ -53,7 +54,7 @@ generateBtn.addEventListener('click', async () => {
     }
 
     const result = data.data || {};
-    notify('success', 'Key generated successfully');
+    notify('success', 'Key generated successfully', NOTIFY_TIME);
     keyEl.className = '';
     keyEl.textContent = result.key;
     debugEl.textContent = `Expires: ${new Date(result.expires_at).toLocaleString()} | ${result.keys_remaining} key${result.keys_remaining !== 1 ? 's' : ''} remaining today`;
@@ -62,7 +63,7 @@ generateBtn.addEventListener('click', async () => {
 
     await navigator.clipboard.writeText(result.key).catch(() => {});
   } catch (error) {
-    notify('error', 'Network error, check your connection');
+    notify('error', 'Network error, check your connection', NOTIFY_TIME);
     keyEl.className = 'empty';
     keyEl.textContent = 'Key will appear here';
     debugEl.textContent = error.message;
@@ -74,7 +75,7 @@ generateBtn.addEventListener('click', async () => {
 
 copyBtn.addEventListener('click', async () => {
   await navigator.clipboard.writeText(keyEl.textContent).catch(() => {});
-  notify('success', 'Key copied to clipboard');
+  notify('success', 'Key copied to clipboard', NOTIFY_TIME);
 });
 
 // Auto-generate if hash is already present in URL

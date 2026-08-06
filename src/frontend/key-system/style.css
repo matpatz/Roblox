@@ -68,7 +68,7 @@ button {
 #generateBtn {
   background: linear-gradient(135deg, #6d87b4 0%, var(--accent-color) 55%, #445a80 100%);
   color: #fff;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.3rem;
   box-shadow: 0 8px 24px rgba(90, 107, 138, 0.35);
 }
 

@@ -4,7 +4,6 @@ const copyBtn = document.getElementById('copyBtn');
 const debugEl = document.getElementById('debug');
 
 const API_URL = '/api/v1/key-system/generate-key';
-const CHECK_URL = '/api/v1/key-system/check-key';
 const NOTIFY_TIME = 10;
 const KEY_RE = /^[A-Za-z0-9]{32}$/;
 
@@ -13,7 +12,7 @@ const hash = urlParams.get('hash');
 const lookupKey = urlParams.get('key');
 
 async function checkKey(key) {
-  const response = await fetch(`${CHECK_URL}?key=${encodeURIComponent(key)}`);
+  const response = await fetch(`${API_URL}?key=${encodeURIComponent(key)}`);
   let data;
   try {
     data = await response.json();

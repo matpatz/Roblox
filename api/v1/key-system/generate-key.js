@@ -8,6 +8,32 @@ import { extractIp, rateLimit, validateString } from '../../_lib/validate.js';
 export const config = { runtime: 'nodejs' };
 
 const HASH_RE = /^[a-zA-Z0-9]{64}$/;
+const KEY_RE = /^[A-Za-z0-9]{32}$/;
+
+async function lookupKey(key, res, req, supabase) {
+  const { data: rows, error } = await supabase
+    .from('keys')
+    .select('key, expires_at, used, created_at')
+    .ilike('key', key)
+    .limit(1);
+
+  if (error) throw new ApiError(500, 'Key lookup failed, try again');
+
+  const row = rows && rows[0];
+  if (!row) {
+    return successResponse(res, req, { status: 'not_found', message: 'Key not found' });
+  }
+
+  if (row.used) {
+    return successResponse(res, req, { status: 'used', message: 'Key has already been used', ...row });
+  }
+
+  if (new Date(row.expires_at).getTime() < Date.now()) {
+    return successResponse(res, req, { status: 'expired', message: 'Key has expired', ...row });
+  }
+
+  return successResponse(res, req, { status: 'valid', message: 'Key is valid', ...row });
+}
 
 async function verifyLinkvertise(hash) {
   const token = process.env.LINKVERTISE_TOKEN;
@@ -48,6 +74,15 @@ async function verifyLinkvertise(hash) {
 
 async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
+
+  const supabase = getSupabase();
+
+  if (req.method === 'GET') {
+    await rateLimit(req, { limit: 30, window: 60 });
+    const key = validateString(req.query?.key, 'key', { min: 32, max: 32, pattern: KEY_RE });
+    return lookupKey(key, res, req, supabase);
+  }
+
   if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
   await rateLimit(req, { limit: 10, window: 60 });
 
@@ -59,7 +94,6 @@ async function handler_fn(req, res) {
   await verifyLinkvertise(hash);
 
   const ip = extractIp(req);
-  const supabase = getSupabase();
 
   const key = crypto.randomUUID().replace(/-/g, '').toUpperCase().slice(0, 32);
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();

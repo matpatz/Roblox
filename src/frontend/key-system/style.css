@@ -20,12 +20,20 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
+.key-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: 1.4rem;
+}
+
 #key {
+  flex: 0 0 50%;
+  min-width: 0;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 12px 0 0 12px;
   padding: 1.25rem 1.25rem;
-  margin-bottom: 1.4rem;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 1.1rem;
   font-weight: 600;
@@ -38,6 +46,12 @@ body {
   justify-content: center;
   text-align: center;
   text-shadow: 0 0 14px rgba(90, 107, 138, 0.45);
+}
+
+#key.standalone {
+  flex: 1 1 auto;
+  width: 100%;
+  border-radius: 12px;
 }
 
 #key.empty {
@@ -66,9 +80,11 @@ button {
 }
 
 #generateBtn {
+  width: auto;
+  flex-shrink: 0;
+  border-radius: 0 12px 12px 0;
   background: linear-gradient(135deg, #6d87b4 0%, var(--accent-color) 55%, #445a80 100%);
   color: #fff;
-  margin-bottom: 0.6rem;
   box-shadow: 0 8px 24px rgba(90, 107, 138, 0.35);
 }
 

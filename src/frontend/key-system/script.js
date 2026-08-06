@@ -55,7 +55,7 @@ generateBtn.addEventListener('click', async () => {
 
     const result = data.data || {};
     notify('success', 'Key generated successfully', NOTIFY_TIME);
-    keyEl.className = '';
+    keyEl.className = 'standalone';
     keyEl.textContent = result.key;
     debugEl.textContent = `Expires: ${new Date(result.expires_at).toLocaleString()} | ${result.keys_remaining} key${result.keys_remaining !== 1 ? 's' : ''} remaining today`;
     copyBtn.style.display = 'flex';

@@ -55,6 +55,24 @@ CREATE TABLE IF NOT EXISTS misc (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Key System
+CREATE TABLE IF NOT EXISTS keys (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  key TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used BOOLEAN DEFAULT false,
+  created_ip TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS user_limits (
+  ip TEXT NOT NULL,
+  date TEXT NOT NULL,
+  keys_used INT DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (ip, date)
+);
+
 -- Atomic counter function
 CREATE OR REPLACE FUNCTION increment_executions()
 RETURNS void AS $$

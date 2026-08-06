@@ -3,7 +3,7 @@ import { ApiError } from './errors.js';
 
 const IP_RE = /^\d{1,3}(?:\.\d{1,3}){3}$/;
 
-function extractIp(req) {
+export function extractIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   const raw = Array.isArray(forwarded) ? forwarded[0] : (forwarded || '');
   const leftmost = raw.split(',')[0].trim();

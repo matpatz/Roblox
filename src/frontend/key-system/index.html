@@ -1,36 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Key System</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/src/frontend/key-system/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voltex Scripts — Key System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/frontend/style.css">
+<link rel="stylesheet" href="/src/frontend/key-system/style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Key System</h1>
-
-    <div id="status" class="loading">
-      Complete the Linkvertise ad above to get a hash, then refresh
+<header class="topbar">
+  <nav class="nav">
+    <a href="/" class="brand">
+      <img class="bolt" src="/assets/bolt.png" alt="Voltex" width="18" height="18">
+      <span>VOLTEX</span>
+    </a>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/projects">Projects</a>
+      <a href="/stats">Stats</a>
+      <a href="/key-system" class="active">Key System</a>
     </div>
+  </nav>
+</header>
 
-    <div id="key" class="empty">Key will appear here</div>
+<main class="container">
+  <h1>Key System</h1>
 
-    <button id="generateBtn" disabled>
-      Generate Key
-    </button>
-
-    <button id="copyBtn" style="display:none">
-      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-      Copy Key
-    </button>
-
-    <div id="debug"></div>
+  <div id="status" class="loading">
+    Complete the Linkvertise ad above to get a hash, then refresh
   </div>
 
-  <script src="/src/frontend/key-system/script.js"></script>
+  <div id="key" class="empty">Key will appear here</div>
+
+  <button id="generateBtn" disabled>
+    Generate Key
+  </button>
+
+  <button id="copyBtn" style="display:none">
+    Copy Key
+  </button>
+
+  <div id="debug"></div>
+</main>
+
+<script src="/src/frontend/key-system/script.js"></script>
 </body>
 </html>

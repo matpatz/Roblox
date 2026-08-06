@@ -26,7 +26,6 @@ if (hash && hash.length === 64) {
     'error',
     'No valid hash found. Complete the Linkvertise ad first.'
   );
-  debugEl.textContent = 'URL should contain: ?hash=64charhashhere';
 }
 
 generateBtn.addEventListener('click', async () => {

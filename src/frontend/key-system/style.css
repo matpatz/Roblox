@@ -1,79 +1,99 @@
-.container {
-  background: var(--bg-soft);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 2.25rem 2rem;
-  width: 100%;
-  max-width: 420px;
-  margin: 64px auto 56px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+body {
+  background:
+    radial-gradient(900px 480px at 50% -8%, rgba(90, 107, 138, 0.18), transparent 65%),
+    var(--bg);
 }
 
-h1 {
-  font-family: 'Chakra Petch', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: 0.04em;
-  text-align: center;
-  margin-bottom: 1.5rem;
+.container {
+  background: linear-gradient(180deg, #13161f 0%, var(--bg-soft) 100%);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 2.5rem 2rem 2rem;
+  width: 100%;
+  max-width: 440px;
+  margin: 64px auto 56px;
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 #status {
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
-  font-size: 0.88rem;
+  border-radius: 999px;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.85rem;
   font-weight: 500;
   text-align: center;
   margin-bottom: 1.25rem;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   justify-content: center;
   min-height: 2.75rem;
+  letter-spacing: 0.01em;
 }
 
-.success { background: #0d2016; border: 1px solid #1a4a2e; color: #4ade80; }
-.error   { background: #1f0d0d; border: 1px solid #4a1a1a; color: #f87171; }
-.loading { background: #0d1a2e; border: 1px solid #1a3050; color: #7ab3e0; }
+#status::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.success { background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.25); color: #4ade80; }
+.error   { background: rgba(248, 113, 113, 0.08); border: 1px solid rgba(248, 113, 113, 0.25); color: #f87171; }
+.loading { background: rgba(90, 107, 138, 0.12); border: 1px solid rgba(90, 107, 138, 0.35); color: #a9c3e8; }
+
+.loading::before {
+  animation: keypulse 1.2s ease-in-out infinite;
+}
+
+@keyframes keypulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
 
 #key {
-  background: var(--bg);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 1.1rem 1.25rem;
-  margin-bottom: 1.25rem;
+  border-radius: 12px;
+  padding: 1.25rem 1.25rem;
+  margin-bottom: 1.4rem;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   word-break: break-all;
-  min-height: 58px;
-  color: var(--accent-color);
+  min-height: 62px;
+  color: var(--accent-hover);
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  text-shadow: 0 0 14px rgba(90, 107, 138, 0.45);
 }
 
 #key.empty {
   color: var(--muted);
   font-family: 'Inter', sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 400;
   letter-spacing: 0;
+  text-shadow: none;
 }
 
 button {
   width: 100%;
-  padding: 0.8rem;
-  border-radius: 10px;
+  padding: 0.85rem;
+  border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
   font-family: 'Inter', sans-serif;
   cursor: pointer;
   border: none;
-  transition: background 0.15s;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, filter 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,31 +101,40 @@ button {
 }
 
 #generateBtn {
-  background: var(--accent-subtle);
-  color: var(--text);
+  background: linear-gradient(135deg, #6d87b4 0%, var(--accent-color) 55%, #445a80 100%);
+  color: #fff;
   margin-bottom: 0.6rem;
+  box-shadow: 0 8px 24px rgba(90, 107, 138, 0.35);
 }
 
-#generateBtn:hover:not(:disabled) { background: var(--accent-color); }
+#generateBtn:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(90, 107, 138, 0.45);
+}
 
 #generateBtn:disabled {
   background: var(--bg);
   color: var(--muted);
+  box-shadow: none;
   cursor: not-allowed;
+  transform: none;
 }
 
 #copyBtn {
-  background: #12281a;
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.3);
   color: #4ade80;
-  border: 1px solid #1a4a2e;
 }
 
-#copyBtn:hover { background: #163320; }
+#copyBtn:hover {
+  background: rgba(74, 222, 128, 0.14);
+}
 
 #debug {
   font-size: 0.78rem;
   color: var(--muted);
-  margin-top: 0.9rem;
+  margin-top: 1rem;
   font-family: 'JetBrains Mono', monospace;
   line-height: 1.6;
   text-align: center;

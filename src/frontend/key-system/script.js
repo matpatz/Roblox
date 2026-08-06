@@ -59,7 +59,6 @@ generateBtn.addEventListener('click', async () => {
     keyEl.textContent = result.key;
     debugEl.textContent = `Expires: ${new Date(result.expires_at).toLocaleString()} | ${result.keys_remaining} key${result.keys_remaining !== 1 ? 's' : ''} remaining today`;
     copyBtn.style.display = 'flex';
-    generateBtn.style.display = 'none';
 
     await navigator.clipboard.writeText(result.key).catch(() => {});
   } catch (error) {

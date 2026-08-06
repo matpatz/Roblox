@@ -20,20 +20,12 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.key-row {
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  margin-bottom: 1.4rem;
-}
-
 #key {
-  flex: 0 0 50%;
-  min-width: 0;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--line);
-  border-radius: 12px 0 0 12px;
+  border-radius: 12px;
   padding: 1.25rem 1.25rem;
+  margin-bottom: 1.4rem;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 1.1rem;
   font-weight: 600;
@@ -48,12 +40,6 @@ body {
   text-shadow: 0 0 14px rgba(90, 107, 138, 0.45);
 }
 
-#key.standalone {
-  flex: 1 1 auto;
-  width: 100%;
-  border-radius: 12px;
-}
-
 #key.empty {
   color: var(--muted);
   font-family: 'Inter', sans-serif;
@@ -64,8 +50,8 @@ body {
 }
 
 button {
-  width: 50%;
-  padding: 1rem;
+  width: 100%;
+  padding: 0.85rem;
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
@@ -79,10 +65,16 @@ button {
   gap: 8px;
 }
 
-#generateBtn {
+.btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-row button {
   width: 50%;
-  flex-shrink: 0;
-  border-radius: 0 12px 12px 0;
+}
+
+#generateBtn {
   background: linear-gradient(135deg, #6d87b4 0%, var(--accent-color) 55%, #445a80 100%);
   color: #fff;
   box-shadow: 0 8px 24px rgba(90, 107, 138, 0.35);
@@ -103,7 +95,6 @@ button {
 }
 
 #copyBtn {
-  width: 100%;
   background: rgba(74, 222, 128, 0.08);
   border: 1px solid rgba(74, 222, 128, 0.3);
   color: #4ade80;

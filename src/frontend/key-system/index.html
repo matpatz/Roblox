@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/src/frontend/style.css">
+<link rel="stylesheet" href="/src/frontend/notify.css">
 <link rel="stylesheet" href="/src/frontend/key-system/style.css">
 </head>
 <body>
@@ -21,16 +22,11 @@
       <a href="/">Home</a>
       <a href="/projects">Projects</a>
       <a href="/stats">Stats</a>
-      <a href="/key-system" class="active">Key System</a>
     </div>
   </nav>
 </header>
 
 <main class="container">
-
-  <div id="status" class="loading">
-    Complete the Linkvertise ad above to get a hash, then refresh
-  </div>
 
   <div id="key" class="empty">Key will appear here</div>
 
@@ -45,6 +41,7 @@
   <div id="debug"></div>
 </main>
 
+<script src="/src/frontend/notify.js"></script>
 <script src="/src/frontend/key-system/script.js"></script>
 </body>
 </html>

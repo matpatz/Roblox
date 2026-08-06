@@ -41,13 +41,8 @@ generateBtn.addEventListener('click', async () => {
 
     if (!response.ok || data.error) {
       const err = data.error || {};
-      if (response.status === 429 || err.status === 429) {
-        notify('error', err.message || 'Daily limit reached', NOTIFY_TIME);
-        debugEl.textContent = 'You can generate up to 2 keys per day per IP.';
-      } else {
-        notify('error', err.message || 'Something went wrong', NOTIFY_TIME);
-        debugEl.textContent = 'Try again. If the issue persists, contact support.';
-      }
+      notify('error', err.message || 'Something went wrong', NOTIFY_TIME);
+      debugEl.textContent = 'Try again. If the issue persists, contact support.';
       keyEl.className = 'empty';
       keyEl.textContent = 'Key will appear here';
       return;
@@ -57,7 +52,7 @@ generateBtn.addEventListener('click', async () => {
     notify('success', 'Key generated successfully', NOTIFY_TIME);
     keyEl.className = 'standalone';
     keyEl.textContent = result.key;
-    debugEl.textContent = `Expires: ${new Date(result.expires_at).toLocaleString()} | ${result.keys_remaining} key${result.keys_remaining !== 1 ? 's' : ''} remaining today`;
+    debugEl.textContent = `Expires: ${new Date(result.expires_at).toLocaleString()}`;
     copyBtn.style.display = 'flex';
 
     await navigator.clipboard.writeText(result.key).catch(() => {});

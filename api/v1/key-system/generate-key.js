@@ -7,7 +7,6 @@ import { extractIp, rateLimit, validateString } from '../../_lib/validate.js';
 
 export const config = { runtime: 'nodejs' };
 
-const DAILY_KEY_LIMIT = 2;
 const HASH_RE = /^[a-zA-Z0-9]{64}$/;
 
 async function verifyLinkvertise(hash) {
@@ -60,20 +59,7 @@ async function handler_fn(req, res) {
   await verifyLinkvertise(hash);
 
   const ip = extractIp(req);
-  const today = new Date().toISOString().slice(0, 10);
   const supabase = getSupabase();
-
-  const { data: limitRows, error: limitError } = await supabase
-    .from('user_limits')
-    .select('keys_used')
-    .eq('ip', ip)
-    .eq('date', today);
-  if (limitError) throw new ApiError(500, 'Failed to check daily limit');
-
-  const keysUsed = (limitRows && limitRows[0]?.keys_used) || 0;
-  if (keysUsed >= DAILY_KEY_LIMIT) {
-    throw new ApiError(429, `Daily limit reached (${DAILY_KEY_LIMIT}/${DAILY_KEY_LIMIT} keys used today). Try again tomorrow.`);
-  }
 
   const key = crypto.randomUUID().replace(/-/g, '').toUpperCase().slice(0, 32);
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
@@ -86,14 +72,9 @@ async function handler_fn(req, res) {
     throw new ApiError(500, 'Key storage failed, try again');
   }
 
-  await supabase
-    .from('user_limits')
-    .upsert({ ip, date: today, keys_used: keysUsed + 1 }, { onConflict: 'ip,date' });
-
   return successResponse(res, req, {
     key,
-    expires_at: expiresAt,
-    keys_remaining: DAILY_KEY_LIMIT - keysUsed - 1
+    expires_at: expiresAt
   });
 }
 

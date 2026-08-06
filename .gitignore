@@ -9,4 +9,5 @@ supabase-schema.sql
 # tests
 tests
 
+ignore-key-system
 TODO

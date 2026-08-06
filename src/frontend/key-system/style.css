@@ -80,7 +80,7 @@ button {
 }
 
 #generateBtn {
-  width: auto;
+  width: 50%;
   flex-shrink: 0;
   border-radius: 0 12px 12px 0;
   background: linear-gradient(135deg, #6d87b4 0%, var(--accent-color) 55%, #445a80 100%);
@@ -103,6 +103,7 @@ button {
 }
 
 #copyBtn {
+  width: 100%;
   background: rgba(74, 222, 128, 0.08);
   border: 1px solid rgba(74, 222, 128, 0.3);
   color: #4ade80;

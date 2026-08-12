@@ -1,16 +1,23 @@
--- Legacy
+local Services = loadstring(game:HttpGet(
+    "https://www.voltex.website/src/Modules/Variables.lua"
+))()
 
-local cloneref = cloneref or function(X)
-    return X
-end
+export type ContainerLocation = Instance | { Instance } | (() -> (Instance | { Instance }))
 
-export type ContainerSelector = ("Players" | "Workspace") | Instance | { Instance }
+export type ContainerDefinition = {
+    Location: ContainerLocation?,
+    Target: string?,
+    Settings: { [string]: any }?,
+    [string]: any,
+}
+
+export type ContainerMap = { [string]: ContainerDefinition }
 
 export type ESP = {
     Active: boolean,
     MaxDist: number,
     Container: Instance?,
-    Containers: { Instance },
+    Containers: ContainerMap,
 
     ShowBox: boolean,
     ShowCorners: boolean,
@@ -45,9 +52,10 @@ export type ESP = {
     Enable: (self: ESP) -> (),
     Disable: (self: ESP) -> (),
     Clear: (self: ESP) -> (),
-    SetContainer: (self: ESP, Container: Instance?) -> (),
-    SetContainers: (self: ESP, Containers: { Instance }) -> (),
-    SelectContainer: (self: ESP, Selector: ContainerSelector) -> (),
+    SetContainer: (self: ESP, Containers: ContainerMap) -> (),
+    RemoveContainer: (self: ESP, Name: string) -> (),
+    GetContainer: (self: ESP, Name: string) -> ContainerDefinition?,
+    GetContainers: (self: ESP) -> ContainerMap,
     SetBoxSize: (self: ESP, WidthScale: number?, HeightScale: number?) -> (),
     SetProperty: (self: ESP, Name: string, Value: any) -> (),
 }
@@ -55,14 +63,13 @@ export type ESP = {
 local ESP = {}
 ESP.__index = ESP
 
-function ESP.new()
-    local self = setmetatable({}, ESP)
+local self = setmetatable({}, ESP)
 
     -- Services
-    local Players = cloneref(game:GetService("Players"))
-    local RunService = cloneref(game:GetService("RunService"))
-    local CoreGui = cloneref(game:GetService("CoreGui"))
-    local Workspace = cloneref(game:GetService("Workspace"))
+    local Players = Services["Players"]
+    local RunService = Services["RunService"]
+    local CoreGui = Services["CoreGui"]
+    local Workspace = Services["Workspace"]
     local Camera = Workspace.CurrentCamera
     local LocalPlayer = Players.LocalPlayer
 
@@ -74,7 +81,11 @@ function ESP.new()
     self.Active = false
     self.MaxDist = 2000
     self.Container = Players
-    self.Containers = { Players }
+    self.Containers = {
+        Players = {
+            Location = Players,
+        },
+    }
 
     -- 2D options
     self.ShowBox = true
@@ -124,6 +135,8 @@ function ESP.new()
 
     local Tracked = {}
     local Connections = {}
+    local TargetData = {}
+    local ContainerSources = {}
 
     local FrameCount = 0
     local UpdateInterval = 5
@@ -135,22 +148,48 @@ function ESP.new()
     local Yellow = Color3.fromRGB(255, 255, 0)
     local Gray = Color3.fromRGB(128, 128, 128)
 
+    local ModelCornerSigns = {
+        Vector3.new(1, 1, 1),
+        Vector3.new(1, 1, -1),
+        Vector3.new(1, -1, 1),
+        Vector3.new(1, -1, -1),
+        Vector3.new(-1, 1, 1),
+        Vector3.new(-1, 1, -1),
+        Vector3.new(-1, -1, 1),
+        Vector3.new(-1, -1, -1),
+    }
+
+    local Box3DCornerSigns = {
+        Vector3.new(-1, 1, -1),
+        Vector3.new(1, 1, -1),
+        Vector3.new(1, 1, 1),
+        Vector3.new(-1, 1, 1),
+        Vector3.new(-1, -1, -1),
+        Vector3.new(1, -1, -1),
+        Vector3.new(1, -1, 1),
+        Vector3.new(-1, -1, 1),
+    }
+
+    local SkeletonPairs = {
+        { "Head", "Torso" },
+        { "Torso", "LeftArm" },
+        { "Torso", "RightArm" },
+        { "Torso", "LeftLeg" },
+        { "Torso", "RightLeg" },
+    }
+
     local ContainerAddedConnections = {}
     local ContainerRemovedConnections = {}
 
     -- Helpers
 
     local function IsPlayerContainer()
-        for _, C in self.Containers do
-            if C == Players then
+        for Name, Definition in self.Containers do
+            if Name == "Players" or Definition.Location == Players then
                 return true
             end
         end
         return false
-    end
-
-    local function IsLocalTarget(Target)
-        return IsPlayerContainer() and Target == LocalPlayer
     end
 
     local function CreateDrawing(Type, Properties)
@@ -175,17 +214,110 @@ function ESP.new()
         end
     end
 
+    local function GetTargetSetting(Target, Name)
+        local Data = TargetData[Target]
+        local Definition = Data and Data.Definition
+        if Definition then
+            if Definition[Name] ~= nil then
+                return Definition[Name]
+            end
+            local Overrides = Definition.Settings or Definition.Properties
+            if Overrides and Overrides[Name] ~= nil then
+                return Overrides[Name]
+            end
+        end
+        return self[Name]
+    end
+
+    local function ResolveLocation(Name, Definition)
+        local Location = Definition.Location
+        if Location == nil and Name == "Players" then
+            Location = Players
+        end
+
+        if typeof(Location) == "function" then
+            local Success, Result = pcall(Location)
+            return if Success then Result else nil
+        end
+
+        return Location
+    end
+
+    local function GetSources(Name, Definition)
+        local Location = ResolveLocation(Name, Definition)
+        if Location == Players then
+            return Players:GetPlayers()
+        elseif typeof(Location) == "Instance" then
+            return Location:GetChildren()
+        elseif typeof(Location) == "table" then
+            return Location
+        end
+        return {}
+    end
+
+    local function ResolveTarget(Source, Selector)
+        if typeof(Selector) ~= "string" then
+            return Source
+        end
+
+        local ClassName, ChildName = Selector:match("^([^:]+):(.+)$")
+        if not ClassName then
+            ClassName = Selector
+        end
+
+        local SearchRoot = Source
+        if Source:IsA("Player") then
+            SearchRoot = Source.Character
+        end
+        if not SearchRoot then
+            return Source
+        end
+
+        if ChildName then
+            local NamedTarget = SearchRoot:FindFirstChild(ChildName, true)
+            if NamedTarget then
+                return NamedTarget
+            end
+        end
+
+        if ChildName then
+            local Success, TypedNameTarget = pcall(function()
+                return SearchRoot:FindFirstChildWhichIsA(ChildName, true)
+            end)
+            if Success and TypedNameTarget then
+                return TypedNameTarget
+            end
+        end
+
+        local Success, TypedTarget = pcall(function()
+            return SearchRoot:FindFirstChildWhichIsA(ClassName, true)
+        end)
+        return if Success and TypedTarget then TypedTarget else SearchRoot
+    end
+
     local function GetCharacterFromTarget(Target)
-        if Target == Players then
+        local Data = TargetData[Target]
+        local Source = Data and Data.Source or Target
+
+        if Source == Players then
             return nil
         end
-        if Target:IsA("Player") then
-            return Target.Character
+        if Source:IsA("Player") then
+            return Source.Character
         end
-        if Target:IsA("Model") then
-            return Target
+        if Source:IsA("Model") or Source:IsA("BasePart") then
+            return Source
         end
         return nil
+    end
+
+    local function FindPrimaryPart(Model)
+        if not Model then
+            return nil
+        end
+
+        return (Model:IsA("Model") and Model.PrimaryPart)
+            or Model:FindFirstChildWhichIsA("BasePart", true)
     end
 
     local function GetParts(Target)
@@ -194,16 +326,86 @@ function ESP.new()
             return nil, nil, nil, nil
         end
 
-        local HRP = Character:FindFirstChild("HumanoidRootPart")
-        local Head = Character:FindFirstChild("Head")
+        local Data = TargetData[Target]
+        local Anchor = Data and Data.Anchor
+        if Data and Data.Definition.Target and (Anchor == Data.Source or not Anchor or not Anchor.Parent) then
+            Anchor = ResolveTarget(Data.Source, Data.Definition.Target)
+            Data.Anchor = Anchor
+        end
+        local HRP
+        if Anchor and Anchor:IsA("BasePart") then
+            HRP = Anchor
+        elseif Anchor and Anchor:IsA("Model") then
+            HRP = FindPrimaryPart(Anchor)
+        elseif Character:IsA("BasePart") then
+            HRP = Character
+        else
+            HRP = Character:FindFirstChild("HumanoidRootPart") or FindPrimaryPart(Character)
+        end
+
+        local Head = if Character:IsA("Model") then Character:FindFirstChild("Head")
             or Character:FindFirstChild("UpperTorso")
             or Character:FindFirstChild("Torso")
-        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+            or HRP else HRP
+        local Humanoid = if Character:IsA("Model") then Character:FindFirstChildOfClass("Humanoid") else nil
 
         if HRP and Head then
             return Character, HRP, Head, Humanoid
         end
         return nil, nil, nil, nil
+    end
+
+    -- Project model bounds so non-character containers can use the 2D ESP too.
+    local function GetModelCorners(Model, RootPart, TopPart, IsCharacter)
+        local RootPosition, RootOnScreen = Camera:WorldToViewportPoint(RootPart.Position)
+        local TopPosition, TopOnScreen = Camera:WorldToViewportPoint(TopPart.Position)
+        local MinX, MinY = math.huge, math.huge
+        local MaxX, MaxY = -math.huge, -math.huge
+        local OnScreen = false
+
+        if IsCharacter then
+            if RootOnScreen then
+                OnScreen = true
+                MinX = RootPosition.X
+                MinY = RootPosition.Y
+                MaxX = RootPosition.X
+                MaxY = RootPosition.Y
+            end
+            if TopOnScreen then
+                OnScreen = true
+                MinX = math.min(MinX, TopPosition.X)
+                MinY = math.min(MinY, TopPosition.Y)
+                MaxX = math.max(MaxX, TopPosition.X)
+                MaxY = math.max(MaxY, TopPosition.Y)
+            end
+            return OnScreen, MinX, MinY, MaxX, MaxY, RootPosition, RootOnScreen, TopPosition, TopOnScreen
+        end
+
+        local ModelCFrame, ModelSize
+        if Model:IsA("BasePart") then
+            ModelCFrame = Model.CFrame
+            ModelSize = Model.Size
+        else
+            ModelCFrame, ModelSize = Model:GetBoundingBox()
+        end
+        local HalfSize = ModelSize / 2
+        for _, Sign in ModelCornerSigns do
+            local Corner = ModelCFrame:PointToWorldSpace(Vector3.new(
+                HalfSize.X * Sign.X,
+                HalfSize.Y * Sign.Y,
+                HalfSize.Z * Sign.Z
+            ))
+            local Position, IsOnScreen = Camera:WorldToViewportPoint(Corner)
+            if IsOnScreen then
+                OnScreen = true
+                MinX = math.min(MinX, Position.X)
+                MinY = math.min(MinY, Position.Y)
+                MaxX = math.max(MaxX, Position.X)
+                MaxY = math.max(MaxY, Position.Y)
+            end
+        end
+
+        return OnScreen, MinX, MinY, MaxX, MaxY, RootPosition, RootOnScreen, TopPosition, TopOnScreen
     end
 
     local function HideTarget(Target)
@@ -286,6 +488,7 @@ function ESP.new()
             Chams[Target] = nil
         end
 
+        TargetData[Target] = nil
         Tracked[Target] = nil
     end
 
@@ -403,39 +606,86 @@ function ESP.new()
         SkeletonLines[Target] = Lines
     end
 
-    local function TrackTarget(Target)
-        if Tracked[Target] then
+    local function TrackSource(Source, ContainerName, Definition)
+        if typeof(Source) ~= "Instance" then
             return
         end
-        if IsLocalTarget(Target) then
+        if not (Source:IsA("Player") or Source:IsA("Model") or Source:IsA("BasePart")) then
+            return
+        end
+        if Source == LocalPlayer and IsPlayerContainer() then
             return
         end
 
-        Tracked[Target] = true
+        local Data = TargetData[Source]
+        if Data then
+            Data.Owners[ContainerName] = true
+            Data.Definition = Definition
+            Data.Anchor = ResolveTarget(Source, Definition.Target)
+            return
+        end
 
-        NewBox(Target)
-        NewCorners(Target)
-        NewName(Target)
-        NewTracer(Target)
-        NewQuad(Target)
-        NewHealth(Target)
-        NewDistance(Target)
-        NewChams(Target)
-        NewHealthBar(Target)
-        New3DBox(Target)
-        NewSkeleton(Target)
+        Data = {
+            Source = Source,
+            Anchor = ResolveTarget(Source, Definition.Target),
+            Definition = Definition,
+            Owners = { [ContainerName] = true },
+        }
+        TargetData[Source] = Data
+        Tracked[Source] = true
 
-        Connections[Target] = Connections[Target] or {}
+        NewBox(Source)
+        NewCorners(Source)
+        NewName(Source)
+        NewTracer(Source)
+        NewQuad(Source)
+        NewHealth(Source)
+        NewDistance(Source)
+        NewChams(Source)
+        NewHealthBar(Source)
+        New3DBox(Source)
+        NewSkeleton(Source)
 
-        if Target:IsA("Player") and Target.CharacterRemoving then
-            table.insert(Connections[Target], Target.CharacterRemoving:Connect(function()
-                HideTarget(Target)
+        Connections[Source] = Connections[Source] or {}
+
+        if Source:IsA("Player") and Source.CharacterRemoving then
+            table.insert(Connections[Source], Source.CharacterRemoving:Connect(function()
+                HideTarget(Source)
             end))
         end
     end
 
-    local function UntrackTarget(Target)
-        CleanupTarget(Target)
+    local function UntrackSource(Source, ContainerName)
+        local Data = TargetData[Source]
+        if not Data then
+            return
+        end
+
+        Data.Owners[ContainerName] = nil
+        if next(Data.Owners) then
+            return
+        end
+        CleanupTarget(Source)
+    end
+
+    local function SyncContainerSources(Name, Definition)
+        local CurrentSources = {}
+        for _, Source in next, GetSources(Name, Definition) do
+            if typeof(Source) == "Instance" then
+                CurrentSources[Source] = true
+                TrackSource(Source, Name, Definition)
+            end
+        end
+
+        local PreviousSources = ContainerSources[Name]
+        if PreviousSources then
+            for Source in next, PreviousSources do
+                if not CurrentSources[Source] then
+                    UntrackSource(Source, Name)
+                end
+            end
+        end
+        ContainerSources[Name] = CurrentSources
     end
 
     local function DetachContainerListeners()
@@ -452,38 +702,66 @@ function ESP.new()
     local function AttachContainerListeners()
         DetachContainerListeners()
 
-        for _, Container in self.Containers do
-            if Container == Players then
-                table.insert(ContainerAddedConnections, Players.PlayerAdded:Connect(TrackTarget))
-                table.insert(ContainerRemovedConnections, Players.PlayerRemoving:Connect(UntrackTarget))
-            elseif Container:IsA("Instance") then
-                table.insert(ContainerAddedConnections, Container.ChildAdded:Connect(TrackTarget))
-                table.insert(ContainerRemovedConnections, Container.ChildRemoved:Connect(UntrackTarget))
+        for Name, Definition in self.Containers do
+            local Location = ResolveLocation(Name, Definition)
+            if Location == Players then
+                table.insert(ContainerAddedConnections, Players.PlayerAdded:Connect(function(Source)
+                    TrackSource(Source, Name, Definition)
+                end))
+                table.insert(ContainerRemovedConnections, Players.PlayerRemoving:Connect(function(Target)
+                    UntrackSource(Target, Name)
+                end))
+            elseif typeof(Definition.Location) ~= "function" and typeof(Location) == "Instance" then
+                table.insert(ContainerAddedConnections, Location.ChildAdded:Connect(function(Source)
+                    TrackSource(Source, Name, Definition)
+                end))
+                table.insert(ContainerRemovedConnections, Location.ChildRemoved:Connect(function(Source)
+                    UntrackSource(Source, Name)
+                end))
             end
         end
     end
 
     local function SeedFromContainers()
-        for _, Container in self.Containers do
-            if Container == Players then
-                for _, Player in next, Players:GetPlayers() do
-                    TrackTarget(Player)
-                end
-            elseif Container:IsA("Instance") then
-                for _, Child in next, Container:GetChildren() do
-                    TrackTarget(Child)
-                end
+        for Name, Definition in self.Containers do
+            SyncContainerSources(Name, Definition)
+        end
+    end
+
+    local function RefreshDynamicContainers()
+        for Name, Definition in self.Containers do
+            if typeof(Definition.Location) == "function" then
+                SyncContainerSources(Name, Definition)
             end
         end
     end
 
-    local function ApplyContainers(Containers)
-        for Target in next, Tracked do
+    local function CleanupTrackedTargets()
+        while true do
+            local Target = next(Tracked)
+            if not Target then
+                break
+            end
             CleanupTarget(Target)
         end
+    end
 
-        self.Containers = Containers
-        self.Container = if #Containers > 0 then Containers[1] else nil
+    local function ApplyContainers(Containers)
+        CleanupTrackedTargets()
+
+        local Normalized = {}
+        for Name, Definition in next, Containers do
+            if typeof(Definition) == "Instance" then
+                Normalized[Name] = { Location = Definition }
+            elseif typeof(Definition) == "table" then
+                Normalized[Name] = Definition
+            end
+        end
+
+        self.Containers = Normalized
+        ContainerSources = {}
+        local FirstName, FirstDefinition = next(Normalized)
+        self.Container = FirstDefinition and ResolveLocation(FirstName, FirstDefinition) or nil
 
         SeedFromContainers()
         AttachContainerListeners()
@@ -509,6 +787,8 @@ function ESP.new()
     end
 
     -- Public API
+    -- Container definitions support Location (Instance, Instance list, or function),
+    -- Target selectors such as "BasePart:Torso", and direct or nested setting overrides.
 
     function self:Enable()
         self.Active = true
@@ -521,33 +801,30 @@ function ESP.new()
         end
     end
 
-    function self:SelectContainer(Selector)
-        -- Normalize mixed input (strings + Instances) into Instance list
-        local Mixed = if typeof(Selector) == "table" then Selector else { Selector }
-        local Normalized = {}
-        for _, Item in next, Mixed do
-            if typeof(Item) == "string" then
-                if Item == "Players" then
-                    table.insert(Normalized, Players)
-                elseif Item == "Workspace" then
-                    table.insert(Normalized, workspace)
-                end
-            elseif typeof(Item) == "Instance" then
-                table.insert(Normalized, Item)
+    function self:SetContainer(Containers)
+        ApplyContainers(Containers)
+    end
+
+    function self:RemoveContainer(Name)
+        if self.Containers[Name] == nil then
+            return
+        end
+
+        local Containers = {}
+        for ContainerName, Container in self.Containers do
+            if ContainerName ~= Name then
+                Containers[ContainerName] = Container
             end
         end
-        ApplyContainers(Normalized)
-    end
-
-    function self:SetContainer(Container)
-        if Container == nil then
-            Container = Players
-        end
-        ApplyContainers({ Container })
-    end
-
-    function self:SetContainers(Containers)
         ApplyContainers(Containers)
+    end
+
+    function self:GetContainer(Name)
+        return self.Containers[Name]
+    end
+
+    function self:GetContainers()
+        return self.Containers
     end
 
     function self:SetBoxSize(WidthScale, HeightScale)
@@ -599,9 +876,7 @@ function ESP.new()
     end
 
     function self:Clear()
-        for Target in next, Tracked do
-            CleanupTarget(Target)
-        end
+        CleanupTrackedTargets()
         table.clear(Boxes)
         table.clear(Names)
         table.clear(Tracers)
@@ -615,6 +890,7 @@ function ESP.new()
         table.clear(SkeletonLines)
         table.clear(Tracked)
         table.clear(Connections)
+        DetachContainerListeners()
         self.Active = false
     end
 
@@ -623,6 +899,8 @@ function ESP.new()
         if not self.Active then
             return
         end
+
+        RefreshDynamicContainers()
 
         FrameCount += 1
         if self.PerformanceMode and FrameCount % UpdateInterval ~= 0 then
@@ -644,35 +922,65 @@ function ESP.new()
                 continue
             end
 
-            local HRPPos, HRPOnScreen = Camera:WorldToViewportPoint(HRP.Position)
-            local HeadPos, HeadOnScreen = Camera:WorldToViewportPoint(Head.Position)
+            local MaxDist = GetTargetSetting(Target, "MaxDist")
+            local TeamColor = GetTargetSetting(Target, "TeamColor")
+            local ShowBox = GetTargetSetting(Target, "ShowBox")
+            local ShowCorners = GetTargetSetting(Target, "ShowCorners")
+            local ShowName = GetTargetSetting(Target, "ShowName")
+            local ShowHeld = GetTargetSetting(Target, "ShowHeld")
+            local ShowTracer = GetTargetSetting(Target, "ShowTracer")
+            local ShowQuad = GetTargetSetting(Target, "ShowQuad")
+            local ShowHealth = GetTargetSetting(Target, "ShowHealth")
+            local ShowDistance = GetTargetSetting(Target, "ShowDistance")
+            local ShowChams = GetTargetSetting(Target, "ShowChams")
+            local ShowHealthBar = GetTargetSetting(Target, "ShowHealthBar")
+            local Show3DBox = GetTargetSetting(Target, "Show3DBox")
+            local ShowSkeleton = GetTargetSetting(Target, "ShowSkeleton")
+            local BoxColor = GetTargetSetting(Target, "BoxColor")
+            local CornerColor = GetTargetSetting(Target, "CornerColor")
+            local NameColor = GetTargetSetting(Target, "NameColor")
+            local TracerColor = GetTargetSetting(Target, "TracerColor")
+            local QuadColor = GetTargetSetting(Target, "QuadColor")
+            local HealthTextColor = GetTargetSetting(Target, "HealthTextColor")
+            local ChamsColor = GetTargetSetting(Target, "ChamsColor")
+            local HealthBarColorOverride = GetTargetSetting(Target, "HealthBarColorOverride")
+            local TracerThickness = GetTargetSetting(Target, "TracerThickness")
+            local BoxWidthScale = GetTargetSetting(Target, "BoxWidthScale")
+            local BoxHeightScale = GetTargetSetting(Target, "BoxHeightScale")
+
             local Dist = (CameraPos - HRP.Position).Magnitude
 
-            if Dist > self.MaxDist then
+            if Dist > MaxDist then
                 HideTarget(Target)
                 continue
             end
 
+            local ModelOnScreen, MinX, MinY, MaxX, MaxY, HRPPos, HRPOnScreen, HeadPos, HeadOnScreen = GetModelCorners(Character, HRP, Head, Humanoid ~= nil)
+
             local BaseCol = White
-            if Target:IsA("Player") and self.TeamColor and Target.Team ~= LocalPlayer.Team then
-                BaseCol = Red
+            if Target:IsA("Player") and TeamColor then
+                if Target.Team == LocalPlayer.Team then
+                    BaseCol = Target.TeamColor.Color
+                else
+                    BaseCol = Red
+                end
             end
-            if Humanoid and Humanoid.Health <= 0 then
+            if Humanoid and (Humanoid.Health <= 0 or Humanoid:GetState() == Enum.HumanoidStateType.Dead) then
                 BaseCol = Gray
             end
 
             -- Box
             local Height, Width, BoxLeft, BoxTop
-            if (self.ShowBox or self.ShowCorners) and HRPOnScreen and HeadOnScreen then
-                Height = math.abs(HRPPos.Y - HeadPos.Y) * (self.BoxHeightScale or 1)
-                Width = Height * (self.BoxWidthScale or 0.6)
-                BoxLeft = HRPPos.X - Width / 2
-                BoxTop = HeadPos.Y
+            if (ShowBox or ShowCorners) and ModelOnScreen then
+                Height = math.abs(MaxY - MinY) * (BoxHeightScale or 1)
+                Width = math.abs(MaxX - MinX) * ((BoxWidthScale or 0.6) / 0.6)
+                BoxLeft = (MinX + MaxX) / 2 - Width / 2
+                BoxTop = MinY
 
-                if self.ShowBox then
+                if ShowBox then
                     Box.Size = Vector2.new(Width, Height)
                     Box.Position = Vector2.new(BoxLeft, BoxTop)
-                    Box.Color = self.BoxColor or BaseCol
+                    Box.Color = BoxColor or BaseCol
                     Box.Visible = true
                 else
                     Box.Visible = false
@@ -682,7 +990,7 @@ function ESP.new()
             end
 
             -- Corners
-            if self.ShowCorners and HRPOnScreen and HeadOnScreen and Height and Width and BoxLeft and BoxTop then
+            if ShowCorners and ModelOnScreen and Height and Width and BoxLeft and BoxTop then
                 local C = Corners[Target]
                 if C then
                     local X1, Y1 = BoxLeft, BoxTop
@@ -691,7 +999,7 @@ function ESP.new()
                     local X4, Y4 = BoxLeft + Width, BoxTop + Height
 
                     local CornerLen = math.max(3, Height * 0.2)
-                    local Col = self.CornerColor or BaseCol
+                    local Col = CornerColor or BaseCol
 
                     C[1].From = Vector2.new(X1, Y1 + CornerLen)
                     C[1].To = Vector2.new(X1, Y1)
@@ -740,13 +1048,13 @@ function ESP.new()
             end
 
             -- Name + Distance
-            if (self.ShowName or self.ShowDistance) and HeadOnScreen then
+            if (ShowName or ShowDistance) and HeadOnScreen then
                 local NameText = ""
                 local DistanceText = ""
 
-                if self.ShowName then
+                if ShowName then
                     NameText = if typeof(Target) == "Instance" then Target.Name else "Target"
-                    if self.ShowHeld and Target:IsA("Player") then
+                    if ShowHeld and Target:IsA("Player") then
                         local Tool = Character:FindFirstChildOfClass("Tool")
                         if Tool then
                             NameText = `{NameText} [{Tool.Name}]`
@@ -754,7 +1062,7 @@ function ESP.new()
                     end
                 end
 
-                if self.ShowDistance then
+                if ShowDistance then
                     DistanceText = `{math.floor(Dist)} studs`
                 end
 
@@ -768,26 +1076,26 @@ function ESP.new()
                 local N = Names[Target]
                 N.Position = Vector2.new(HeadPos.X, HeadPos.Y - 15)
                 N.Text = Combined
-                N.Color = self.NameColor or BaseCol
+                N.Color = NameColor or BaseCol
                 N.Visible = true
             elseif Names[Target] then
                 Names[Target].Visible = false
             end
 
             -- Tracer
-            if self.ShowTracer and HRPOnScreen then
+            if ShowTracer and HRPOnScreen then
                 local Tr = Tracers[Target]
                 Tr.From = Vector2.new(ViewportSize.X / 2, ViewportSize.Y)
                 Tr.To = Vector2.new(HRPPos.X, HRPPos.Y)
-                Tr.Color = self.TracerColor or BaseCol
-                Tr.Thickness = self.TracerThickness or 1
+                Tr.Color = TracerColor or BaseCol
+                Tr.Thickness = TracerThickness or 1
                 Tr.Visible = true
             elseif Tracers[Target] then
                 Tracers[Target].Visible = false
             end
 
             -- Quad
-            if self.ShowQuad and HRPOnScreen and HeadOnScreen then
+            if ShowQuad and HRPOnScreen and HeadOnScreen then
                 local Q = Quads[Target]
                 local HeightQ = math.abs(HRPPos.Y - HeadPos.Y)
                 local WidthQ = HeightQ * 0.6
@@ -797,17 +1105,17 @@ function ESP.new()
                 Q.PointB = Vector2.new(HRPPos.X + HalfWidth, HeadPos.Y)
                 Q.PointC = Vector2.new(HRPPos.X + HalfWidth, HRPPos.Y)
                 Q.PointD = Vector2.new(HRPPos.X - HalfWidth, HRPPos.Y)
-                Q.Color = self.QuadColor or BaseCol
+                Q.Color = QuadColor or BaseCol
                 Q.Visible = true
             elseif Quads[Target] then
                 Quads[Target].Visible = false
             end
 
             -- Health text
-            if self.ShowHealth and Humanoid and HeadOnScreen then
+            if ShowHealth and Humanoid and HeadOnScreen then
                 local HealthTxt = Healths[Target]
                 local HealthText = `{math.floor(Humanoid.Health)}/{math.floor(Humanoid.MaxHealth)}`
-                local HealthCol = self.HealthTextColor or GetColor(Humanoid.Health, Humanoid.MaxHealth)
+                local HealthCol = HealthTextColor or GetColor(Humanoid.Health, Humanoid.MaxHealth)
                 HealthTxt.Position = Vector2.new(HeadPos.X, HeadPos.Y + 5)
                 HealthTxt.Text = HealthText
                 HealthTxt.Color = HealthCol
@@ -817,7 +1125,7 @@ function ESP.new()
             end
 
             -- Health bar
-            if self.ShowHealthBar and Humanoid and HRPOnScreen and HeadOnScreen then
+            if ShowHealthBar and Humanoid and HRPOnScreen and HeadOnScreen then
                 local Bar = HealthBars[Target]
                 local HeightHB = math.abs(HRPPos.Y - HeadPos.Y)
                 local WidthHB = HeightHB * 0.6
@@ -828,7 +1136,7 @@ function ESP.new()
                 local HP = Humanoid.Health
                 local HealthPct = if MaxH > 0 then HP / MaxH else 0
                 local BarHeight = HeightHB * math.clamp(HealthPct, 0, 1)
-                local BarColor = self.HealthBarColorOverride or GetColor(HP, MaxH)
+                local BarColor = HealthBarColorOverride or GetColor(HP, MaxH)
 
                 Bar.From = Vector2.new(BoxLeftHB - 6, BoxTopHB + HeightHB - BarHeight)
                 Bar.To = Vector2.new(BoxLeftHB - 6, BoxTopHB + HeightHB)
@@ -839,39 +1147,33 @@ function ESP.new()
             end
 
             -- Chams
-            if self.ShowChams then
+            if ShowChams then
                 local Cham = Chams[Target]
                 if Cham then
                     Cham.Adornee = Character
                     Cham.Enabled = true
-                    Cham.FillColor = self.ChamsColor or BaseCol
+                    Cham.FillColor = ChamsColor or BaseCol
                 end
             elseif Chams[Target] then
                 Chams[Target].Enabled = false
             end
 
             -- 3D box
-            if self.Show3DBox and Box3DLines[Target] then
+            if Show3DBox and Box3DLines[Target] then
                 local Lines = Box3DLines[Target]
                 local Size = HRP.Size * 1.5
                 local CF = HRP.CFrame
-
-                local Offsets = {
-                    Vector3.new(-Size.X / 2,  Size.Y / 2, -Size.Z / 2),
-                    Vector3.new( Size.X / 2,  Size.Y / 2, -Size.Z / 2),
-                    Vector3.new( Size.X / 2,  Size.Y / 2,  Size.Z / 2),
-                    Vector3.new(-Size.X / 2,  Size.Y / 2,  Size.Z / 2),
-                    Vector3.new(-Size.X / 2, -Size.Y / 2, -Size.Z / 2),
-                    Vector3.new( Size.X / 2, -Size.Y / 2, -Size.Z / 2),
-                    Vector3.new( Size.X / 2, -Size.Y / 2,  Size.Z / 2),
-                    Vector3.new(-Size.X / 2, -Size.Y / 2,  Size.Z / 2),
-                }
 
                 local Points2D = table.create(8)
                 local OnScreenAny = false
 
                 for i = 1, 8 do
-                    local WorldPos = (CF * CFrame.new(Offsets[i])).Position
+                    local Sign = Box3DCornerSigns[i]
+                    local WorldPos = (CF * CFrame.new(
+                        Sign.X * Size.X / 2,
+                        Sign.Y * Size.Y / 2,
+                        Sign.Z * Size.Z / 2
+                    )).Position
                     local V2, OnScreen = Camera:WorldToViewportPoint(WorldPos)
                     Points2D[i] = { Vector2.new(V2.X, V2.Y), OnScreen }
                     if OnScreen then
@@ -880,7 +1182,7 @@ function ESP.new()
                 end
 
                 if OnScreenAny then
-                    local Col = self.BoxColor or BaseCol
+                    local Col = BoxColor or BaseCol
 
                     local function SetLine(Idx, I1, I2)
                         local E1 = Points2D[I1]
@@ -922,7 +1224,7 @@ function ESP.new()
             end
 
             -- Skeleton
-            if self.ShowSkeleton and SkeletonLines[Target] then
+            if ShowSkeleton and SkeletonLines[Target] then
                 local Lines = SkeletonLines[Target]
                 local Joints = GetJointPositions(Character)
 
@@ -935,18 +1237,10 @@ function ESP.new()
                     return Vector2.new(V.X, V.Y), OnScreen
                 end
 
-                local PairsDef = {
-                    { "Head", "Torso" },
-                    { "Torso", "LeftArm" },
-                    { "Torso", "RightArm" },
-                    { "Torso", "LeftLeg" },
-                    { "Torso", "RightLeg" },
-                }
-
                 local Idx = 1
-                local Col = self.BoxColor or BaseCol
+                local Col = BoxColor or BaseCol
 
-                for _, Pair in next, PairsDef do
+                for _, Pair in next, SkeletonPairs do
                     local P1, O1 = Proj(Pair[1])
                     local P2, O2 = Proj(Pair[2])
                     local Line = Lines[Idx]
@@ -974,9 +1268,6 @@ function ESP.new()
     end)
 
     -- Initial setup
-    ApplyContainers({ Players })
+    ApplyContainers({ Players = Players })
 
-    return self
-end
-
-return ESP
+return self

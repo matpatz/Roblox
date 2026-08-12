@@ -4,6 +4,11 @@ local Services = loadstring(game:HttpGet(
 
 local PlaceId = game.PlaceId
 local Script = shared.script
+
+if Script:find(":disabled") or shared.webhook_disabled = true then
+    return
+end
+
 local Game = Services["MarketplaceService"]:GetProductInfo(PlaceId).Name
 
 local Player = Services["Players"].LocalPlayer

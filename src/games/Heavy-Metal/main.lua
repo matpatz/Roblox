@@ -1,3 +1,5 @@
+-- actual game is "Heavy Rust"
+
 local am = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/aimbot.lua"))()
 local sm = require(game:GetService("ReplicatedStorage")["Blaster"]["Scripts"]["BlasterController"])
 

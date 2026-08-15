@@ -2,9 +2,9 @@
 
 getgenv().AUTO_AGE = true
 
-local ReplicatedStorage = game:GetService'ReplicatedStorage'
-local SpinRequest = ReplicatedStorage:WaitForChild('SpinRequest', 5)
-local SpinWheelEvents = ReplicatedStorage:WaitForChild'SpinWheelEvents':WaitForChild('Age500Event', 5)
+const ReplicatedStorage = game:GetService'ReplicatedStorage'
+const SpinRequest = ReplicatedStorage:WaitForChild('SpinRequest', 5)
+const SpinWheelEvents = ReplicatedStorage:WaitForChild'SpinWheelEvents':WaitForChild('Age500Event', 5)
 
 task.spawn(function()
 	while task.wait() do

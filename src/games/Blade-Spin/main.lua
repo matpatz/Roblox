@@ -1,11 +1,16 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
-local conn; local player = game:GetService("Players").LocalPlayer
-conn = game:GetService("RunService").RenderStepped:Connect(function(dt)
-    if player:GetAttribute("InRound") == true then
-        game:GetService("ReplicatedStorage").ReplicatedStorageHolders.Events.AddCoins:FireServer(1e6); game:GetService("ReplicatedStorage").ReplicatedStorageHolders.Events.AddXP:FireServer(1e5)
-    end
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local Events = game:GetService("ReplicatedStorage").ReplicatedStorageHolders.Events
+
+local AddCoins = Events.AddCoins
+local AddXP = Events.AddXP
+
+local conn
+conn = game:GetService("RunService").RenderStepped:Connect(function()
+    if not LocalPlayer:GetAttribute("InRound") then
+		return
+	end
+	AddCoins:FireServer(1e6);
+	AddXP:FireServer(1e5) -- the max
 end)
 
 --conn:Disconnect()

@@ -32,6 +32,7 @@ const webhooks = {
 	'games/trident': 'https://discord.com/api/webhooks/1531139142170181642/v9_E0Z4AogIv9XoPIHVk6-iDi2n7YPrxWw46FwM19rswCUXIqv_e__W1Y9bx_VCB-hj-',
     'games/Pickaxe-Swing-Escape': 'https://discord.com/api/webhooks/1531420645458710568/U8JY7mJroSZN8QJwPlL3-xC2h6KiyfW7F_B4gNKX5FYZLlC926pz9-gUp9VtbTE0A1hb',
 	'games/Age-Every-Click': "https://discord.com/api/webhooks/1538107785688911912/7lnYesUhfVZ2Zt3I_1rIA7DCoi2gFAXKLJfHvzj63WGa16zl6Rp-gXeuOkC9JWW6tDbu",
+	'Trench-War': 'https://discord.com/api/webhooks/1538143290052968482/-S6bsbGRgcXRacmRPHNJN4j5NXjALI5oTFZrKCJxISPSj99hv8XIqeyvybzhVpT-T2iB',
 };
 
 async function isValidUser(userId) {

@@ -17,9 +17,15 @@ function pixelsToRichText(data, width, height, cols) {
   const rows = Math.floor(height / cellH);
   const lines = [];
 
+  // Pixels darker than this are treated as background and get NO color tag,
+  // so the copied output looks like normal ASCII art instead of a wall of
+  // <font color="#000000"> tags.
+  const BG_THRESHOLD = 40;
+
   for (let row = 0; row < rows; row++) {
     let line = '';
     let lastHex = null;
+    let inTag = false;
 
     for (let col = 0; col < cols; col++) {
       const px = Math.floor((col + 0.5) * cellW);
@@ -33,20 +39,32 @@ function pixelsToRichText(data, width, height, cols) {
       const char = CHARS[Math.floor((lum / 255) * (CHARS.length - 1))];
       const hex = toHex(Math.round(r * a), Math.round(g * a), Math.round(b * a));
 
-      if (hex !== lastHex) {
-        if (lastHex !== null) line += '</font>';
-        line += `<font color="${hex}">`;
-        lastHex = hex;
-      }
+      let out = char;
+      if (char === '&') out = '&amp;';
+      else if (char === '<') out = '&lt;';
+      else if (char === '>') out = '&gt;';
+      else if (char === '"') out = '&quot;';
 
-      if (char === '&') line += '&amp;';
-      else if (char === '<') line += '&lt;';
-      else if (char === '>') line += '&gt;';
-      else if (char === '"') line += '&quot;';
-      else line += char;
+      if (lum < BG_THRESHOLD) {
+        // Background: close any open tag and emit a plain char.
+        if (inTag) {
+          line += '</font>';
+          inTag = false;
+          lastHex = null;
+        }
+        line += out;
+      } else {
+        if (hex !== lastHex) {
+          if (inTag) line += '</font>';
+          line += `<font color="${hex}">`;
+          inTag = true;
+          lastHex = hex;
+        }
+        line += out;
+      }
     }
 
-    if (lastHex !== null) line += '</font>';
+    if (inTag) line += '</font>';
     lines.push(line);
   }
 

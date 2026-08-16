@@ -1971,6 +1971,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Elements.Template.Visible = false
 
 	Elements.UIPageLayout.FillDirection = Enum.FillDirection.Horizontal
+	Elements.UIPageLayout:GetPropertyChangedSignal("CurrentPage"):Connect(function()
+		local currentPage = Elements.UIPageLayout.CurrentPage
+		if not currentPage then return end
+
+		for _, tabPage in ipairs(Elements:GetChildren()) do
+			if tabPage.Name ~= "Template" and tabPage.ClassName == "ScrollingFrame" and tabPage.Name ~= "Placeholder" then
+				tabPage.Visible = (tabPage == currentPage)
+			end
+		end
+	end)
 	TabList.Template.Visible = false
 
 	-- Tab
@@ -3581,6 +3591,7 @@ function RayfieldLibrary:IsVisible(): boolean
 end
 
 local hideHotkeyConnection -- Has to be initialized here since the connection is made later in the script
+
 function RayfieldLibrary:Destroy()
 	rayfieldDestroyed = true
 	hideHotkeyConnection:Disconnect()
@@ -3688,6 +3699,18 @@ hideHotkeyConnection = UserInputService.InputBegan:Connect(function(input, proce
 			Hidden = true
 			Hide()
 		end
+	end
+end)
+
+UserInputService.WindowFocusReleased:Connect(function()
+	if not Hidden and Main.Visible and Elements.UIPageLayout.CurrentPage then
+		Elements.UIPageLayout:JumpTo(Elements.UIPageLayout.CurrentPage)
+	end
+end)
+
+UserInputService.WindowFocused:Connect(function()
+	if not Hidden and Main.Visible and Elements.UIPageLayout.CurrentPage then
+		Elements.UIPageLayout:JumpTo(Elements.UIPageLayout.CurrentPage)
 	end
 end)
 

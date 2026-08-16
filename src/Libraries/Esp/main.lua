@@ -346,6 +346,8 @@ local self = setmetatable({}, ESP)
         local Head = if Character:IsA("Model") then Character:FindFirstChild("Head")
             or Character:FindFirstChild("UpperTorso")
             or Character:FindFirstChild("Torso")
+            or Character:FindFirstChild("head")
+            or Character:FindFirstChild("torso")
             or HRP else HRP
         local Humanoid = if Character:IsA("Model") then Character:FindFirstChildOfClass("Humanoid") else nil
 
@@ -496,7 +498,7 @@ local self = setmetatable({}, ESP)
         Boxes[Target] = CreateDrawing("Square", {
             Thickness = 2,
             Filled = false,
-            Transparency = 1,
+            Transparency = 0,
             Color = self.BoxColor,
             Visible = false,
         })
@@ -507,7 +509,7 @@ local self = setmetatable({}, ESP)
         for i = 1, 8 do
             Lines[i] = CreateDrawing("Line", {
                 Thickness = 2,
-                Transparency = 1,
+                Transparency = 0,
                 Color = self.CornerColor,
                 Visible = false,
             })

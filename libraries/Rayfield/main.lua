@@ -27,6 +27,29 @@ local TweenService = getService("TweenService")
 local Players = getService("Players")
 local CoreGui = getService("CoreGui")
 
+-- Wrap TweenService:Create so a capability error (e.g. "The current thread cannot access
+-- 'Instance' (lacking capability Plugin)" when the UI lives under CoreGui) can't crash
+-- the calling thread. Falls back to a no-op tween if the tween can't be created/played,
+-- so UI code keeps running even in restricted environments.
+local RealTweenService = TweenService
+TweenService = setmetatable({}, {
+	__index = function(_, key)
+		if key == "Create" then
+			return function(_, target, info, goal)
+				local ok, tween = pcall(RealTweenService.Create, RealTweenService, target, info, goal)
+				if ok and tween then
+					local playOk = pcall(tween.Play, tween)
+					if playOk then
+						return tween
+					end
+				end
+				return { Play = function() end, Cancel = function() end }
+			end
+		end
+		return RealTweenService[key]
+	end
+})
+
 -- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
 -- Errors with the function are caught and logged to the output
 local function loadWithTimeout(url: string, timeout: number?): ...any

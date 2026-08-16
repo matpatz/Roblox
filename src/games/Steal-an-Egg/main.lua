@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
 -- // Modules
+local EggCmds = require(ReplicatedStorage.Library.Client.EggCmds)
 local AreaEggResetTimeUtil = require(ReplicatedStorage.Library.Util.AreaEggResetTimeUtil)
 
 -- // Events
@@ -32,6 +33,16 @@ LocalPlayer.CharacterAdded:Connect(function(NewCharacter)
 	Humanoid = NewCharacter:WaitForChild("Humanoid")
 end)
 
+-- // config
+local config = {
+	Eggs = {
+		BestEgg = {
+			Area = "Forest",
+			DesireMutations = true
+		}
+	}
+}
+
 -- // cheat
 local cheat = {
 	Utils = {
@@ -44,13 +55,50 @@ local cheat = {
 local Utils = cheat.Utils
 local Core = cheat.Core
 
+local Zones = {
+    ["Cosmic"] = 9,
+    ["Prehistoric"] = 8,
+    ["Abyss Ocean"] = 7,
+    ["Volcano"] = 6,
+    ["Snow"] = 5,
+    ["Jungle"] = 4,
+    ["Desert"] = 3,
+    ["Lake"] = 2,
+    ["Forest"] = 1
+}
+
 -- // Utils
-Utils.GetBestEgg = function()
-	local Egg = Eggs:GetChildren()[1]
-	if not Egg then
-		return false
-	end
-	return Egg
+Utils.GetBestEgg = function(Options)
+    local Area = Options.Area
+    local DesireMutations = Options.DesireMutations == true
+    local BestEgg
+    local BestRank = -math.huge
+
+    for _, Egg in next, (EggCmds.GetAreaEggSnapshot().Records) do
+		if Egg.State ~= "Slot" then
+			continue
+		end
+        if Egg.AreaId ~= Area then
+			continue
+        end
+
+		local Rank = Zones[Area] or 0
+
+		if DesireMutations then
+			if #Egg.Mutations > 0 then
+				Rank += 100
+			else
+				Rank -= 100
+			end
+		end
+
+		if Rank > BestRank then
+			BestRank = Rank
+			BestEgg = Eggs:FindFirstChild(Egg.Uid)
+		end
+    end
+
+    return BestEgg
 end
 
 Utils.IsNight = function()
@@ -69,7 +117,7 @@ end
 
 Utils.TweenTo = function(Area: Instance)
 	local Distance = (HumanoidRootPart.Position - Area.Position).Magnitude
-	local Duration = Distance / Humanoid.WalkSpeed
+	local Duration = Distance / (Humanoid.WalkSpeed * 1.1)
 
 	local Tween = TweenService:Create(HumanoidRootPart, TweenInfo.new(Duration, Enum.EasingStyle.Linear), {
 		CFrame = Area.CFrame
@@ -79,25 +127,38 @@ Utils.TweenTo = function(Area: Instance)
 	Tween.Completed:Wait()
 end
 
-Core.StealBestEgg = function()
+local function GetSlot(Name: string)
+    return Name:match("([^_]+:.-)$")
+end
+
+Core.StealBestEgg = function(Options)
 	if not Utils.VerifySteal() then
 		return false
 	end
 
-	local Egg = Utils.GetBestEgg():WaitForChild("Hitbox")
+	local Egg = Utils.GetBestEgg(Options):WaitForChild("Hitbox")
 	if not Egg then
 		return false
 	end
+	local Name = Egg.Parent.Name
 
 	Utils.TweenTo(Egg)
 	task.wait(.15)
 
-	RequestAreaEggCarry:InvokeServer(
-		{
-			FirstAreaSlotKey = "Forest:Slot_002", -- only matters for the first stage but the server accepts it no matter what
-			Uid = Egg.Parent.Name
-		}
-	)
+	if Name:find("FirstAreaEgg") then
+		RequestAreaEggCarry:InvokeServer(
+			{
+				FirstAreaSlotKey = GetSlot(Name),
+				Uid = Name
+			}
+		)
+	else
+		RequestAreaEggCarry:InvokeServer(
+			{
+				Uid = Name
+			}
+		)
+	end
 
 	task.wait(.25)
 
@@ -116,4 +177,67 @@ Core.HatchEgg = function(Egg: Instance)
 	)
 end
 
-Core.StealBestEgg()
+-- // Interface
+
+local Rayfield = loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua"))()
+local Flags = Rayfield.Flags
+
+local Window = Rayfield:CreateWindow({
+    Name = "Steal an Egg",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "subtitle",
+})
+
+local tabs = {
+    Eggs = Window:CreateTab("Eggs"),
+    settings = Window:CreateTab("Settings"),
+}
+
+tabs.Eggs:CreateDropdown({
+    Name = "Zone",
+    Options = {
+        "Cosmic",
+        "Prehistoric",
+        "Abyss Ocean",
+        "Volcano",
+        "Snow",
+        "Jungle",
+        "Desert",
+        "Lake",
+        "Forest"
+    },
+    CurrentOption = config.Eggs.Area,
+    MultipleOptions = false,
+    Flag = "EggZone",
+    Callback = function(Option)
+        config.Eggs.Area = Option[1]
+    end
+})
+
+tabs.Eggs:CreateToggle({
+    Name = "Auto Steal Egg",
+    CurrentValue = false,
+    Flag = "AutoStealEgg",
+    Callback = function(Value)
+        if not Value then
+            return
+        end
+
+        task.spawn(function()
+            while Value do
+                if Core.StealBestEgg(config.Eggs.BestEgg) then
+                    task.wait(.2)
+                else
+                    task.wait()
+                end
+            end
+        end)
+    end,
+})
+
+tabs.Eggs:CreateButton({
+    Name = "Steal Egg",
+    Callback = function()
+		Core.StealBestEgg(config.Eggs.BestEgg)
+    end,
+})

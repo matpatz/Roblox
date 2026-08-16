@@ -33,6 +33,9 @@ LocalPlayer.CharacterAdded:Connect(function(NewCharacter)
 	Humanoid = NewCharacter:WaitForChild("Humanoid")
 end)
 
+--// locals
+local Flags = {}
+
 -- // config
 local config = {
 	Eggs = {
@@ -180,7 +183,7 @@ end
 -- // Interface
 
 local Rayfield = loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua"))()
-local Flags = Rayfield.Flags
+Flags = Rayfield.Flags
 
 local Window = Rayfield:CreateWindow({
     Name = "Steal an Egg",
@@ -206,11 +209,11 @@ tabs.Eggs:CreateDropdown({
         "Lake",
         "Forest"
     },
-    CurrentOption = config.Eggs.Area,
+    CurrentOption = {config.Eggs.BestEgg.Area},
     MultipleOptions = false,
     Flag = "EggZone",
     Callback = function(Option)
-        config.Eggs.Area = Option[1]
+        config.Eggs.BestEgg.Area = Option[1]
     end
 })
 

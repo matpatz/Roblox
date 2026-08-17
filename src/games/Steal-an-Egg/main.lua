@@ -3,8 +3,6 @@
 	[+] Min Egg Size Slider
 --]]
 
-print("ran")
-
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -13,11 +11,15 @@ const TweenService = game:GetService("TweenService")
 -- // Modules
 const EggCmds = require(ReplicatedStorage.Library.Client.EggCmds)
 const AreaEggResetTimeUtil = require(ReplicatedStorage.Library.Util.AreaEggResetTimeUtil)
+const PlotCmds = require(ReplicatedStorage.Library.Client.PlotCmds)
+const EggToolDisplay = require(ReplicatedStorage.Library.Client.Eggs.EggToolDisplay)
 
 -- // Events
 const RequestHatchEgg = game:GetService("ReplicatedStorage").Network["Eggs: RequestHatchEgg"]
 const RequestCompleteHatchEgg = ReplicatedStorage.Network["Eggs: RequestCompleteHatchEgg"]
 const RequestAreaEggCarry = game:GetService("ReplicatedStorage").Network["Eggs: RequestAreaEggCarry"]
+const ActiveRenderStateChanged = game:GetService("ReplicatedStorage").Network["Treadmills: ActiveRenderStateChanged"]
+const RequestUnequip = game:GetService("ReplicatedStorage").Network["Treadmills: RequestUnequip"] -- rf
 
 -- // Workspace
 const SpawmPoint = workspace:FindFirstChildWhichIsA("SpawnLocation")
@@ -42,16 +44,23 @@ end)
 --// locals
 const UserId = LocalPlayer.UserId
 local Flags = {}
+Flags.__index = Flags
+
+local OnTreadmill = false
+ActiveRenderStateChanged.OnClientEvent:Connect(function(a1, active, a3)
+    OnTreadmill = active
+end)
 
 -- // config
 local config = {
 	Eggs = {
-        AutoPlaceStolenEgg = false,
 		BestEgg = {
 			Area = "Forest",
 			DesireMutations = true,
 			MinimumRank = 1
-		}
+		},
+		EggRadius = 2,
+		AutoPlace = false
 	}
 }
 
@@ -66,6 +75,21 @@ local cheat = {
 }
 local Utils = cheat.Utils
 local Core = cheat.Core
+
+-- Get the Uid of the egg tool currently equipped in the character, if any
+Utils.GetEquippedEggUid = function()
+    if not Character then
+        return nil
+    end
+
+    for _, Child in next, Character:GetChildren() do
+        if Child.ClassName == "Tool" and EggToolDisplay.IsEggTool(Child) then
+            return EggToolDisplay.GetToolUid(Child)
+        end
+    end
+
+    return nil
+end
 
 -- thank you great and mighty chatgpt
 Utils.GetOccupiedEggPositions = function()
@@ -87,10 +111,10 @@ Utils.GetOccupiedEggPositions = function()
     return Occupied
 end
 
-Utils.GetFreeEggPosition = function(Plot, EggRadius)
-    local PlacementArea = Plot:FindFirstChild("PlacementArea")
+Utils.GetFreeEggPosition = function(Plot, EggRadius, CenterPoint)
+    local PlacementArea = Plot:FindFirstChild("PlacementArea") or Plot
 
-    if not PlacementArea then
+    if not PlacementArea or not PlacementArea:IsA("BasePart") then
         return nil
     end
 
@@ -104,8 +128,10 @@ Utils.GetFreeEggPosition = function(Plot, EggRadius)
 
             local Free = true
 
-            for _, CFrame in next, Occupied do
-                if (Position - CFrame.Position).Magnitude < EggRadius * 2 then
+            for _, OccupiedLocalCFrame in next, Occupied do
+                -- Convert LocalCFrame to world space for comparison
+                local OccupiedWorldPos = CenterPoint.CFrame:PointToWorldSpace(OccupiedLocalCFrame.Position)
+                if (Position - OccupiedWorldPos).Magnitude < EggRadius * 2 then
                     Free = false
                     break
                 end
@@ -121,13 +147,51 @@ Utils.GetFreeEggPosition = function(Plot, EggRadius)
 end
 
 Core.PlaceEgg = function(Uid: string)
-    local CFrame = Utils.GetFreeEggPosition()
+    -- Use the equipped tool's Uid (matches the server's expected egg identity)
+    local ToolUid = Utils.GetEquippedEggUid()
+    if ToolUid then
+        Uid = ToolUid
+    end
+
+    -- Wait for the stolen egg to become an owned runtime record
+    for _ = 1, 10 do
+        local Found = false
+        local Snapshot = EggCmds.GetRuntimeSnapshot()
+        for _, Owner in next, Snapshot do
+            if Owner.OwnerUserId == UserId then
+                for EggUid in next, Owner.Records do
+                    if EggUid == Uid then
+                        Found = true
+                        break
+                    end
+                end
+            end
+        end
+        if Found then break end
+        task.wait(.25)
+    end
+
+    local PlotData = PlotCmds.GetPlotData()
+    if not PlotData then
+        return false
+    end
+
+    local CFrame = Utils.GetFreeEggPosition(PlotData.PetArea, config.Eggs.EggRadius, PlotData.CenterPoint)
 
     if not CFrame then
         return false
     end
 
-    local Success = EggCmds.RequestPlaceEgg(Uid, CFrame)
+    -- Tween to the placement position
+    Utils.TweenTo(CFrame)
+    task.wait(.50)
+
+    -- Convert world space CFrame to object space relative to CenterPoint
+    local LocalCFrame = PlotData.CenterPoint.CFrame:ToObjectSpace(CFrame)
+    
+    local Success = EggCmds.RequestPlaceEgg(Uid, LocalCFrame)
+
+    --Utils.TweenTo(SpawmPoint) -- otherwise you noclip = lotta problems
 
     return Success == true
 end
@@ -202,19 +266,24 @@ Utils.VerifySteal = function()
 	if Night then
 		return false
 	end
+    if OnTreadmill then
+        RequestUnequip:InvokeServer()
+    end
+
 	return true
 end
 
-Utils.TweenTo = function(Area: Instance)
-	local Distance = (HumanoidRootPart.Position - Area.Position).Magnitude
-	local Duration = Distance / (Humanoid.WalkSpeed * 1.1)
+Utils.TweenTo = function(Area, SpeedMultiplier)
+    local Target: CFrame = typeof(Area) == "Instance" and Area.CFrame or Area
+    local Distance = (HumanoidRootPart.Position - Target.Position).Magnitude
+    local Duration = Distance / (Humanoid.WalkSpeed * (SpeedMultiplier or 1.1))
 
-	local Tween = TweenService:Create(HumanoidRootPart, TweenInfo.new(Duration, Enum.EasingStyle.Linear), {
-		CFrame = Area.CFrame
-	})
+    local Tween = TweenService:Create(HumanoidRootPart, TweenInfo.new(Duration, Enum.EasingStyle.Linear), {
+        CFrame = Target
+    })
 
-	Tween:Play()
-	Tween.Completed:Wait()
+    Tween:Play()
+    Tween.Completed:Wait()
 end
 
 local function GetSlot(Name: string)
@@ -222,25 +291,20 @@ local function GetSlot(Name: string)
 end
 
 Core.StealBestEgg = function(Options)
-    print("exists")
 	if not Utils.VerifySteal() then
-        print("fail check")
-        return false
+		return false
 	end
 
 	local Egg = Utils.GetBestEgg(Options):WaitForChild("Hitbox")
 	if not Egg then
-        print("no egg")
 		return false
 	end
-    print("name")
 	local Name = Egg.Parent.Name
 
-    print("tween egg")
+    Utils.TweenTo(SpawmPoint)
 	Utils.TweenTo(Egg)
-	task.wait(.15)
+	task.wait(.8)
 
-    print("if then else")
 	if Name:find("FirstAreaEgg") then
 		RequestAreaEggCarry:InvokeServer(
 			{
@@ -256,15 +320,13 @@ Core.StealBestEgg = function(Options)
 		)
 	end
 
-	task.wait(.25)
+	task.wait(.15)
 
-    print("pre tween")
 	Utils.TweenTo(SpawmPoint)
-    print("after")
 
-    print(config.Eggs.AutoPlaceStolenEgg)
-    if config.Eggs.AutoPlaceStolenEgg then
-        print("yes")
+    if config.Eggs.AutoPlace then
+        task.wait(.5)
+
         Core.PlaceEgg(Name)
     end
 
@@ -346,7 +408,7 @@ tabs.Eggs:CreateToggle({
         end
 
         task.spawn(function()
-            while Flags.AutoStealEgg.CurrentValue do
+            while Value do
                 Core.StealBestEgg(config.Eggs.BestEgg)
                 task.wait(.2)
             end
@@ -357,8 +419,9 @@ tabs.Eggs:CreateToggle({
 tabs.Eggs:CreateButton({
     Name = "Steal Egg",
     Callback = function()
-        print("called")
-		Core.StealBestEgg(config.Eggs.BestEgg)
+        task.spawn(function()
+            Core.StealBestEgg(config.Eggs.BestEgg)
+        end)
     end,
 })
 
@@ -367,7 +430,7 @@ tabs.Eggs:CreateToggle({
     CurrentValue = false,
     Flag = "AutoPlaceStolenEgg",
     Callback = function(Value)
-        config.Eggs.AutoPlaceStolenEgg = Value
+        config.Eggs.AutoPlace = Value
     end,
 })
 
@@ -394,6 +457,20 @@ tabs.Eggs:CreateSlider({
     end
 })
 
+--[[
+tabs.Eggs:CreateSlider({
+    Name = "Egg Radius",
+    Range = {1, 5},
+    Increment = 0.5,
+    Suffix = "",
+    CurrentValue = config.Eggs.EggRadius,
+    Flag = "EggRadius",
+    Callback = function(Value)
+        config.Eggs.EggRadius = Value
+    end
+})
+--]]
+
 -- // Pen
 tabs.Pen:CreateToggle({
     Name = "Auto Hatch all Eggs",
@@ -405,7 +482,7 @@ tabs.Pen:CreateToggle({
         end
 
         task.spawn(function()
-            while Flags.AutoHatchEggs.CurrentValue do
+            while Value do
                 Core.HatchEggs()
                 task.wait(.2)
             end

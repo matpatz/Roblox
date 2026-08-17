@@ -1,26 +1,36 @@
 loadstring(game:HttpGet("https://github.com/matpatz/luau/raw/main/public/code/loader/u/device.lua"))()
 local device = getgenv()["device"]
 
-local get = (type(cloneref) == "function") and cloneref or function(x) return x end
-local players = get(game:GetService("Players")); local lp = players["LocalPlayer"]
-local rs = get(game:GetService("RunService"))
-local input = get(game:GetService("UserInputService"))
-local vim = get(game:GetService("VirtualInputManager"))
-local rep = get(game:GetService("ReplicatedStorage"))
-local core = get(game:GetService("CoreGui"))
-local lighting = get(game:GetService("Lighting"))
-local https = get(game:GetService("HttpService"))
-local cs = get(game:GetService("CollectionService"))
-local stats = get(game:GetService("Stats"))
-local marketplace = get(game:GetService("MarketplaceService"))
-local analytic = get(game:GetService("RbxAnalyticsService"))
-local log = get(game:GetService("LogService"))
+getgenv().PlayerHelper = true
 
-local cam = workspace.CurrentCamera
+local Services = loadstring(game:HttpGet(
+    "https://roblox-alpha-murex.vercel.app/src/Modules/Variables.lua"
+))()
+
+local Players = Services.Players
+local Player = Services.Player
+local RunService = Services.RunService
+local UserInputService = Services.UserInputService
+local VirtualInputManager = Services.VirtualInputManager
+local CoreGui = Services.CoreGui
+local CurrentCamera = Services.Workspace.CurrentCamera
+
+if not Player.Character then
+    Player.CharacterAdded:Wait()
+end
+local Character = Player.Character
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Humanoid = Character:WaitForChild("Humanoid")
+
+Player.CharacterAdded:Connect(function(NewCharacter)
+    Character = NewCharacter
+    HumanoidRootPart = NewCharacter:WaitForChild("HumanoidRootPart")
+    Humanoid = NewCharacter:WaitForChild("Humanoid")
+end)
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
-    Name = "Voltex - " .. tostring(game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name),
+    Name = "Teen-Titan Battleground",
     LoadingTitle = "Title",
     LoadingSubtitle = "Subtitle",
     ConfigurationSaving = {
@@ -30,26 +40,28 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
+local Flags = Rayfield.Flags
+
 local main = Window:CreateTab("Main")
 main:CreateSection("Aimbot / Combat")
 
 local function isme(char)
-    local player = players:GetPlayerFromCharacter(char)
-    return player ~= lp
+    local player = Players:GetPlayerFromCharacter(char)
+    return player ~= Player
 end
 
 local function gclosest()
     local closest, dist = nil, math.huge
-    local mouse = input:GetMouseLocation()
+    local mouse = UserInputService:GetMouseLocation()
 
-    for _, p in ipairs(players:GetPlayers()) do
-        if p ~= lp and p.Character then
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= Player and p.Character then
             local t = p.Character:FindFirstChild("HumanoidRootPart") or p.Character:FindFirstChild("Torso")
             if t then
-                local v, on = cam:WorldToViewportPoint(t.Position)
+                local v, on = CurrentCamera:WorldToViewportPoint(t.Position)
 
                 if on and v.Z > 0 then
-                    if (cam.CFrame.Position - t.Position).Magnitude <= 1000 then
+                    if (CurrentCamera.CFrame.Position - t.Position).Magnitude <= 1000 then
                         local d = (Vector2.new(v.X, v.Y) - mouse).Magnitude
                         if d < dist then
                             dist = d
@@ -64,34 +76,35 @@ local function gclosest()
     return closest
 end
 
-local aimbot = false
 main:CreateToggle({
     Name = "Enable Aimbot",
-    CurrentValue = aimbot,
-    Flag = "ea",
-    Callback = function(v)
-        aimbot = v
-    end
+    CurrentValue = false,
+    Flag = "EnableAimbot",
+    Callback = function() end
 })
 
-local tbot = false
+main:CreateToggle({
+    Name = "Require Keybind",
+    CurrentValue = true,
+    Flag = "RequireKeybind",
+    Callback = function() end
+})
+
 main:CreateToggle({
     Name = "TriggerBot",
-    CurrentValue = tbot,
-    Flag = "tb",
-    Callback = function(v)
-        tbot = v
-    end
+    CurrentValue = false,
+    Flag = "TriggerBot",
+    Callback = function() end
 })
 
 local holding = false
-input.InputBegan:Connect(function(i)
+UserInputService.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton2 then
         holding = true
     end
 end)
 
-input.InputEnded:Connect(function(i)
+UserInputService.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton2 then
         holding = false
     end
@@ -100,7 +113,7 @@ end)
 if device == "Mobile" then
     local gui = Instance.new("ScreenGui")
     gui.Name = "aimlock"
-    gui.Parent = core
+    gui.Parent = CoreGui
 
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 100, 0, 50)
@@ -118,27 +131,27 @@ if device == "Mobile" then
 end
 
 local last = 0
-rs.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function()
     local target = gclosest()
     if not target or not target.Character then return end
 
     local hrp = target.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    local camPos = cam.CFrame.Position
+    local camPos = CurrentCamera.CFrame.Position
     local direction = (hrp.Position - camPos).Unit
 
-    if aimbot and holding then
-        cam.CFrame = cam.CFrame:Lerp(
+    if Flags.EnableAimbot.CurrentValue and (not Flags.RequireKeybind.CurrentValue or holding) then
+        CurrentCamera.CFrame = CurrentCamera.CFrame:Lerp(
             CFrame.new(camPos, camPos + direction),
             0.6
         )
     end
 
-    if tbot then
-        local pos, onScreen = cam:WorldToViewportPoint(hrp.Position)
+    if Flags.TriggerBot.CurrentValue then
+        local pos, onScreen = CurrentCamera:WorldToViewportPoint(hrp.Position)
         if onScreen then
-            local mouse = input:GetMouseLocation()
+            local mouse = UserInputService:GetMouseLocation()
             local dx = pos.X - mouse.X
             local dy = pos.Y - mouse.Y
             local dist = dx*dx + dy*dy
@@ -147,8 +160,8 @@ rs.RenderStepped:Connect(function()
             if dist < 144 and (time() - last) > 0.05 then
                 last = time()
 
-                vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
             end
         end
     end
@@ -156,36 +169,76 @@ end)
 
 main:CreateSection("Combat + Visuals")
 
-local cesp = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/esp.lua"))();local esp = cesp()
+local esp = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Libraries/Esp/main.lua"))()
+
 main:CreateDropdown({
     Name = "Esp Settings",
-    Options = {"Box", "Name", "Held Item", "Tracer", "Health", "Distance", "Chams", "Health Bar", "Team Color", "Performance Mode"},
+    Options = {
+        "Box",
+        "Corners",
+        "Name",
+        "Held Item",
+        "Tracer",
+        "Quad",
+        "Health",
+        "Distance",
+        "Chams",
+        "Health Bar",
+        "Team Color",
+        "Performance Mode",
+        "Skeleton",
+        "3D Box",
+    },
     CurrentOption = {},
     MultipleOptions = true,
-    Flag = "es",
+    Flag = "EspSettings",
     Callback = function(selectedOptions)
-        esp:box(false)
-        esp:name(false)
-        esp:held(false)
-        esp:tracer(false)
-        esp:health(false)
-        esp:distance(false)
-        esp:chams(false)
-        esp:healthbar(false)
-        esp:team(false)
-        esp:performance(false)
+        -- Reset all options
+        esp:SetProperty("ShowBox", false)
+        esp:SetProperty("ShowCorners", false)
+        esp:SetProperty("ShowName", false)
+        esp:SetProperty("ShowHeld", false)
+        esp:SetProperty("ShowTracer", false)
+        esp:SetProperty("ShowQuad", false)
+        esp:SetProperty("ShowHealth", false)
+        esp:SetProperty("ShowDistance", false)
+        esp:SetProperty("ShowChams", false)
+        esp:SetProperty("ShowHealthBar", false)
+        esp:SetProperty("TeamColor", false)
+        esp:SetProperty("PerformanceMode", false)
+        esp:SetProperty("ShowSkeleton", false)
+        esp:SetProperty("Show3DBox", false)
 
-        for _, option in pairs(selectedOptions) do
-            if option == "Box" then esp:box(true)
-            elseif option == "Name" then esp:name(true)
-            elseif option == "Held Item" then esp:held(true)
-            elseif option == "Tracer" then esp:tracer(true)
-            elseif option == "Health" then esp:health(true)
-            elseif option == "Distance" then esp:distance(true)
-            elseif option == "Chams" then esp:chams(true)
-            elseif option == "Health Bar" then esp:healthbar(true)
-            elseif option == "Team Color" then esp:team(true)
-            elseif option == "Performance Mode" then esp:performance(true)
+        -- Enable selected options
+        for _, option in ipairs(selectedOptions) do
+            if option == "Box" then
+                esp:SetProperty("ShowBox", true)
+            elseif option == "Corners" then
+                esp:SetProperty("ShowCorners", true)
+            elseif option == "Name" then
+                esp:SetProperty("ShowName", true)
+            elseif option == "Held Item" then
+                esp:SetProperty("ShowHeld", true)
+            elseif option == "Tracer" then
+                esp:SetProperty("ShowTracer", true)
+            elseif option == "Quad" then
+                esp:SetProperty("ShowQuad", true)
+            elseif option == "Health" then
+                esp:SetProperty("ShowHealth", true)
+            elseif option == "Distance" then
+                esp:SetProperty("ShowDistance", true)
+            elseif option == "Chams" then
+                esp:SetProperty("ShowChams", true)
+            elseif option == "Health Bar" then
+                esp:SetProperty("ShowHealthBar", true)
+            elseif option == "Team Color" then
+                esp:SetProperty("TeamColor", true)
+            elseif option == "Performance Mode" then
+                esp:SetProperty("PerformanceMode", true)
+            elseif option == "Skeleton" then
+                esp:SetProperty("ShowSkeleton", true)
+            elseif option == "3D Box" then
+                esp:SetProperty("Show3DBox", true)
             end
         end
     end,
@@ -194,23 +247,40 @@ main:CreateDropdown({
 main:CreateToggle({
     Name = "Enable",
     CurrentValue = false,
-    Flag = "esp",
+    Flag = "Enable",
     Callback = function(v)
-        if v then esp:enable() else esp:disable() end
+        if v then
+            esp:Enable()
+        else
+            esp:Disable()
+        end
+    end,
+})
+
+main:CreateSlider({
+    Name = "Esp Distance",
+    Range = {1, 2000},
+    Increment = 10,
+    Suffix = "studs",
+    CurrentValue = 1000,
+    Flag = "EspDistance",
+    Callback = function(v)
+        esp:SetProperty("MaxDist", v)
     end,
 })
 
 main:CreateDivider()
 
-local hitbox, hsize = false, 20; local boxes = {}
+local boxes = {}
 local function applyHitbox(char)
     if not isme(char) then return end
 
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    if hitbox then
-        hrp.Size = Vector3.new(hsize, hsize, hsize)
+    if Flags.HitboxExpander.CurrentValue then
+        local size = Flags.HitboxSize.CurrentValue
+        hrp.Size = Vector3.new(size, size, size)
         hrp.Transparency = 0.7
         hrp.CanCollide = false
     else
@@ -231,20 +301,12 @@ local function hookPlayer(p)
     end
 end
 
-for _, p in ipairs(players:GetPlayers()) do
-    hookPlayer(p)
-end
-
-players.PlayerAdded:Connect(hookPlayer)
-
 main:CreateToggle({
     Name = "Hitbox Expander",
-    CurrentValue = hitbox,
-    Flag = "he",
-    Callback = function(v)
-        hitbox = v
-
-        for _, p in ipairs(players:GetPlayers()) do
+    CurrentValue = false,
+    Flag = "HitboxExpander",
+    Callback = function()
+        for _, p in ipairs(Players:GetPlayers()) do
             if p.Character then
                 applyHitbox(p.Character)
             end
@@ -257,13 +319,11 @@ main:CreateSlider({
     Range = {10, 60},
     Increment = 1,
     Suffix = "studs",
-    CurrentValue = hsize,
-    Flag = "hs",
-    Callback = function(v)
-        hsize = v
-
-        if hitbox then
-            for _, p in ipairs(players:GetPlayers()) do
+    CurrentValue = 20,
+    Flag = "HitboxSize",
+    Callback = function()
+        if Flags.HitboxExpander.CurrentValue then
+            for _, p in ipairs(Players:GetPlayers()) do
                 if p.Character then
                     applyHitbox(p.Character)
                 end
@@ -272,13 +332,19 @@ main:CreateSlider({
     end
 })
 
+for _, p in ipairs(Players:GetPlayers()) do
+    hookPlayer(p)
+end
+
+Players.PlayerAdded:Connect(hookPlayer)
+
 local misc = Window:CreateTab("Misc")
 
 local gquality = settings().Rendering.QualityLevel
 misc:CreateToggle({
     Name = "Anti-Lag",
     CurrentValue = false,
-    Flag = "al",
+    Flag = "AntiLag",
     Callback = function(v)
         if v then
             settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
@@ -292,7 +358,7 @@ local rnum = tostring(math.random(1e7, 1e9))
 misc:CreateToggle({
     Name = "Anti-Void",
     CurrentValue = false,
-    Flag = "av",
+    Flag = "AntiVoid",
     Callback = function(val)
         if val then
             if not workspace:FindFirstChild(rnum) then
@@ -316,20 +382,19 @@ misc:CreateToggle({
 local auto = Window:CreateTab("Autofarm")
 auto:CreateSection("Autofarm")
 
-local autofarm = false; local grav = workspace.Gravity
+local grav = workspace.Gravity
 auto:CreateToggle({
     Name = "Autofarm",
-    CurrentValue = autofarm,
-    Flag = "af",
+    CurrentValue = false,
+    Flag = "Autofarm",
     Callback = function(v)
-        autofarm = v
         workspace.Gravity = v and 0 or grav
     end
 })
 
 auto:CreateLabel("Settings")
 
-local method, methods = "Safe", {
+local methods = {
     "Safe", -- orbits around the map shooting
     "Teleport" -- auto teleports to closest
 }
@@ -337,99 +402,90 @@ auto:CreateDropdown({
     Name = "Method",
     Options = methods,
     CurrentOption = methods[1],
-    Flag = "am",
-    Callback = function(v)
-        method = v
-    end
+    Flag = "Method",
+    Callback = function() end
 })
 
 auto:CreateDivider()
 
 local chars, listed = {}, {}
-for _, item in ipairs(workspace["Spawn"]["CharacterSelectTouchParts"]:GetChildren()) do
-    chars[item.Name] = item
-    table.insert(listed, item.Name)
+local spawnFolder = workspace:FindFirstChild("Spawn")
+local touchFolder = spawnFolder and spawnFolder:FindFirstChild("CharacterSelectTouchParts")
+if touchFolder then
+    for _, item in ipairs(touchFolder:GetChildren()) do
+        chars[item.Name] = item
+        table.insert(listed, item.Name)
+    end
 end
 --listed = table.sort(listed)
 
-local selected = chars[listed[1]]
 auto:CreateDropdown({
     Name = "Character",
     Options = listed,
     CurrentOption = listed[1],
-    Flag = "sm",
-    Callback = function(v)
-        selected = chars[v]
-    end
+    Flag = "Character",
+    Callback = function() end
 })
 
-local aselect = false
 auto:CreateToggle({
-    Name = "Auto select character on death",
-    CurrentValue = aselect,
-    Flag = "as",
-    Callback = function(v)
-        aselect = v
-    end
+    Name = "Auto Select Character on death",
+    CurrentValue = false,
+    Flag = "AutoSelectCharacter",
+    Callback = function() end
 })
 
 local function selectCharacter()
-    if not selected or not aselect then return end
+    if not Flags.AutoSelectCharacter.CurrentValue then return end
+
+    local char = chars[Flags.Character.CurrentOption[1]]
+    if not char then return end
 
     if firetouchinterest then
-        local root = lp.Character.HumanoidRootPart
-        firetouchinterest(selected, root, true)
-        firetouchinterest(selected, root, false)
+        firetouchinterest(char, HumanoidRootPart, true)
+        firetouchinterest(char, HumanoidRootPart, false)
     else
-        root.CFrame = selected.CFrame + Vector3.new(0, 3, 0)
+        HumanoidRootPart.CFrame = char.CFrame + Vector3.new(0, 3, 0)
         task.wait(0.5)
     end
 end
 
 auto:CreateDivider()
 
-local bselected = "1"; local s = {"1", "2", "3", "all"}
+local s = {"1", "2", "3", "all"}
 auto:CreateDropdown({
     Name = "Tool to select",
     Options = s,
     CurrentOption = s[1],
-    Flag = "bs",
-    Callback = function(v)
-        bselected = v
-    end
+    Flag = "ToolSelect",
+    Callback = function() end
 })
 
-local autobackpack = false
 auto:CreateToggle({
     Name = "Auto Select",
-    CurrentValue = autobackpack,
-    Flag = "asb",
-    Callback = function(v)
-        autobackpack = v
-    end
+    CurrentValue = false,
+    Flag = "AutoSelect",
+    Callback = function() end
 })
 
 local function equipTool()
-    if not lp.Character then return end
-    
-    local hum = lp.Character:FindFirstChild("Humanoid")
-    local backpack = lp:FindFirstChildOfClass("Backpack")
+    if not Humanoid then return end
 
-    if not hum or not backpack then return end
+    local backpack = Player:FindFirstChildOfClass("Backpack")
+    if not backpack then return end
 
-    if bselected == "all" then
+    if Flags.ToolSelect.CurrentOption[1] == "all" then
         for _, tool in ipairs(backpack:GetChildren()) do
             if tool:IsA("Tool") then
-                hum:EquipTool(tool)
+                Humanoid:EquipTool(tool)
                 task.wait(0.05)
             end
         end
     else
-        local index = tonumber(bselected)
+        local index = tonumber(Flags.ToolSelect.CurrentOption[1])
         if index then
             local tool = backpack:GetChildren()[index]
             if tool and tool:IsA("Tool") then
-                hum:EquipTool(tool)
+                Humanoid:EquipTool(tool)
             end
         end
     end
@@ -437,88 +493,51 @@ end
 
 -- main --
 
-local died = Instance.new("BindableEvent")
 local wasaf = false
-local wasaimbot = false
-local wastbot = false
 
-lp.CharacterAdded:Connect(function(char)
-    local hum = char:WaitForChild("Humanoid", 10)
-    if hum then
-        hum.Died:Connect(function()
-            died:Fire()
-        end)
-    end
-    
-    local hrp = char:WaitForChild("HumanoidRootPart", 10)
-    if not hrp then return end
-    
+local function onDied()
+    wasaf = Flags.Autofarm.CurrentValue
+    Flags.Autofarm:Set(false)
+end
+
+Humanoid.Died:Connect(onDied)
+
+Player.CharacterAdded:Connect(function()
+    Humanoid.Died:Connect(onDied)
+
     task.wait(0.5)
 
-    if aselect then
+    if Flags.AutoSelectCharacter.CurrentValue then
         selectCharacter()
         task.wait(1)
     end
 
-    if autobackpack then
+    if Flags.AutoSelect.CurrentValue then
         task.wait(1)
         equipTool()
     end
 
     if wasaf then
-        autofarm = true
+        Flags.Autofarm:Set(true)
         wasaf = false
     end
-    
-    if wasaimbot then
-        aimbot = true
-        wasaimbot = false
-    end
-    if wastbot then
-        tbot = true
-        wastbot = false
-    end
-end)
-
-if lp.Character then
-    local hum = lp.Character:FindFirstChild("Humanoid")
-    if hum then
-        hum.Died:Connect(function()
-            died:Fire()
-        end)
-    end
-end
-
-died.Event:Connect(function()
-    wasaf = autofarm
-    autofarm = false
-    wasaimbot = aimbot
-    wastbot = tbot
 end)
 
 local t = 0
-rs.Heartbeat:Connect(function(dt)
-    if not autofarm then return end
+RunService.Heartbeat:Connect(function(dt)
+    if not Flags.Autofarm.CurrentValue then return end
 
     pcall(function()
-        local char = lp.Character
-        if not char then return end
-        
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if not root then return end
-
         local target = gclosest()
         if not target or not target.Character then return end
         
         local troot = target.Character:FindFirstChild("HumanoidRootPart")
         if not troot then return end
 
-        aimbot, tbot, holding = true, true, true
+        if Flags.Method.CurrentOption[1] == "Teleport" then
+            HumanoidRootPart.CFrame = troot.CFrame * CFrame.new(0, 0, 3)
 
-        if method == "Teleport" then
-            root.CFrame = troot.CFrame * CFrame.new(0, 0, 3)
-
-        elseif method == "Safe" then
+        elseif Flags.Method.CurrentOption[1] == "Safe" then
             t = t + dt
             local radius, height = 225, 75
 
@@ -531,7 +550,7 @@ rs.Heartbeat:Connect(function(dt)
                 math.sin(t * 0.5) * radius
             )
 
-            root.CFrame = root.CFrame:Lerp(CFrame.new(pos), 0.25)
+            HumanoidRootPart.CFrame = HumanoidRootPart.CFrame:Lerp(CFrame.new(pos), 0.25)
         end
     end)
 end)

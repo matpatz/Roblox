@@ -17,7 +17,6 @@ local SpawmPoint = workspace:FindFirstChildWhichIsA("SpawnLocation")
 local Eggs = workspace.AreaEggSlotsClient
 
 -- // LocalPlayer
-
 local LocalPlayer = Players.LocalPlayer
 
 if not LocalPlayer.Character then
@@ -34,6 +33,7 @@ LocalPlayer.CharacterAdded:Connect(function(NewCharacter)
 end)
 
 --// locals
+const UserId = LocalPlayer.UserId
 local Flags = {}
 
 -- // config
@@ -58,7 +58,7 @@ local cheat = {
 local Utils = cheat.Utils
 local Core = cheat.Core
 
-local Zones = {
+const Zones = {
     ["Cosmic"] = 9,
     ["Prehistoric"] = 8,
     ["Abyss Ocean"] = 7,
@@ -67,7 +67,8 @@ local Zones = {
     ["Jungle"] = 4,
     ["Desert"] = 3,
     ["Lake"] = 2,
-    ["Forest"] = 1
+    ["Forest"] = 1,
+	["Random"] = 0
 }
 
 -- // Utils
@@ -81,9 +82,11 @@ Utils.GetBestEgg = function(Options)
 		if Egg.State ~= "Slot" then
 			continue
 		end
-        if Egg.AreaId ~= Area then
-			continue
-        end
+		if Area ~= "Random" then
+			if Egg.AreaId ~= Area then
+				continue
+			end
+		end
 
 		local Rank = Zones[Area] or 0
 
@@ -170,14 +173,29 @@ Core.StealBestEgg = function(Options)
 	return true
 end
 
-Core.HatchEgg = function(Egg: Instance)
-	local Id = Egg.Name -- also exists as an attribute
+Utils.HatchEgg = function(Uid: string)
 	RequestHatchEgg:InvokeServer(
-		Id
+		Uid
 	); task.wait(0.5) -- not sure
 	RequestCompleteHatchEgg:InvokeServer(
-		Id
+		Uid
 	)
+end
+
+Core.HatchEggs = function()
+	const Snapshot = EggCmds.GetRuntimeSnapshot()
+
+	for _, Owner in next, (Snapshot) do
+		if Owner.OwnerUserId ~= UserId then
+			continue
+		end
+		for Uid, Egg in next, (Owner.Records) do
+			if Egg.Placement and EggCmds.IsLocalEggReady(Uid) then
+				Utils.HatchEgg(Uid)
+			end
+		end
+	end
+	return true
 end
 
 -- // Interface
@@ -193,8 +211,10 @@ local Window = Rayfield:CreateWindow({
 
 local tabs = {
     Eggs = Window:CreateTab("Eggs"),
-    settings = Window:CreateTab("Settings"),
+    Pen = Window:CreateTab("Pen"),
 }
+
+-- // Eggs
 
 tabs.Eggs:CreateDropdown({
     Name = "Zone",
@@ -207,7 +227,8 @@ tabs.Eggs:CreateDropdown({
         "Jungle",
         "Desert",
         "Lake",
-        "Forest"
+        "Forest",
+		"Random"
     },
     CurrentOption = {config.Eggs.BestEgg.Area},
     MultipleOptions = false,
@@ -242,5 +263,34 @@ tabs.Eggs:CreateButton({
     Name = "Steal Egg",
     Callback = function()
 		Core.StealBestEgg(config.Eggs.BestEgg)
+    end,
+})
+
+-- // Pen
+tabs.Pen:CreateToggle({
+    Name = "Auto Hatch all Eggs",
+    CurrentValue = false,
+    Flag = "AutoHatchEggs",
+    Callback = function(Value)
+        if not Value then
+            return
+        end
+
+        task.spawn(function()
+            while Value do
+                if Core.HatchEggs() then
+                    task.wait(.2)
+                else
+                    task.wait()
+                end
+            end
+        end)
+    end,
+})
+
+tabs.Pen:CreateButton({
+    Name = "Hatch all Eggs",
+    Callback = function()
+		Core.HatchEggs()
     end,
 })

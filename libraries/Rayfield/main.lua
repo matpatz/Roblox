@@ -102,7 +102,7 @@ end
 
 local requestsDisabled = false
 local customAssetId = nil
-local secureMode = true
+local secureMode = false
 if getgenv then
 	local ok, result = pcall(function() return getgenv().DISABLE_RAYFIELD_REQUESTS end)
 	if ok and result then requestsDisabled = true end

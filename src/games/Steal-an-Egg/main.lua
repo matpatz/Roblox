@@ -3,6 +3,8 @@
 	[+] Min Egg Size Slider
 --]]
 
+print("ran")
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -44,6 +46,7 @@ local Flags = {}
 -- // config
 local config = {
 	Eggs = {
+        AutoPlaceStolenEgg = false,
 		BestEgg = {
 			Area = "Forest",
 			DesireMutations = true,
@@ -63,6 +66,71 @@ local cheat = {
 }
 local Utils = cheat.Utils
 local Core = cheat.Core
+
+-- thank you great and mighty chatgpt
+Utils.GetOccupiedEggPositions = function()
+    local Occupied = {}
+    local Snapshot = EggCmds.GetRuntimeSnapshot()
+
+    for _, Owner in next, Snapshot do
+        if Owner.OwnerUserId ~= UserId then
+            continue
+        end
+
+        for _, Egg in next, Owner.Records do
+            if Egg.Placement and Egg.Placement.LocalCFrame then
+                Occupied[#Occupied + 1] = Egg.Placement.LocalCFrame
+            end
+        end
+    end
+
+    return Occupied
+end
+
+Utils.GetFreeEggPosition = function(Plot, EggRadius)
+    local PlacementArea = Plot:FindFirstChild("PlacementArea")
+
+    if not PlacementArea then
+        return nil
+    end
+
+    local Occupied = Utils.GetOccupiedEggPositions()
+    local Size = PlacementArea.Size
+
+    for X = -Size.X / 2, Size.X / 2, EggRadius * 2 do
+        for Z = -Size.Z / 2, Size.Z / 2, EggRadius * 2 do
+            local LocalPosition = Vector3.new(X, 0, Z)
+            local Position = PlacementArea.CFrame:PointToWorldSpace(LocalPosition)
+
+            local Free = true
+
+            for _, CFrame in next, Occupied do
+                if (Position - CFrame.Position).Magnitude < EggRadius * 2 then
+                    Free = false
+                    break
+                end
+            end
+
+            if Free then
+                return CFrame.new(Position)
+            end
+        end
+    end
+
+    return nil
+end
+
+Core.PlaceEgg = function(Uid: string)
+    local CFrame = Utils.GetFreeEggPosition()
+
+    if not CFrame then
+        return false
+    end
+
+    local Success = EggCmds.RequestPlaceEgg(Uid, CFrame)
+
+    return Success == true
+end
 
 const Zones = {
     ["Cosmic"] = 9,
@@ -154,19 +222,25 @@ local function GetSlot(Name: string)
 end
 
 Core.StealBestEgg = function(Options)
+    print("exists")
 	if not Utils.VerifySteal() then
-		return false
+        print("fail check")
+        return false
 	end
 
 	local Egg = Utils.GetBestEgg(Options):WaitForChild("Hitbox")
 	if not Egg then
+        print("no egg")
 		return false
 	end
+    print("name")
 	local Name = Egg.Parent.Name
 
+    print("tween egg")
 	Utils.TweenTo(Egg)
 	task.wait(.15)
 
+    print("if then else")
 	if Name:find("FirstAreaEgg") then
 		RequestAreaEggCarry:InvokeServer(
 			{
@@ -184,7 +258,15 @@ Core.StealBestEgg = function(Options)
 
 	task.wait(.25)
 
+    print("pre tween")
 	Utils.TweenTo(SpawmPoint)
+    print("after")
+
+    print(config.Eggs.AutoPlaceStolenEgg)
+    if config.Eggs.AutoPlaceStolenEgg then
+        print("yes")
+        Core.PlaceEgg(Name)
+    end
 
 	return true
 end
@@ -275,7 +357,17 @@ tabs.Eggs:CreateToggle({
 tabs.Eggs:CreateButton({
     Name = "Steal Egg",
     Callback = function()
+        print("called")
 		Core.StealBestEgg(config.Eggs.BestEgg)
+    end,
+})
+
+tabs.Eggs:CreateToggle({
+    Name = "Auto Place Stolen Egg",
+    CurrentValue = false,
+    Flag = "AutoPlaceStolenEgg",
+    Callback = function(Value)
+        config.Eggs.AutoPlaceStolenEgg = Value
     end,
 })
 

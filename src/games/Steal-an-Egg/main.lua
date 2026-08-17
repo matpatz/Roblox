@@ -1,23 +1,28 @@
+--[[ TODO:
+	[+] Auto Place Egg (after finishing a steal)
+	[+] Min Egg Size Slider
+--]]
+
 -- // Services
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const Players = game:GetService("Players")
+const TweenService = game:GetService("TweenService")
 
 -- // Modules
-local EggCmds = require(ReplicatedStorage.Library.Client.EggCmds)
-local AreaEggResetTimeUtil = require(ReplicatedStorage.Library.Util.AreaEggResetTimeUtil)
+const EggCmds = require(ReplicatedStorage.Library.Client.EggCmds)
+const AreaEggResetTimeUtil = require(ReplicatedStorage.Library.Util.AreaEggResetTimeUtil)
 
 -- // Events
-local RequestHatchEgg = game:GetService("ReplicatedStorage").Network["Eggs: RequestHatchEgg"]
-local RequestCompleteHatchEgg = ReplicatedStorage.Network["Eggs: RequestCompleteHatchEgg"]
-local RequestAreaEggCarry = game:GetService("ReplicatedStorage").Network["Eggs: RequestAreaEggCarry"]
+const RequestHatchEgg = game:GetService("ReplicatedStorage").Network["Eggs: RequestHatchEgg"]
+const RequestCompleteHatchEgg = ReplicatedStorage.Network["Eggs: RequestCompleteHatchEgg"]
+const RequestAreaEggCarry = game:GetService("ReplicatedStorage").Network["Eggs: RequestAreaEggCarry"]
 
 -- // Workspace
-local SpawmPoint = workspace:FindFirstChildWhichIsA("SpawnLocation")
-local Eggs = workspace.AreaEggSlotsClient
+const SpawmPoint = workspace:FindFirstChildWhichIsA("SpawnLocation")
+const Eggs = workspace.AreaEggSlotsClient
 
 -- // LocalPlayer
-local LocalPlayer = Players.LocalPlayer
+const LocalPlayer = Players.LocalPlayer
 
 if not LocalPlayer.Character then
 	LocalPlayer.CharacterAdded:Wait()
@@ -41,7 +46,8 @@ local config = {
 	Eggs = {
 		BestEgg = {
 			Area = "Forest",
-			DesireMutations = true
+			DesireMutations = true,
+			MinimumRank = 1
 		}
 	}
 }
@@ -75,33 +81,43 @@ const Zones = {
 Utils.GetBestEgg = function(Options)
     local Area = Options.Area
     local DesireMutations = Options.DesireMutations == true
+    local MinRank = Options.MinimumRank
     local BestEgg
     local BestRank = -math.huge
 
     for _, Egg in next, (EggCmds.GetAreaEggSnapshot().Records) do
-		if Egg.State ~= "Slot" then
-			continue
-		end
-		if Area ~= "Random" then
-			if Egg.AreaId ~= Area then
-				continue
-			end
-		end
+        if Egg.State ~= "Slot" then
+            continue
+        end
 
-		local Rank = Zones[Area] or 0
+        local EggRank = Zones[Egg.AreaId] or 0
 
-		if DesireMutations then
-			if #Egg.Mutations > 0 then
-				Rank += 100
-			else
-				Rank -= 100
-			end
-		end
+        if Area ~= "Random" and Egg.AreaId ~= Area then
+            continue
+        end
 
-		if Rank > BestRank then
-			BestRank = Rank
-			BestEgg = Eggs:FindFirstChild(Egg.Uid)
-		end
+        if Area == "Random" and EggRank < MinRank then
+            continue
+        end
+
+        local Rank = EggRank
+
+        if DesireMutations then
+            if #Egg.Mutations > 0 then
+                Rank += 100
+            else
+                Rank -= 100
+            end
+        end
+
+        if Rank > BestRank then
+            local Instance = Eggs:FindFirstChild(Egg.Uid)
+
+            if Instance then
+                BestRank = Rank
+                BestEgg = Instance
+            end
+        end
     end
 
     return BestEgg
@@ -248,12 +264,9 @@ tabs.Eggs:CreateToggle({
         end
 
         task.spawn(function()
-            while Value do
-                if Core.StealBestEgg(config.Eggs.BestEgg) then
-                    task.wait(.2)
-                else
-                    task.wait()
-                end
+            while Flags.AutoStealEgg.CurrentValue do
+                Core.StealBestEgg(config.Eggs.BestEgg)
+                task.wait(.2)
             end
         end)
     end,
@@ -264,6 +277,29 @@ tabs.Eggs:CreateButton({
     Callback = function()
 		Core.StealBestEgg(config.Eggs.BestEgg)
     end,
+})
+
+tabs.Eggs:CreateDivider()
+
+tabs.Eggs:CreateToggle({
+    Name = "Desire Mutations",
+    CurrentValue = true,
+    Flag = "DesireMutations",
+    Callback = function(Value)
+		config.Eggs.BestEgg.DesireMutations = Value
+    end,
+})
+
+tabs.Eggs:CreateSlider({
+    Name = "Minimum Zone Rank",
+    Range = {1, 9},
+    Increment = 1,
+    Suffix = "",
+    CurrentValue = config.Eggs.BestEgg.MinimumRank,
+    Flag = "MinEggRank",
+    Callback = function(Value)
+        config.Eggs.BestEgg.MinimumRank = Value
+    end
 })
 
 -- // Pen
@@ -277,12 +313,9 @@ tabs.Pen:CreateToggle({
         end
 
         task.spawn(function()
-            while Value do
-                if Core.HatchEggs() then
-                    task.wait(.2)
-                else
-                    task.wait()
-                end
+            while Flags.AutoHatchEggs.CurrentValue do
+                Core.HatchEggs()
+                task.wait(.2)
             end
         end)
     end,

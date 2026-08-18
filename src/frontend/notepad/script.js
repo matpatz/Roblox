@@ -1,10 +1,9 @@
 /* Notepad — a lightweight Pastefy-backed notepad.
- * Saves notes as pastes on https://pastefy.app via API v2.
- * Token comes straight from the PASTEFY_API_KEY env var.
+ * Saves notes as pastes on https://pastefy.app via API v2,
+ * proxied through /api/v1/pastefy (the token lives in .env server-side).
  */
 
-const PASTEFY_API_KEY = process.env.PASTEFY_API_KEY;
-const API_URL = 'https://pastefy.app/api/v2/paste';
+const API_URL = '/api/v1/pastefy';
 const DEFAULT_VISIBILITY = 'UNLISTED'; // PUBLIC | UNLISTED | PRIVATE
 
 const titleEl = document.getElementById('title');
@@ -24,11 +23,7 @@ function say(el, text) {
 async function pastefy(path, options = {}) {
   const res = await fetch(API_URL + path, {
     ...options,
-    headers: {
-      Authorization: `Token ${PASTEFY_API_KEY}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
   });
 
   let data = null;
@@ -37,13 +32,14 @@ async function pastefy(path, options = {}) {
   if (!res.ok) {
     const message =
       (data &&
-        (data.message ||
-          (data.error && data.error.message) ||
+        (data.error?.message ||
+          data.message ||
           (typeof data.error === 'string' && data.error))) ||
       `Request failed (${res.status})`;
     throw new Error(message);
   }
-  return data;
+  // API wraps payloads as { success: true, data }
+  return data && data.success ? data.data : data;
 }
 
 async function saveNote() {
@@ -60,7 +56,7 @@ async function saveNote() {
   say(msgEl, '');
 
   try {
-    const data = await pastefy('', {
+    const paste = await pastefy('', {
       method: 'POST',
       body: JSON.stringify({
         title: titleEl.value.trim(),
@@ -70,7 +66,6 @@ async function saveNote() {
       }),
     });
 
-    const paste = data && data.paste;
     if (!paste || !paste.id) throw new Error('Pastefy returned an unexpected response.');
 
     noteIdEl.value = paste.id;
@@ -97,7 +92,7 @@ async function loadNote() {
   say(msgEl, '');
 
   try {
-    const data = await pastefy('/' + encodeURIComponent(id));
+    const data = await pastefy('?id=' + encodeURIComponent(id));
     if (!data || typeof data.content !== 'string') {
       throw new Error('Paste not found.');
     }

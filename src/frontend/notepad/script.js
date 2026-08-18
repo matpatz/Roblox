@@ -1,8 +1,3 @@
-/* Notepad — a lightweight Pastefy-backed notepad.
- * Saves notes as pastes on https://pastefy.app via API v2.
- * No auth needed — pastes are created anonymously as UNLISTED.
- */
-
 const API_URL = 'https://pastefy.app/api/v2/paste';
 const DEFAULT_VISIBILITY = 'UNLISTED'; // PUBLIC | UNLISTED | PRIVATE
 

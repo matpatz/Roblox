@@ -154,17 +154,6 @@
     "playButtonText": "Play on Roblox"
   },
   {
-    "id": "trident",
-    "title": "Trident Survival",
-    "description": "Basic Aimbot, Esp, Silent aim, amany of features.",
-    "updated": "2 weeks ago",
-    "tags": ["In Development"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/trident/main.lua\"))()",
-    "buttonText": "Get Script",
-    "playUrl": "https://www.roblox.com/games/13253735473/Trident-Survival",
-    "playButtonText": "Play on Roblox"
-  },
-  {
     "id": "ageeveryclick",
     "title": "Age Every Click",
     "description": "Auto Max Age",

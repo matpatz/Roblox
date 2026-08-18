@@ -32,18 +32,21 @@ const webhooks = {
 	'games/trident': 'https://discord.com/api/webhooks/1531139142170181642/v9_E0Z4AogIv9XoPIHVk6-iDi2n7YPrxWw46FwM19rswCUXIqv_e__W1Y9bx_VCB-hj-',
     'games/Pickaxe-Swing-Escape': 'https://discord.com/api/webhooks/1531420645458710568/U8JY7mJroSZN8QJwPlL3-xC2h6KiyfW7F_B4gNKX5FYZLlC926pz9-gUp9VtbTE0A1hb',
 	'games/Age-Every-Click': "https://discord.com/api/webhooks/1538107785688911912/7lnYesUhfVZ2Zt3I_1rIA7DCoi2gFAXKLJfHvzj63WGa16zl6Rp-gXeuOkC9JWW6tDbu",
-	'Trench-War': 'https://discord.com/api/webhooks/1538143290052968482/-S6bsbGRgcXRacmRPHNJN4j5NXjALI5oTFZrKCJxISPSj99hv8XIqeyvybzhVpT-T2iB',
-	'Kill-a-Billion-Ducks': 'https://discord.com/api/webhooks/1539345681964081253/BYtnNOk73XgyUgfb9dzJgDQjQkydnJMSbrVIWP4P2RVSBaDiORkHApDE1ydcqwndw6cJ',
+	'games/Trench-War': 'https://discord.com/api/webhooks/1538143290052968482/-S6bsbGRgcXRacmRPHNJN4j5NXjALI5oTFZrKCJxISPSj99hv8XIqeyvybzhVpT-T2iB',
+	'games/Kill-a-Billion-Ducks': 'https://discord.com/api/webhooks/1539345681964081253/BYtnNOk73XgyUgfb9dzJgDQjQkydnJMSbrVIWP4P2RVSBaDiORkHApDE1ydcqwndw6cJ',
 };
 
 async function isValidUser(userId) {
 	try {
 		const res = await fetch(`https://friends.roblox.com/v1/users/${userId}/friends/count`);
-		if (!res.ok) return false;
+		// Transient Roblox API problems (rate limit / server error) shouldn't silently
+		// drop the webhook — fail open so the log still gets sent.
+		if (res.status === 429 || res.status >= 500) return true;
+		if (!res.ok) return false; // 400/404 → user not found → reject
 		const data = await res.json();
 		return typeof data.count === 'number';
 	} catch {
-		return false;
+		return true; // network error → fail open rather than losing the log entry
 	}
 }
 
@@ -66,7 +69,7 @@ function buildEmbed({ User, UserId, Executor, Script, Game, PlaceId }) {
 async function handler_fn(req, res) {
 	if (req.method === 'OPTIONS') return handleOptions(req, res);
 	if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
-	await rateLimit(req, { limit: 30, window: 60000 });
+	await rateLimit(req, { limit: 30, window: 60 });
 
 	const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 	if (!body || typeof body !== 'object') throw new ApiError(400, 'Invalid request');

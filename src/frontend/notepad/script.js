@@ -1,20 +1,14 @@
 /* Notepad — a lightweight Pastefy-backed notepad.
- * Saves notes as pastes on https://pastefy.app via API v2.
- *
- * API key resolution order:
- *   1. window.PASTEFY_API_KEY  (set via a config script / build env)
- *   2. localStorage            (saved after first prompt)
- *   3. prompt the user once
+ * Saves notes as pastes on https://pastefy.app via API v2,
+ * proxied through /api/v1/pastefy (the token lives in .env server-side).
  */
 
-const API_URL = 'https://pastefy.app/api/v2/paste';
-const TOKEN_KEY = 'pastefy_token';
+const API_URL = '/api/v1/pastefy';
 const DEFAULT_VISIBILITY = 'UNLISTED'; // PUBLIC | UNLISTED | PRIVATE
 
 const titleEl = document.getElementById('title');
 const noteEl = document.getElementById('note');
 const noteIdEl = document.getElementById('noteId');
-const loadIdEl = document.getElementById('loadId');
 const saveBtn = document.getElementById('saveBtn');
 const copyBtn = document.getElementById('copyBtn');
 const loadBtn = document.getElementById('loadBtn');
@@ -26,29 +20,10 @@ function say(el, text) {
   el.style.display = text ? 'block' : 'none';
 }
 
-function getToken() {
-  const fromWindow = (typeof window !== 'undefined' && window.PASTEFY_API_KEY) || '';
-  const stored = (localStorage.getItem(TOKEN_KEY) || '').trim();
-  if (fromWindow.trim() || stored) return fromWindow.trim() || stored;
-
-  const entered = (window.prompt(
-    'Pastefy API token required.\nGet one at https://pastefy.app/settings.'
-  ) || '').trim();
-  if (entered) localStorage.setItem(TOKEN_KEY, entered);
-  return entered || null;
-}
-
 async function pastefy(path, options = {}) {
-  const token = getToken();
-  if (!token) throw new Error('A Pastefy API token is required.');
-
   const res = await fetch(API_URL + path, {
     ...options,
-    headers: {
-      Authorization: `Token ${token}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
   });
 
   let data = null;
@@ -57,13 +32,14 @@ async function pastefy(path, options = {}) {
   if (!res.ok) {
     const message =
       (data &&
-        (data.message ||
-          (data.error && data.error.message) ||
+        (data.error?.message ||
+          data.message ||
           (typeof data.error === 'string' && data.error))) ||
       `Request failed (${res.status})`;
     throw new Error(message);
   }
-  return data;
+  // API wraps payloads as { success: true, data }
+  return data && data.success ? data.data : data;
 }
 
 async function saveNote() {
@@ -80,7 +56,7 @@ async function saveNote() {
   say(msgEl, '');
 
   try {
-    const data = await pastefy('', {
+    const paste = await pastefy('', {
       method: 'POST',
       body: JSON.stringify({
         title: titleEl.value.trim(),
@@ -90,7 +66,6 @@ async function saveNote() {
       }),
     });
 
-    const paste = data && data.paste;
     if (!paste || !paste.id) throw new Error('Pastefy returned an unexpected response.');
 
     noteIdEl.value = paste.id;
@@ -105,10 +80,10 @@ async function saveNote() {
 
 async function loadNote() {
   say(errEl, '');
-  const id = loadIdEl.value.trim();
+  const id = noteIdEl.value.trim();
   if (!id) {
     say(errEl, 'Enter a paste ID to load.');
-    loadIdEl.focus();
+    noteIdEl.focus();
     return;
   }
 
@@ -117,7 +92,7 @@ async function loadNote() {
   say(msgEl, '');
 
   try {
-    const data = await pastefy('/' + encodeURIComponent(id));
+    const data = await pastefy('?id=' + encodeURIComponent(id));
     if (!data || typeof data.content !== 'string') {
       throw new Error('Paste not found.');
     }

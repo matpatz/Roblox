@@ -1,6 +1,10 @@
 .history
 .vercel
 
+.env
+.env.*
+!.env.example
+
 supabase-schema.sql
 
 # development stuff

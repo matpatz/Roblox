@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Notepad</title>
+<link rel="stylesheet" href="/src/frontend/notepad/style.css" />
+</head>
+<body>
+<div class="app">
+  <h2>Notepad</h2>
+
+  <div class="controls">
+    <input id="title" placeholder="Title">
+    <button id="saveBtn">Save</button>
+    <button id="copyBtn">Copy ID</button>
+  </div>
+
+  <textarea id="note" placeholder="Write your note here..."></textarea>
+
+  <div class="controls">
+    <input id="noteId" placeholder="Saved ID" readonly>
+    <hr>
+    <input id="loadId" placeholder="Enter ID to load">
+    <button id="loadBtn">Load</button>
+  </div>
+
+  <p id="msg"></p>
+  <p id="err"></p>
+</div>
+
+<script src="/src/frontend/notepad/script.js"></script>
+</body>
+</html>

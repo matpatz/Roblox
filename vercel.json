@@ -10,7 +10,8 @@
     { "source": "/projects/misc.json", "destination": "/src/frontend/projects/misc.json" },
     { "source": "/stats", "destination": "/src/frontend/stats.html" },
     { "source": "/setup", "destination": "/src/frontend/setup.html" },
-    { "source": "/key-system", "destination": "/src/frontend/key-system/index.html" }
+    { "source": "/key-system", "destination": "/src/frontend/key-system/index.html" },
+    { "source": "/notepad", "destination": "/src/frontend/notepad/index.html" }
   ],
   "headers": [
     {

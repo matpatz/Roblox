@@ -15,3 +15,9 @@ tests
 
 ignore-key-system
 TODO
+
+webhooks.env
+discord-webhooks.secret.json
+scripts-util
+
+supabase/.temp/

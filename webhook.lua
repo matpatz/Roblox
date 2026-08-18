@@ -21,7 +21,7 @@ local Payload = {
 }
 
 request({
-    Url = "https://roblox-alpha-murex.vercel.app/api/v1/webhook",
+    Url = "https://dtfnhmehvzqcgwwdkmzh.supabase.co/functions/v1/webhook",
 
     Method = "POST",
 

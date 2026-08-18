@@ -159,9 +159,193 @@
     "description": "Basic Aimbot, Esp, Silent aim, amany of features.",
     "updated": "2 weeks ago",
     "tags": ["In Development"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Trident/main.lua\"))()",
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/trident/main.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/13253735473/Trident-Survival",
     "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "ageeveryclick",
+    "title": "Age Every Click",
+    "description": "Auto Max Age",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Age-Every-Click/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "beabeggar",
+    "title": "Be a Beggar",
+    "description": "Auto Minigame",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Be-a-Beggar/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "bladespin",
+    "title": "Blade Spin",
+    "description": "Auto Coins & XP",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Blade-Spin/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "buildascamempire",
+    "title": "Build a Scam Empire",
+    "description": "Autofarm",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Build-a-Scam-Empire/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "clonelinechallenge",
+    "title": "Clone Line Challenge",
+    "description": "Auto Level & Money",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Clone-Line-Challenge/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "desertstorm",
+    "title": "Desert Storm",
+    "description": "Anticheat Bypass",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Desert-Storm/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "digtoearthcore",
+    "title": "Dig to Earth Core",
+    "description": "Auto Farm",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Dig-to-Earth-Core/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "growbiggereverystep",
+    "title": "Grow Bigger Every Step",
+    "description": "Auto Grow",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Grow-Bigger-Every-Step/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "horserace",
+    "title": "Horse Race",
+    "description": "Auto Win",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Horse-Race/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "huntingseason",
+    "title": "Hunting Season",
+    "description": "Aimbot, ESP, Teleports",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Hunting-Season/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "hyperspeedrunner",
+    "title": "Hyper Speed Runner",
+    "description": "Auto XP",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Hyper-Speed-Runner/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "industrialist",
+    "title": "Industrialist",
+    "description": "Anti-AFK & Clear Pollution",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Industrialist/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "killabillionducks",
+    "title": "Kill a Billion Ducks",
+    "description": "Auto Kill Ducks",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Kill-a-Billion-Ducks/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "launchurplane",
+    "title": "Launch ur Plane",
+    "description": "Auto Money",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Launch-ur-Plane/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "mergesoldiers",
+    "title": "Merge Soldiers",
+    "description": "Tycoon Auto Farm",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Merge-Soldiers/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "pickaxeswingescape",
+    "title": "Pickaxe Swing Escape",
+    "description": "Auto Farm & Teleports",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Pickaxe-Swing-Escape/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "rostalpha",
+    "title": "Rost Alpha",
+    "description": "Silent Aim",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Rost-Alpha/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "speedvsgiant",
+    "title": "Speed vs Giant",
+    "description": "Autofarm & Teleports",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Speed-vs-Giant/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "stealanegg",
+    "title": "Steal an Egg",
+    "description": "Auto Steal & Hatch",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Steal-an-Egg/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "stepforjumps",
+    "title": "Step for Jumps",
+    "description": "Auto Jumps & Rebirth",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Step-for-Jumps/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "timebombduel",
+    "title": "Timebomb Duel",
+    "description": "Auto Teleport",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Timebomb-Duel/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "trenchwar",
+    "title": "Trench War",
+    "description": "Aimbot, Triggerbot, ESP",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Trench-War/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "vagrant",
+    "title": "Vagrant",
+    "description": "Aimbot",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Vagrant/main.lua\"))()",
+    "buttonText": "Get Script"
   }
 ]

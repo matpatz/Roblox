@@ -1,9 +1,9 @@
 /* Notepad — a lightweight Pastefy-backed notepad.
- * Saves notes as pastes on https://pastefy.app via API v2,
- * proxied through /api/v1/pastefy (the token lives in .env server-side).
+ * Saves notes as pastes on https://pastefy.app via API v2.
+ * No auth needed — pastes are created anonymously as UNLISTED.
  */
 
-const API_URL = '/api/v1/pastefy';
+const API_URL = 'https://pastefy.app/api/v2/paste';
 const DEFAULT_VISIBILITY = 'UNLISTED'; // PUBLIC | UNLISTED | PRIVATE
 
 const titleEl = document.getElementById('title');
@@ -32,14 +32,13 @@ async function pastefy(path, options = {}) {
   if (!res.ok) {
     const message =
       (data &&
-        (data.error?.message ||
-          data.message ||
+        (data.message ||
+          (data.error && data.error.message) ||
           (typeof data.error === 'string' && data.error))) ||
       `Request failed (${res.status})`;
     throw new Error(message);
   }
-  // API wraps payloads as { success: true, data }
-  return data && data.success ? data.data : data;
+  return data;
 }
 
 async function saveNote() {
@@ -56,7 +55,7 @@ async function saveNote() {
   say(msgEl, '');
 
   try {
-    const paste = await pastefy('', {
+    const data = await pastefy('', {
       method: 'POST',
       body: JSON.stringify({
         title: titleEl.value.trim(),
@@ -66,6 +65,7 @@ async function saveNote() {
       }),
     });
 
+    const paste = data && data.paste;
     if (!paste || !paste.id) throw new Error('Pastefy returned an unexpected response.');
 
     noteIdEl.value = paste.id;
@@ -92,7 +92,7 @@ async function loadNote() {
   say(msgEl, '');
 
   try {
-    const data = await pastefy('?id=' + encodeURIComponent(id));
+    const data = await pastefy('/' + encodeURIComponent(id));
     if (!data || typeof data.content !== 'string') {
       throw new Error('Paste not found.');
     }

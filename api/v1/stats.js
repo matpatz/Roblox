@@ -105,21 +105,6 @@ async function handler_fn(req, res) {
     executionHistory = Object.entries(counts).map(([date, count]) => ({ date, count }));
   }
 
-  // TEMP DEBUG (remove after fixing): ?debug=1 shows how many window rows were
-  // fetched and the newest rows' raw added_at + computed UTC day.
-  let debug = null;
-  try {
-    if (new URL(req.url, 'http://x').searchParams.get('debug') === '1') {
-      const rows = historyResult.status === 'fulfilled' ? historyResult.value || [] : [];
-      debug = {
-        seven_days_ago: sevenDaysAgo.toISOString(),
-        now_utc: new Date().toISOString(),
-        window_rows: historyResult.status === 'fulfilled' ? historyResult.value?.length ?? 0 : 'rejected',
-        newest: rows.slice(-5).map(r => ({ raw: r.added_at, utcDay: toUtcDay(r.added_at) }))
-      };
-    }
-  } catch (e) { /* best-effort */ }
-
   const payload = {
     total_executions: totalExecutions,
     active_users: activeUsers,
@@ -128,7 +113,6 @@ async function handler_fn(req, res) {
     discord_community: discordCommunity,
     execution_history: executionHistory
   };
-  if (debug) payload.debug = debug;
 
   await kv.set(CACHE_KEY, payload, { ex: CACHE_TTL });
 

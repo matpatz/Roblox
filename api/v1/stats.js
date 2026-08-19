@@ -10,6 +10,21 @@ export const config = { runtime: 'nodejs' };
 const CACHE_KEY = 'stats:cache';
 const CACHE_TTL = 60;
 
+// PostgREST returns timestamptz values as ISO strings, but not necessarily in
+// UTC (the offset can be +10:00, -05:00, +00, etc.). Slicing the raw string
+// gives the *displayed* date, which is wrong whenever the offset isn't UTC.
+// Parse the timestamp properly and return the true UTC calendar day (YYYY-MM-DD)
+// so the daily buckets below stay consistent regardless of DB/server timezone.
+function toUtcDay(ts) {
+  let d = new Date(ts);
+  if (isNaN(d.getTime())) {
+    // Handle offsets written without minutes, e.g. "+00" instead of "+00:00",
+    // which the JS engine won't parse on its own.
+    d = new Date(String(ts).replace(/([+-]\d{2})$/, '$1:00'));
+  }
+  return isNaN(d.getTime()) ? String(ts).slice(0, 10) : d.toISOString().slice(0, 10);
+}
+
 async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'GET') throw new ApiError(405, 'Method not allowed');
@@ -26,9 +41,10 @@ async function handler_fn(req, res) {
   const oneHourAgo = new Date();
   oneHourAgo.setHours(oneHourAgo.getHours() - 1);
 
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-  sevenDaysAgo.setHours(0, 0, 0, 0);
+  // 7-day window aligned to UTC midnight so the query range exactly covers the
+  // same UTC dates used by the history buckets below, regardless of server TZ.
+  const now = new Date();
+  const sevenDaysAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6));
 
   const [discordResult, totalsResult, activeResult, hourlyResult, historyResult] = await Promise.allSettled([
     fetch(`https://discord.com/api/v10/guilds/${guildId}?with_counts=true`, {
@@ -59,12 +75,11 @@ async function handler_fn(req, res) {
   if (historyResult.status === 'fulfilled' && historyResult.value?.data) {
     const counts = {};
     for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      counts[d.toISOString().slice(0, 10)] = 0;
+      const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
+      counts[day.toISOString().slice(0, 10)] = 0;
     }
     for (const row of historyResult.value.data) {
-      const day = row.added_at.slice(0, 10);
+      const day = toUtcDay(row.added_at);
       if (day in counts) counts[day]++;
     }
     executionHistory = Object.entries(counts).map(([date, count]) => ({ date, count }));

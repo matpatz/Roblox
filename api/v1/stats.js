@@ -85,6 +85,21 @@ async function handler_fn(req, res) {
     executionHistory = Object.entries(counts).map(([date, count]) => ({ date, count }));
   }
 
+  // TEMP DEBUG (remove after fixing): ?debug=1 exposes raw added_at strings to
+  // diagnose why recent days bucket to 0.
+  let debug = null;
+  try {
+    if (new URL(req.url, 'http://x').searchParams.get('debug') === '1' && historyResult.status === 'fulfilled' && historyResult.value?.data) {
+      const rows = historyResult.value.data;
+      debug = {
+        seven_days_ago: sevenDaysAgo.toISOString(),
+        now_utc: new Date().toISOString(),
+        total_rows: rows.length,
+        samples: rows.slice(0, 10).map(r => ({ raw: r.added_at, utcDay: toUtcDay(r.added_at) }))
+      };
+    }
+  } catch (e) { /* debug is best-effort */ }
+
   const payload = {
     total_executions: totalExecutions,
     active_users: activeUsers,
@@ -93,6 +108,7 @@ async function handler_fn(req, res) {
     discord_community: discordCommunity,
     execution_history: executionHistory
   };
+  if (debug) payload.debug = debug;
 
   await kv.set(CACHE_KEY, payload, { ex: CACHE_TTL });
 

@@ -25,6 +25,27 @@ function toUtcDay(ts) {
   return isNaN(d.getTime()) ? String(ts).slice(0, 10) : d.toISOString().slice(0, 10);
 }
 
+// PostgREST caps a plain select at 1000 rows (db-max-rows), even when a larger
+// limit is requested. The 7-day window can exceed that, which silently drops the
+// newest executions. Fetch in pages so the whole window is returned.
+async function fetchWindowAddedAt(supabase, sinceIso) {
+  const rows = [];
+  const PAGE = 1000;
+  let from = 0;
+  for (;;) {
+    const { data, error } = await supabase
+      .from('identifiers')
+      .select('added_at')
+      .gte('added_at', sinceIso)
+      .range(from, from + PAGE - 1);
+    if (error || !data) break;
+    rows.push(...data);
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
+  return rows;
+}
+
 async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'GET') throw new ApiError(405, 'Method not allowed');
@@ -55,9 +76,7 @@ async function handler_fn(req, res) {
       .gte('added_at', thirtyDaysAgo.toISOString()),
     supabase.from('identifiers').select('*', { count: 'exact', head: true })
       .gte('added_at', oneHourAgo.toISOString()),
-    supabase.from('identifiers').select('added_at')
-      .gte('added_at', sevenDaysAgo.toISOString())
-      .limit(100000)
+    fetchWindowAddedAt(supabase, sevenDaysAgo.toISOString())
   ]);
 
   const discordCommunity = discordResult.status === 'fulfilled' && discordResult.value
@@ -73,18 +92,33 @@ async function handler_fn(req, res) {
   const executionsLastHour = hourlyResult.status === 'fulfilled' ? hourlyResult.value?.count || 0 : 0;
 
   let executionHistory = [];
-  if (historyResult.status === 'fulfilled' && historyResult.value?.data) {
+  if (historyResult.status === 'fulfilled' && historyResult.value?.length) {
     const counts = {};
     for (let i = 6; i >= 0; i--) {
       const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
       counts[day.toISOString().slice(0, 10)] = 0;
     }
-    for (const row of historyResult.value.data) {
+    for (const row of historyResult.value) {
       const day = toUtcDay(row.added_at);
       if (day in counts) counts[day]++;
     }
     executionHistory = Object.entries(counts).map(([date, count]) => ({ date, count }));
   }
+
+  // TEMP DEBUG (remove after fixing): ?debug=1 shows how many window rows were
+  // fetched and the newest rows' raw added_at + computed UTC day.
+  let debug = null;
+  try {
+    if (new URL(req.url, 'http://x').searchParams.get('debug') === '1') {
+      const rows = historyResult.status === 'fulfilled' ? historyResult.value || [] : [];
+      debug = {
+        seven_days_ago: sevenDaysAgo.toISOString(),
+        now_utc: new Date().toISOString(),
+        window_rows: historyResult.status === 'fulfilled' ? historyResult.value?.length ?? 0 : 'rejected',
+        newest: rows.slice(-5).map(r => ({ raw: r.added_at, utcDay: toUtcDay(r.added_at) }))
+      };
+    }
+  } catch (e) { /* best-effort */ }
 
   const payload = {
     total_executions: totalExecutions,
@@ -94,6 +128,7 @@ async function handler_fn(req, res) {
     discord_community: discordCommunity,
     execution_history: executionHistory
   };
+  if (debug) payload.debug = debug;
 
   await kv.set(CACHE_KEY, payload, { ex: CACHE_TTL });
 

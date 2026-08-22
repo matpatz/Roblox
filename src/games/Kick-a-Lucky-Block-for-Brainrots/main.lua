@@ -21,7 +21,11 @@ local area = workspace.Areas.KickReady
 local waves = workspace.Waves
 
 local function _kick(strength)
-    Network["rev_KickEvent"]:FireServer(strength or 1)
+    Network["ref_KickEvent"]:InvokeServer(
+        strength or 1,
+        1,
+        workspace:GetServerTimeNow()
+    )
 end
 
 local following

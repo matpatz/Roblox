@@ -7,6 +7,7 @@
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
 const TweenService = game:GetService("TweenService")
+const RunService = game:GetService("RunService")
 
 -- // Modules
 const EggCmds = require(ReplicatedStorage.Library.Client.EggCmds)
@@ -15,11 +16,14 @@ const PlotCmds = require(ReplicatedStorage.Library.Client.PlotCmds)
 const EggToolDisplay = require(ReplicatedStorage.Library.Client.Eggs.EggToolDisplay)
 
 -- // Events
-const RequestHatchEgg = game:GetService("ReplicatedStorage").Network["Eggs: RequestHatchEgg"]
-const RequestCompleteHatchEgg = ReplicatedStorage.Network["Eggs: RequestCompleteHatchEgg"]
-const RequestAreaEggCarry = game:GetService("ReplicatedStorage").Network["Eggs: RequestAreaEggCarry"]
-const ActiveRenderStateChanged = game:GetService("ReplicatedStorage").Network["Treadmills: ActiveRenderStateChanged"]
-const RequestUnequip = game:GetService("ReplicatedStorage").Network["Treadmills: RequestUnequip"] -- rf
+const Network = ReplicatedStorage.Network
+const RequestHatchEgg = Network["Eggs: RequestHatchEgg"]
+const RequestCompleteHatchEgg = Network["Eggs: RequestCompleteHatchEgg"]
+const RequestAreaEggCarry = Network["Eggs: RequestAreaEggCarry"]
+const ActiveRenderStateChanged = Network["Treadmills: ActiveRenderStateChanged"]
+const RequestUnequip = Network["Treadmills: RequestUnequip"] -- rf
+const RequestPurchase = Network["Trails: RequestPurchase"]
+const RequestBaseUpgrade = Network["Plots: RequestBaseUpgrade"]
 
 -- // Workspace
 const SpawmPoint = workspace:FindFirstChildWhichIsA("SpawnLocation")
@@ -41,10 +45,12 @@ LocalPlayer.CharacterAdded:Connect(function(NewCharacter)
 	Humanoid = NewCharacter:WaitForChild("Humanoid")
 end)
 
---// locals
+--// variables
 const UserId = LocalPlayer.UserId
 local Flags = {}
 Flags.__index = Flags
+
+--const Trails = ReplicatedStorage.Directory.Trails._Index
 
 local OnTreadmill = false
 ActiveRenderStateChanged.OnClientEvent:Connect(function(a1, active, a3)
@@ -61,7 +67,12 @@ local config = {
 		},
 		EggRadius = 2,
 		AutoPlace = false
-	}
+	},
+    Shop = {
+        Trail = {
+            Selected = "GreenTrail"
+        }
+    }
 }
 
 -- // cheat
@@ -275,15 +286,59 @@ end
 
 Utils.TweenTo = function(Area, SpeedMultiplier)
     local Target: CFrame = typeof(Area) == "Instance" and Area.CFrame or Area
-    local Distance = (HumanoidRootPart.Position - Target.Position).Magnitude
+    local Start = HumanoidRootPart.Position
+
+    local Distance = (Start - Target.Position).Magnitude
     local Duration = Distance / (Humanoid.WalkSpeed * (SpeedMultiplier or 1.1))
 
-    local Tween = TweenService:Create(HumanoidRootPart, TweenInfo.new(Duration, Enum.EasingStyle.Linear), {
-        CFrame = Target
-    })
+    local Gravity = workspace.Gravity
+    local VelocityY = 0
+    local StartTime = os.clock()
+    local LastTime = StartTime
 
-    Tween:Play()
-    Tween.Completed:Wait()
+    local Connection
+
+    Connection = RunService.Heartbeat:Connect(function()
+        local Now = os.clock()
+        local DeltaTime = Now - LastTime
+        LastTime = Now
+
+        local Alpha = math.clamp((Now - StartTime) / Duration, 0, 1)
+
+        local Position = Start:Lerp(Target.Position, Alpha)
+
+        VelocityY -= Gravity * DeltaTime
+        Position += Vector3.yAxis * VelocityY * DeltaTime
+
+        local RayOrigin = Position + Vector3.yAxis * 2
+        local RayDirection = Vector3.yAxis * -6
+
+        local Result = workspace:Raycast(
+            RayOrigin,
+            RayDirection,
+            RaycastParams.new()
+        )
+
+        if Result and VelocityY < 0 then
+            local Height = Humanoid.HipHeight + HumanoidRootPart.Size.Y / 2
+            local GroundY = Result.Position.Y + Height
+
+            if Position.Y <= GroundY then
+                Position = Vector3.new(Position.X, GroundY, Position.Z)
+                VelocityY = 0
+            end
+        end
+
+        HumanoidRootPart.CFrame = CFrame.new(Position) * Target.Rotation
+
+        if Alpha >= 1 then
+            Connection:Disconnect()
+        end
+    end)
+
+    repeat
+        RunService.Heartbeat:Wait()
+    until not Connection.Connected
 end
 
 local function GetSlot(Name: string)
@@ -372,6 +427,7 @@ local Window = Rayfield:CreateWindow({
 local tabs = {
     Eggs = Window:CreateTab("Eggs"),
     Pen = Window:CreateTab("Pen"),
+    Shop = Window:CreateTab("Shop"),
 }
 
 -- // Eggs
@@ -494,5 +550,52 @@ tabs.Pen:CreateButton({
     Name = "Hatch all Eggs",
     Callback = function()
 		Core.HatchEggs()
+    end,
+})
+
+-- // Shop
+Core.BuyTrail = function(config)
+    RequestPurchase:InvokeServer(
+        config.Shop.Trail.Selected
+    )
+end
+
+tabs.Shop:CreateDropdown({
+    Name = "Select Trail",
+    Options = {
+        "BlueTrail",
+        "DivineTrail",
+        "EternalTrail",
+        "GalaxyTrail",
+        "GoldenTrail",
+        "GreenTrail",
+        "GreyTrail",
+        "PurpleTrail",
+        "RedTrail",
+        "SecretTrail",
+    },
+    CurrentOption = {config.Shop.Trail.Selected},
+    MultipleOptions = false,
+    Flag = "SelectedTrail",
+    Callback = function(Option)
+        config.Shop.Trail.Selected = Option[1]
+    end
+})
+
+tabs.Shop:CreateButton({
+    Name = "Buy Trail",
+    Callback = function()
+        Core.BuyTrail(config)
+    end,
+})
+
+Core.PetCapacityUpgrade = function()
+    RequestBaseUpgrade:FireServer()
+end
+
+tabs.Shop:CreateButton({
+    Name = "Upgrade Pet Capacity",
+    Callback = function()
+		Core.PetCapacityUpgrade()
     end,
 })

@@ -45,15 +45,15 @@
 </main>
 
 <script>
-var statsGrid = document.getElementById('statsGrid');
-var graphSection = document.getElementById('graphSection');
-var execGraph = document.getElementById('execGraph');
+const statsGrid = document.getElementById('statsGrid');
+const graphSection = document.getElementById('graphSection');
+const execGraph = document.getElementById('execGraph');
 
 function renderStats(data) {
-  var discord = data.discord_community || {};
-  var memberCount = discord.member_count || discord.presence_count || 0;
+  const discord = data.discord_community || {};
+  const memberCount = discord.member_count || discord.presence_count || 0;
 
-  var stats = [
+  const stats = [
     { label: 'Total Executions', value: data.total_executions || 0, description: 'Successful loadstring executions across all games.' },
     { label: 'Active Users', value: data.active_users || 0, description: 'Monthly unique Roblox users leveraging Voltex.' },
     { label: 'API Status', value: data.api_status || 'Unknown', small: true },
@@ -62,19 +62,19 @@ function renderStats(data) {
 
   statsGrid.innerHTML = '';
   stats.forEach(function(stat) {
-    var card = document.createElement('div');
+    const card = document.createElement('div');
     card.className = 'stat-card';
-    var label = document.createElement('div');
+    const label = document.createElement('div');
     label.className = 'stat-label';
     label.textContent = stat.label;
     card.appendChild(label);
-    var num = document.createElement('div');
+    const num = document.createElement('div');
     num.className = 'stat-number';
     if (stat.small) num.style.fontSize = '28px';
     num.textContent = String(stat.value);
     card.appendChild(num);
     if (stat.description) {
-      var desc = document.createElement('div');
+      const desc = document.createElement('div');
       desc.className = 'stat-desc';
       desc.textContent = stat.description;
       card.appendChild(desc);
@@ -84,39 +84,39 @@ function renderStats(data) {
 }
 
 function renderGraph(history) {
-  var dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  var entries = [];
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  let entries = [];
 
   if (!history || history.length === 0) {
-    for (var i = 6; i >= 0; i--) {
-      var d = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
       d.setDate(d.getDate() - i);
       entries.push({ label: dayLabels[d.getDay()] + ' ' + d.getDate(), count: 0 });
     }
   } else {
     entries = history.map(function(entry) {
-      var d = new Date(entry.date + 'T00:00:00');
+      const d = new Date(entry.date + 'T00:00:00');
       return { label: dayLabels[d.getDay()] + ' ' + d.getDate(), count: entry.count };
     });
   }
 
-  var maxCount = Math.max.apply(null, entries.map(function(e) { return e.count; }));
+  let maxCount = Math.max.apply(null, entries.map(function(e) { return e.count; }));
   if (maxCount === 0) maxCount = 1;
 
-  var bars = document.createElement('div');
+  const bars = document.createElement('div');
   bars.className = 'graph-bars';
   entries.forEach(function(entry) {
-    var wrap = document.createElement('div');
+    const wrap = document.createElement('div');
     wrap.className = 'graph-bar-wrap';
-    var val = document.createElement('div');
+    const val = document.createElement('div');
     val.className = 'graph-bar-value';
     val.textContent = String(entry.count);
     wrap.appendChild(val);
-    var bar = document.createElement('div');
+    const bar = document.createElement('div');
     bar.className = 'graph-bar';
     bar.style.height = Math.max((entry.count / maxCount) * 100, 2) + '%';
     wrap.appendChild(bar);
-    var lbl = document.createElement('div');
+    const lbl = document.createElement('div');
     lbl.className = 'graph-bar-label';
     lbl.textContent = entry.label;
     wrap.appendChild(lbl);
@@ -127,15 +127,15 @@ function renderGraph(history) {
   execGraph.appendChild(bars);
 }
 
-var cached = null;
+let cached = null;
 try { cached = JSON.parse(localStorage.getItem('stats_cache')); } catch(e) {}
 if (cached) {
   renderStats(cached);
   if (cached.execution_history) renderGraph(cached.execution_history);
 }
 
-var controller = new AbortController();
-var timer = setTimeout(function() { controller.abort(); }, 8000);
+const controller = new AbortController();
+const timer = setTimeout(function() { controller.abort(); }, 8000);
 
 fetch('/api/v1/stats', { signal: controller.signal })
   .then(function(res) {
@@ -144,7 +144,7 @@ fetch('/api/v1/stats', { signal: controller.signal })
     return res.json();
   })
   .then(function(json) {
-    var data = json.data || json;
+    const data = json.data || json;
     renderStats(data);
     if (data.execution_history) renderGraph(data.execution_history);
     try { localStorage.setItem('stats_cache', JSON.stringify(data)); } catch(e) {}

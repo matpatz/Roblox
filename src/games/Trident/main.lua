@@ -1,7 +1,7 @@
 -- open source
 -- SLOP ai SLOPPPPP
 
-local Config = {
+const Config = {
     DEBUG = true,
     Prefix = "[Debug]",
     ErrorCodes = {
@@ -28,61 +28,47 @@ do
     end
 end
 
-local Services = loadstring(game:HttpGet(
+const Services = loadstring(game:HttpGet(
     "https://website-iota-ivory-12.vercel.app/code/Modules/Services.lua"
 ))()
 
-local Environment =
-    rawget(getrenv(), "_G")
+const Environment = getrenv()._G
 
-local __index = getrawmetatable(Environment).__index
+const __index = getrawmetatable(Environment).__index
 
 if not __index then
 	Logger:Error(2)
 end
 
-local Success, Upvalues = pcall(debug.getupvalues, __index)
+const Upvalues = debug.getupvalues(__index)
 
-if not Success or not Upvalues then
+if not Upvalues then
 	Logger:Error(2, "no upvalues")
 end
 
-local Bundled =
-    Upvalues[10]
-    and Upvalues[10][2]
+const Classes = Upvalues[10][2]
 
-if not Bundled then
+if not Classes then
 	Logger:Error(2, "no classes")
 end
 
 -- Classes
-local function IndexClass(Key)
-    return Bundled[Key]
+local function GetClass(Key)
+    return Classes[Key]
 end
 
-local Character = IndexClass("Character")
-local FPS = IndexClass("FPS")
-local Camera = IndexClass("Camera")
-local RangedWeaponClient = IndexClass("RangedWeaponClient")
-local NetClient = IndexClass("NetClient")
-local EntityClient = IndexClass("EntityClient")
-local TrollyClient = IndexClass("TrollyClient")
-local DrillClient = IndexClass("MiningDrillClient")
+const Character = GetClass("Character")
+const Camera = GetClass("Camera")
+const RangedWeaponClient = GetClass("RangedWeaponClient")
+const EntityClient = GetClass("EntityClient")
+const TrollyClient = GetClass("TrollyClient")
+const DrillClient = GetClass("MiningDrillClient")
 
-local LocalCharacter = workspace.Const.Ignore.LocalCharacter
+const LocalCharacter = workspace.Const.Ignore.LocalCharacter
 
-local function IndexFunction(Class, Key)
-	if Class == nil or Key == nil then
-		Logger:Error(2, "class or key missing")
-	end
+const Heartbeat = Services.RunService.Heartbeat
+const RenderStepped = Services.RunService.RenderStepped
 
-    return Class[Key]
-end
-
-local Heartbeat = Services.RunService.Heartbeat
-local RenderStepped = Services.RunService.RenderStepped
-
-local Channel, Id = create_comm_channel()
 local cheat = {
     connections = {
         heartbeats = {},
@@ -103,29 +89,7 @@ local cheat = {
 }; local connections, drawings, hooks, metahooks, Utils, Core =
     cheat.connections, cheat.drawings, cheat.hooks, cheat.metahooks, cheat.Utils, cheat.Core
 
-setmetatable(cheat, {
-	__index = function(self, key)
-		return rawget(self, key)
-	end,
-
-	__newindex = function(self, key, value)
-		rawset(self, key, value)
-
-		if key == "connections" then connections = value
-		elseif key == "drawings" then drawings = value
-		elseif key == "hooks" then hooks = value
-		elseif key == "metahooks" then metahooks = value
-		elseif key == "Utils" then Utils = value
-		elseif key == "Core" then Core = value
-		end
-	end
-})
-
 do
-	Utils.SetValue = function(Obj, Key, Value, Notify)
-		Obj[Key] = Value
-	end
-
 	Utils.AddConnection = function(Category, Name, Connection)
 		if Category[Name] then
 			pcall(function()
@@ -156,23 +120,7 @@ do
 		connections.runtime[Name] = false
 	end
 
-	Utils.RandomString = function(Length)
-		local str = {}
-		for i = 1, Length do
-			table.insert(str, string.char(math.random(97, 121))) -- uncap: 97 121 - capitlized: 65 90
-		end
-		return table.concat(str)
-	end
-
-	Utils.RandomNumber = function(Digits)
-		return math.random(Digits)
-	end
-
-    Utils.IsHooked = function(Name)
-		return hooks[Name] ~= nil
-	end
-
-    Utils.AddHook = function(Name, Target, Hook, Type)
+	Utils.AddHook = function(Name, Target, Hook, Type)
 		if hooks[Name] then
 			restorefunction(hooks[Name].Target)
 			hooks[Name] = nil
@@ -193,6 +141,8 @@ do
 			Replacement = WrappedHook,
 			Original = OldFunction
 		}
+
+		return OldFunction
 	end
 
 	Utils.RemoveHook = function(Name)
@@ -208,26 +158,6 @@ end;
 
 local States = {
     Values = {
-		Functions = {
-			IsGrounded = IndexFunction(Character, "IsGrounded"),
-			ForceSlide = IndexFunction(Character, "ForceSlide"),
-			SetSprintBlocked = IndexFunction(Character, "SetSprintBlocked"),
-			CanShoot = IndexFunction(FPS, "IsItemUsable"),
-			GetEquippedItem = IndexFunction(FPS, "GetEquippedItem"),
-			Recoil = IndexFunction(Camera, "Recoil"),
-			SetSwaySpeed = IndexFunction(Camera, "SetSwaySpeed"),
-			SetBaseFOV = IndexFunction(Camera, "SetBaseFOV"),
-			GetX = IndexFunction(Camera, "GetX"),
-			GetY = IndexFunction(Camera, "GetY"),
-			CreateProjectile = IndexFunction(RangedWeaponClient, "CreateProjectile"),
-			GainControl = IndexFunction(TrollyClient, "GainControl"),
-			DrillUpdate = IndexFunction(DrillClient, "Update"),
-			CreateEntity = IndexFunction(EntityClient, "Create"),
-
-			SendTCP = IndexFunction(NetClient, "SendTCP"),
-			SendUDP = IndexFunction(NetClient, "SendUDP"),
-		},
-
         LocalPlayer = {
 			IsGrounded = false,
             EquippedItem = nil,
@@ -262,7 +192,6 @@ local States = {
 
 local _localplayer = States.Values.LocalPlayer
 local Game = States.Values.Game
-local Functions = States.Values.Functions
 
 local Proxy = {}
 
@@ -276,15 +205,13 @@ setmetatable(Proxy, {
 			_localplayer = value
 		elseif key == "Game" then
 			Game = value
-		elseif key == "Functions" then
-			Functions = value
 		end
 	end
 })
 
 States.Values = Proxy
 
-local WILDCARD = newproxy(false)
+const WILDCARD = newproxy(false)
 local function RegisterHook(Id, Object, Property, HookFunction)
     local Key = Object == nil and WILDCARD or Object
     if not metahooks[Key] then
@@ -324,8 +251,8 @@ Old = hookmetamethod(game, "__index", function(Object, Property)
     return Old(Object, Property)
 end)
 
-local u8 = debug.getupvalues(Functions.CreateEntity)[2]
-	-- RAW entity map (id -> entity). Never clear it (the game depends on it) and
+const CreateEntity = EntityClient.Create
+local u8 = debug.getupvalues(CreateEntity)[2]
 	-- don't rely on #u8 (it reports 0 even though it has items).
 
 local Library, ThemeManager, SaveManager =
@@ -334,6 +261,12 @@ local Library, ThemeManager, SaveManager =
 	loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/libraries/Obsidian/addons/SaveManager.lua"))()
 
 local Options, Toggles = Library.Options, Library.Toggles
+
+Utils.IsToggled = function(Name)
+    const Toggle = Toggles[Name]
+    return Toggle and Toggle.Value or false
+end
+
 Library.ForceCheckbox, Library.ShowToggleFrameInKeybinds = false, true
 
 local Window = Library:CreateWindow({
@@ -378,7 +311,7 @@ local function Filter(Entity)
 
 	if Type == "Player" then
 		-- Skip sleepers unless "Include Sleepers" is on.
-		if Entity.sleeping and not (Toggles.sleepercheck and Toggles.sleepercheck.Value) then
+		if Entity.sleeping and not Utils.IsToggled("sleepercheck") then
 			return nil
 		end
 
@@ -465,9 +398,9 @@ local function Filter(Entity)
 end
 
 local EntityList = {}
-Utils.SetValue(Game.Workspace, "EntityList", EntityList)
+Game.Workspace.EntityList = EntityList
 
-local function UpdateEntities()
+Utils.UpdateEntities = function()
     table.clear(EntityList)
 
     for _, Item in next, u8 do
@@ -476,20 +409,47 @@ local function UpdateEntities()
             table.insert(EntityList, Basic)
         end
     end
-end
+end; Utils.UpdateEntities()
 
--- Rebuild the filtered list (and ESP containers) when the game adds/removes an entity.
-local RebuildContainers
-setrawmetatable(u8, {
-    __newindex = function(self, key, value)
-        rawset(self, key, value)
+Utils.GetClosest = function()
+    local Closest, ClosestDistance = nil, math.huge
 
-        UpdateEntities()
-        RebuildContainers()
+    local FOVEnabled = Utils.IsToggled("EnableCrosshair")
+    local FOVSize = Options.FovSize and Options.FovSize.Value
+    local MousePos = Services["UserInputService"]:GetMouseLocation()
+    local Camera = workspace.CurrentCamera
+
+    for _, Entity in next, EntityList do
+        if Entity.Class ~= "Player" then
+            continue
+        end
+
+        local Torso = Entity.Basic.Model and Entity.Basic.Model:FindFirstChild("tosro")
+        if not Torso then
+            continue
+        end
+
+        if FOVEnabled then
+            local ScreenPos, OnScreen = Camera:WorldToViewportPoint(Torso.Position)
+            if not OnScreen then
+                continue
+            end
+
+            local Delta = Vector2.new(ScreenPos.X - MousePos.X, ScreenPos.Y - MousePos.Y)
+            if Delta.Magnitude > FOVSize then
+                continue
+            end
+        end
+
+        local Distance = (Camera.CFrame.Position - Torso.Position).Magnitude
+        if Distance < ClosestDistance then
+            ClosestDistance = Distance
+            Closest = Torso
+        end
     end
-})
 
-UpdateEntities()
+    return Closest
+end
 
 local SilentTab = Tabboxes.Combat:AddTab("Silent Aim")
 
@@ -537,59 +497,44 @@ AimbotTab:AddSlider("aimbotdistance", {
 
 local Crosshair = Tabs.Combat:AddLeftGroupbox("FOV")
 
-Core.Crosshair = {
-    Disable = function()
-        Utils.RemoveConnection(connections.renderstepped, "Crosshair")
-        local crosshair = drawings.crosshair
+-- Toggle on/off and NumSides changes all funnel through here (recreates the circle).
+Core.RefreshCrosshair = function()
+    Utils.RemoveConnection(connections.renderstepped, "Crosshair")
 
-        if crosshair then
-            pcall(function()
-                crosshair.Drawing:Remove()
-            end)
+    if drawings.crosshair.Drawing then
+        pcall(function()
+            drawings.crosshair.Drawing:Remove()
+        end)
 
-            crosshair.Drawing = nil
-        end
-    end,
+        drawings.crosshair.Drawing = nil
+    end
 
-    Enable = function()
-        Core.Crosshair.Disable()
+    if not Utils.IsToggled("EnableCrosshair") then
+        return
+    end
 
-        if not Toggles.EnableCrosshair.Value then
-            return
-        end
+    local Circle = Drawing.new("Circle")
+    Circle.Visible = true
+    Circle.Filled = false
+    Circle.Thickness = 1
+    Circle.Transparency = 1
+    Circle.Color = Color3.new(1,1,1)
 
-        local Circle = Drawing.new("Circle")
-        Circle.Visible = true
-        Circle.Filled = false
-        Circle.Thickness = 1
-        Circle.Transparency = 1
-        Circle.Color = Color3.new(1,1,1)
+    drawings.crosshair.Drawing = Circle
 
-        drawings.crosshair.Drawing = Circle
+    Utils.AddConnection(connections.renderstepped, "Crosshair", RenderStepped:Connect(function()
+        local MousePos = Services["UserInputService"]:GetMouseLocation()
 
-        Utils.AddConnection(connections.renderstepped, "Crosshair", RenderStepped:Connect(function()
-                local MousePos =
-                    Services["UserInputService"]:GetMouseLocation()
+        Circle.Position = MousePos
+        Circle.Radius = Options.FovSize.Value
+        Circle.NumSides = Options.NumSides.Value
+    end))
+end
 
-                Circle.Position = MousePos
-                Circle.Radius = Options.FovSize.Value
-                Circle.NumSides = Options.NumSides.Value
-            end)
-        )
-    end,
-}
-
-Crosshair:AddToggle("EnableCrosshair",{
+Crosshair:AddToggle("EnableCrosshair", {
     Text = "Enable Crosshair",
     Default = false,
-
-    Callback = function(Value)
-        if Value then
-            Core.Crosshair.Enable()
-        else
-            Core.Crosshair.Disable()
-        end
-    end
+    Callback = Core.RefreshCrosshair
 })
 
 Crosshair:AddSlider("NumSides",{
@@ -601,8 +546,8 @@ Crosshair:AddSlider("NumSides",{
     Rounding = 0,
 
     Callback = function()
-        if Toggles.EnableCrosshair.Value then
-            Core.Crosshair.Enable()
+        if Utils.IsToggled("EnableCrosshair") then
+            Core.RefreshCrosshair()
         end
     end
 })
@@ -638,20 +583,34 @@ Hitbox:AddSlider("hitboxsize", {
 
 local WeaponMods = Tabs.Combat:AddRightGroupbox("Weapon Mods")
 
-local OldRecoil
-
-local function SetNoRecoil(Value)
-    local Proto = debug.getproto(Functions.Recoil, 1)
-
-    debug.setconstant(Proto, 2, Value and "PC" or "Mobile") -- device == "PC" => no recoil
+const Recoil = Camera.Recoil
+const Proto = debug.getproto(Recoil, 1)
+local NoRecoil = {
+    Enable = function()
+        debug.setconstant(Proto, 2, "Mobile")
+    end,
+    Disable = function()
+        debug.setconstant(Proto, 2, "PC")
+    end
+} --[[
+if Device == "Mobile" then
+    return -- avoids Recoil
 end
+--]]
 
 WeaponMods:AddToggle("norecoil", {
     Text = "No Recoil",
     Default = false,
-    Callback = SetNoRecoil
+    Callback = function(Value)
+        if Value then
+            NoRecoil.Enable()
+        else
+            NoRecoil.Disable()
+        end
+    end
 })
 
+--[[
 WeaponMods:AddToggle("nospread", {
     Text = "No Spread",
     Default = false,
@@ -663,34 +622,20 @@ WeaponMods:AddToggle("instahit", {
     Default = false,
     Callback = function(Value) end
 })
+--]]
 
-local OldSway
-
-Core.NoSway = {
-    Enable = function()
-        OldSway = Utils.AddHook("NoSway", Functions.SetSwaySpeed, function(accumlator)
-            if not Toggles.nosway.Value then
-                return OldSway(accumlator)
-            end
-            accumlator = 0
-            return table.pack(accumlator)
-        end, "Lua")
-    end,
-
-    Disable = function()
-        Utils.RemoveHook("NoSway")
-        OldSway = nil
-    end,
-}
+const SetSwaySpeed = Camera.SetSwaySpeed
 
 WeaponMods:AddToggle("nosway", {
     Text = "No Sway",
     Default = false,
     Callback = function(Value)
         if Value then
-            Core.NoSway.Enable()
+            Utils.AddHook("NoSway", SetSwaySpeed, function(accumlator)
+                debug.setupvalue(sway, 2, false)
+            end, "Lua")
         else
-            Core.NoSway.Disable()
+            Utils.RemoveHook("NoSway")
         end
     end
 })
@@ -699,31 +644,23 @@ local FastCooldown = Tabs.Combat:AddRightGroupbox("Fast Cooldown")
 
 local OldDrill
 
-Core.FastDrill = {
-    Enable = function()
-        OldDrill = Utils.AddHook("FastDrill", Functions.DrillUpdate, function(p1)
-            if not Toggles.fastdrill.Value then
-                return OldDrill(p1)
-            end
-            p1.AttackCooldown *= 0
-            return p1
-        end, "Lua")
-    end,
-
-    Disable = function()
-        Utils.RemoveHook("FastDrill")
-        OldDrill = nil
-    end,
-}
+const DrillUpdate = DrillClient.Update
 
 FastCooldown:AddToggle("fastdrill", {
     Text = "Fast Drill",
     Default = false,
     Callback = function(Value)
         if Value then
-            Core.FastDrill.Enable()
+            OldDrill = Utils.AddHook("FastDrill", DrillUpdate, function(p1)
+                if not Utils.IsToggled("fastdrill") then
+                    return OldDrill(p1)
+                end
+                p1.AttackCooldown *= 0
+                return p1
+            end, "Lua")
         else
-            Core.FastDrill.Disable()
+            Utils.RemoveHook("FastDrill")
+            OldDrill = nil
         end
     end
 })
@@ -743,13 +680,7 @@ FastCooldown:AddToggle("fastbow", {
 
 -- TODO: Easy work, but highly detected
 
--- ESP is handled by the shared Esp library (dynamic model sources, re-synced each frame).
-local EspLib = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Libraries/Esp/main.lua"))()
-
-local function Tog(Name)
-    local T = Toggles[Name]
-    return T and T.Value or false
-end
+const EspLib = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Libraries/Esp/main.lua"))()
 
 local function SettingsFrom(Values, Color)
     Values = Values or {}
@@ -771,120 +702,49 @@ local function SettingsFrom(Values, Color)
 end
 
 -- Everything not in here is an "entity" for the Entity container.
-local NON_ENTITY_CLASSES = { "Player", "Vehicle" }
+const NON_ENTITY_CLASSES = { "Player", "Vehicle" }
 
--- Return the Models currently ESP'd, based on which toggles are on.
-local function PlayerModels()
-    local Models = {}
-    local IncludePlayers = Tog("playeresp")
-    local IncludeNpcs = Tog("npccheck")
-
-    if not (IncludePlayers or IncludeNpcs) then
-        return Models
-    end
-
-    for _, Entity in next, EntityList do
-        local Model = Entity.Basic.Model
-        local Class = Entity.Class
-
-        if Model
-        and ((Class == "Player" and IncludePlayers)
-            or (Class == "NPC" and IncludeNpcs)) then
-            Models[#Models + 1] = Model
-        end
-    end
-
-    return Models
-end
-
--- Per-category overrides; untouched categories follow the master "entityesp".
-local UserSet = {}
-
-local EntityKeys = {
-    Nitrate = "Nitrate",
-    Iron = "Iron",
-    Stone = "Stone",
-    Totem = "Totem",
-    RespawnTotem = "Totem",
-    Backpack = "Backpack",
+const EntityKeys = {
+    Nitrate = "NitrateEsp",
+    Iron = "IronEsp",
+    Stone = "StoneEsp",
+    Totem = "TotemEsp",
+    RespawnTotem = "TotemEsp",
+    Backpack = "Backpacks",
     MetalCrate = "MetalCrate",
     GreenCrate = "GreenCrate",
 }
 
-local function ShowEntity(Class)
-    local Key = EntityKeys[Class]
-    if Key then
-        if UserSet[Key] ~= nil then
-            return UserSet[Key]
-        end
-        return Tog("entityesp")
-    end
-    return Tog("entityesp")
-end
-
-local function EntityModels()
-    local Models = {}
+-- Player/Entity/Vehicle all do the same thing, so it's one function.
+local function GetModels(Container)
+    const Models = {}
 
     for _, Entity in next, EntityList do
-        local Model = Entity.Basic.Model
-        local Class = Entity.Class
+        const Model = Entity.Basic.Model
+        const Class = Entity.Class
 
-        if Model
-        and not table.find(NON_ENTITY_CLASSES, Class)
-        and ShowEntity(Class) then
+        local Show
+        if Container == "Player" then
+            Show = (Class == "Player" and Utils.IsToggled("playeresp"))
+                or (Class == "NPC" and Utils.IsToggled("npccheck"))
+        elseif Container == "Entity" then
+            -- Sub-toggles (EntityKeys) override the master entityesp toggle.
+            Show = not table.find(NON_ENTITY_CLASSES, Class)
+                and (Utils.IsToggled(EntityKeys[Class]) or Utils.IsToggled("entityesp"))
+        elseif Container == "Vehicle" then
+            Show = Class == "Vehicle" and Utils.IsToggled("vehicleesp")
+        end
+
+        if Model and Show then
             Models[#Models + 1] = Model
         end
     end
 
     return Models
-end
-
-local function VehicleModels()
-    local Models = {}
-
-    if not Tog("vehicleesp") then
-        return Models
-    end
-
-    for _, Entity in next, EntityList do
-        local Model = Entity.Basic.Model
-
-        if Model and Entity.Class == "Vehicle" then
-            Models[#Models + 1] = Model
-        end
-    end
-
-    return Models
-end
-
-RebuildContainers = function()
-    EspLib:SetContainer({
-        Player = {
-            Location = PlayerModels,
-            Settings = SettingsFrom(
-                Options.playerespsettings and Options.playerespsettings.Value,
-                Options.espcolor and Options.espcolor.Value
-            ),
-        },
-        Entity = {
-            Location = EntityModels,
-            Settings = SettingsFrom(
-                Options.entityespsettings and Options.entityespsettings.Value,
-                Options.entitycolor and Options.entitycolor.Value
-            ),
-        },
-        Vehicle = {
-            Location = VehicleModels,
-            Settings = SettingsFrom(
-                Options.vehicleespsettings and Options.vehicleespsettings.Value,
-                Options.espcolor and Options.espcolor.Value
-            ),
-        },
-    })
 end
 
 -- Any of these being enabled keeps the ESP library running.
-local ESP_TOGGLES = {
+const ESP_TOGGLES = {
     "playeresp",
     "npccheck",
     "entityesp",
@@ -898,24 +758,58 @@ local ESP_TOGGLES = {
     "vehicleesp",
 }
 
-local function UpdateEspActive()
-    -- Re-apply containers (dynamic Locations are re-read every frame).
-    RebuildContainers()
+-- Each entry: { ContainerName, settings-dropdown option, color-picker option }.
+const CONTAINERS = {
+    { Name = "Player",  SettingsOption = "playerespsettings",  ColorOption = "espcolor" },
+    { Name = "Entity",  SettingsOption = "entityespsettings",  ColorOption = "entitycolor" },
+    { Name = "Vehicle", SettingsOption = "vehicleespsettings", ColorOption = "espcolor" },
+}
 
-    local AnyOn = false
-    for _, Name in next, ESP_TOGGLES do
-        if Tog(Name) then
-            AnyOn = true
-            break
-        end
+Core.RebuildContainers = function()
+    const Containers = {}
+
+    for _, Container in next, CONTAINERS do
+        const Name = Container.Name
+        const Settings = Options[Container.SettingsOption]
+        const Color = Options[Container.ColorOption]
+
+        Containers[Name] = {
+            -- Explicit container name; the lib uses it when available, else the key/type.
+            Name = Name,
+            Location = function() return GetModels(Name) end,
+            Settings = SettingsFrom(
+                Settings and Settings.Value,
+                Color and Color.Value
+            ),
+        }
     end
 
-    if AnyOn then
-        EspLib:Enable()
-    else
-        EspLib:Disable()
-    end
+    EspLib:SetContainer(Containers)
 end
+
+setrawmetatable(u8, {
+    __newindex = function(self, key, value)
+        rawset(self, key, value)
+
+        Utils.UpdateEntities()
+    end
+})
+
+Core.ESP = {
+    UpdateEspActive = function()
+        -- Re-apply containers (dynamic Locations are re-read every frame).
+        Core.RebuildContainers()
+
+        for _, Name in next, ESP_TOGGLES do
+            if Utils.IsToggled(Name) then
+                EspLib:Enable()
+                return
+            end
+        end
+
+        EspLib:Disable()
+    end,
+}
 
 local PlayerEsp = Tabs.Visuals:AddLeftGroupbox("Esp")
 
@@ -924,7 +818,7 @@ PlayerEsp:AddToggle("playeresp",{
     Default = false,
 
     Callback = function(Value)
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -942,7 +836,7 @@ PlayerEsp:AddDropdown("playerespsettings",{
     Default = {"Distance"},
 
     Callback = function()
-        RebuildContainers()
+        Core.RebuildContainers()
     end
 })
 
@@ -951,8 +845,8 @@ PlayerEsp:AddToggle("sleepercheck",{
     Default = false,
 
     Callback = function(Value)
-        UpdateEntities() -- Filter excludes sleepers while the toggle is off
-        UpdateEspActive()
+        Utils.UpdateEntities() -- Filter excludes sleepers while the toggle is off
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -961,7 +855,7 @@ PlayerEsp:AddToggle("npccheck",{
     Default = false,
 
     Callback = function(Value)
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -971,7 +865,7 @@ PlayerEsp:AddLabel("Esp Color"):AddColorPicker("espcolor", {
     Default = Color3.new(1,1,1),
 
     Callback = function(Color)
-        RebuildContainers()
+        Core.RebuildContainers()
     end
 })
 
@@ -982,10 +876,7 @@ EntityEsp:AddToggle("entityesp",{
     Default = false,
 
     Callback = function(Value)
-        if Value then
-            table.clear(UserSet) -- master "show all" resets per-category overrides
-        end
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -1003,7 +894,7 @@ EntityEsp:AddDropdown("entityespsettings",{
     Default = {"Distance"},
 
     Callback = function()
-        RebuildContainers()
+        Core.RebuildContainers()
     end
 })
 
@@ -1014,8 +905,7 @@ EntityEsp:AddToggle("NitrateEsp",{
     Default = false,
 
     Callback = function(Value)
-        UserSet.Nitrate = Value
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -1024,8 +914,7 @@ EntityEsp:AddToggle("IronEsp",{
     Default = false,
 
     Callback = function(Value)
-        UserSet.Iron = Value
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -1034,8 +923,7 @@ EntityEsp:AddToggle("StoneEsp",{
     Default = false,
 
     Callback = function(Value)
-        UserSet.Stone = Value
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -1044,8 +932,7 @@ EntityEsp:AddToggle("TotemEsp",{
     Default = false,
 
     Callback = function(Value)
-        UserSet.Totem = Value
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -1054,8 +941,7 @@ EntityEsp:AddToggle("Backpacks",{
     Default = false,
 
     Callback = function(Value)
-        UserSet.Backpack = Value
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -1073,8 +959,7 @@ EntityEsp:AddToggle("MetalCrate",{
     Default = false,
 
     Callback = function(Value)
-        UserSet.MetalCrate = Value
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -1083,8 +968,7 @@ EntityEsp:AddToggle("GreenCrate",{
     Default = false,
 
     Callback = function(Value)
-        UserSet.GreenCrate = Value
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -1094,7 +978,7 @@ EntityEsp:AddLabel("Esp Color"):AddColorPicker("entitycolor", {
     Default = Color3.new(1,1,1),
 
     Callback = function(Color)
-        RebuildContainers()
+        Core.RebuildContainers()
     end
 })
 
@@ -1106,7 +990,7 @@ VehicleEsp:AddToggle("vehicleesp",{
     Default = false,
 
     Callback = function(Value)
-        UpdateEspActive()
+        Core.ESP.UpdateEspActive()
     end
 })
 
@@ -1123,7 +1007,7 @@ VehicleEsp:AddDropdown("vehicleespsettings",{
     Default = {"Name","Distance"},
 
     Callback = function()
-        RebuildContainers()
+        Core.RebuildContainers()
     end
 })
 
@@ -1137,48 +1021,38 @@ local Items = {
     "c_RightLowerArm", "c_LeftLowerArm"
 }
 
-Core.ArmChams = {
-    Enable = function()
-        table.clear(ArmMeshes)
-
-        for _, Item in next, Items do
-            local Mesh
-            if Item:sub(1,1) == "c" then
-                Mesh = _localplayer.FPSArms.Fake:FindFirstChild(Item)
-            else
-                Mesh = _localplayer.FPSArms:FindFirstChild(Item)
-            end
-
-            if Mesh then
-                table.insert(ArmMeshes, {
-                    Mesh = Mesh,
-                    Material = Mesh.Material
-                })
-
-                Mesh.Material = Enum.Material.ForceField
-            end
-        end
-    end,
-
-    Disable = function()
-        for _, Data in next, ArmMeshes do
-            if Data.Mesh then
-                Data.Mesh.Material = Data.Material
-            end
-        end
-
-        table.clear(ArmMeshes)
-    end,
-}
-
 Chameleon:AddToggle("armchams", {
     Text = "Arm Chams",
     Default = false,
     Callback = function(Value)
         if Value then
-            Core.ArmChams.Enable()
+            table.clear(ArmMeshes)
+
+            for _, Item in next, Items do
+                local Mesh
+                if Item:sub(1,1) == "c" then
+                    Mesh = _localplayer.FPSArms.Fake:FindFirstChild(Item)
+                else
+                    Mesh = _localplayer.FPSArms:FindFirstChild(Item)
+                end
+
+                if Mesh then
+                    table.insert(ArmMeshes, {
+                        Mesh = Mesh,
+                        Material = Mesh.Material
+                    })
+
+                    Mesh.Material = Enum.Material.ForceField
+                end
+            end
         else
-            Core.ArmChams.Disable()
+            for _, Data in next, ArmMeshes do
+                if Data.Mesh then
+                    Data.Mesh.Material = Data.Material
+                end
+            end
+
+            table.clear(ArmMeshes)
         end
     end
 })
@@ -1190,75 +1064,59 @@ local Ignore = {
     ADS = true
 }
 
-local function ApplyWeaponChams()
-    local HandModel = _localplayer.FPSArms:FindFirstChild("HandModel")
-    if not HandModel then
-        return
-    end
-
-    for _, Object in next, HandModel:GetDescendants() do
-        if Object:IsA("BasePart")
-        and not Ignore[Object.Name]
-        and not WeaponMeshes[Object] then
-
-            WeaponMeshes[Object] = Object.Material
-            Object.Material = Enum.Material.ForceField
-        end
-    end
-end
-
-Core.WeaponChams = {
-    Enable = function()
-        ApplyWeaponChams()
-
-        Utils.AddConnection(connections.misc, "weaponchams", _localplayer.FPSArms.DescendantAdded:Connect(function(Object)
-            if not Toggles.weaponchams.Value then
-                return
-            end
-
-            local HandModel = _localplayer.FPSArms:FindFirstChild("HandModel")
-            if not HandModel then
-                return
-            end
-
-            if Object:IsDescendantOf(HandModel)
-            and Object:IsA("BasePart")
-            and not Ignore[Object.Name]
-            and not WeaponMeshes[Object] then
-
-                WeaponMeshes[Object] = Object.Material
-                Object.Material = Enum.Material.ForceField
-            end
-        end))
-    end,
-
-    Disable = function()
-        Utils.RemoveConnection(connections.misc, "weaponchams")
-
-        for Object, Material in next, WeaponMeshes do
-            if Object.Parent then
-                Object.Material = Material
-            end
-        end
-
-        table.clear(WeaponMeshes)
-    end,
-}
-
 Chameleon:AddToggle("weaponchams", {
     Text = "Weapon Chams",
     Default = false,
     Callback = function(Value)
         if Value then
-            Core.WeaponChams.Enable()
+            local HandModel = _localplayer.FPSArms:FindFirstChild("HandModel")
+            if HandModel then
+                for _, Object in next, HandModel:GetDescendants() do
+                    if Object:IsA("BasePart")
+                    and not Ignore[Object.Name]
+                    and not WeaponMeshes[Object] then
+
+                        WeaponMeshes[Object] = Object.Material
+                        Object.Material = Enum.Material.ForceField
+                    end
+                end
+            end
+
+            Utils.AddConnection(connections.misc, "weaponchams", _localplayer.FPSArms.DescendantAdded:Connect(function(Object)
+                if not Utils.IsToggled("weaponchams") then
+                    return
+                end
+
+                local HandModel = _localplayer.FPSArms:FindFirstChild("HandModel")
+                if not HandModel then
+                    return
+                end
+
+                if Object:IsDescendantOf(HandModel)
+                and Object:IsA("BasePart")
+                and not Ignore[Object.Name]
+                and not WeaponMeshes[Object] then
+
+                    WeaponMeshes[Object] = Object.Material
+                    Object.Material = Enum.Material.ForceField
+                end
+            end))
         else
-            Core.WeaponChams.Disable()
+            Utils.RemoveConnection(connections.misc, "weaponchams")
+
+            for Object, Material in next, WeaponMeshes do
+                if Object.Parent then
+                    Object.Material = Material
+                end
+            end
+
+            table.clear(WeaponMeshes)
         end
     end
 })
 
 RegisterHook("chams", nil, "Material", function(Object, Property, Old)
-    if Toggles.armchams.Value then
+    if Utils.IsToggled("armchams") then
         for _, Data in next, ArmMeshes do
             if Object == Data.Mesh then
                 return Data.Material
@@ -1266,7 +1124,7 @@ RegisterHook("chams", nil, "Material", function(Object, Property, Old)
         end
     end
 
-    if Toggles.weaponchams.Value then
+    if Utils.IsToggled("weaponchams") then
         for _, Data in next, WeaponMeshes do
             if Object == Data.Mesh then
                 return Data.Material
@@ -1286,8 +1144,9 @@ Bullet:AddToggle("bullettracer", {
 })
 
 local OldCreateProjectile
-OldCreateProjectile = hookfunction(Functions.CreateProjectile, function(originCF, weapon, ...)
-	if not Toggles.bullettracer.Value then
+local CreateProjectile = RangedWeaponClient.CreateProjectile
+OldCreateProjectile = hookfunction(CreateProjectile, function(originCF, weapon, ...)
+	if not Utils.IsToggled("bullettracer") then
 		return OldCreateProjectile(originCF, weapon, ...)
 	end
 	
@@ -1341,33 +1200,17 @@ local Ambient = Tabs.World:AddRightGroupbox("Ambient")
 local Lighting = game:GetService("Lighting")
 	-- Services is NOT the original.
 
-Core.Ambient = {
-    Enable = function()
-        Utils.AddConnection(connections.heartbeats, "SpoofAmbient", Heartbeat:Connect(function()
-            Lighting.Ambient = Options.ambientcolor.Value
-        end))
-    end,
-
-    Disable = function()
-        Utils.RemoveConnection(connections.heartbeats, "SpoofAmbient")
-        Lighting.Ambient = Game.Lighting.CurrentAmbient
-    end,
-}
-
-local function SetAmbientColor(Color)
-    if Toggles.ambient.Value then
-        Lighting.Ambient = Color
-    end
-end
-
 Ambient:AddToggle("ambient", {
     Text = "Enable",
     Default = false,
     Callback = function(Value)
         if Value then
-            Core.Ambient.Enable()
+            Utils.AddConnection(connections.heartbeats, "SpoofAmbient", Heartbeat:Connect(function()
+                Lighting.Ambient = Options.ambientcolor.Value
+            end))
         else
-            Core.Ambient.Disable()
+            Utils.RemoveConnection(connections.heartbeats, "SpoofAmbient")
+            Lighting.Ambient = Game.Lighting.CurrentAmbient
         end
     end
 })
@@ -1375,12 +1218,15 @@ Ambient:AddToggle("ambient", {
 Ambient:AddLabel("Ambient Color"):AddColorPicker("ambientcolor", {
     Default = Color3.fromRGB(255,255,255),
     Title = "Ambient Color",
-
-    Callback = SetAmbientColor
+    Callback = function(Color)
+        if Utils.IsToggled("ambient") then
+            Lighting.Ambient = Color
+        end
+    end,
 })
 
 RegisterHook("ambient", Lighting, "Ambient", function(Object, Property, Old)
-    if Toggles.ambient.Value and Object == Lighting and Property == "Ambient" then
+    if Utils.IsToggled("ambient") and Object == Lighting and Property == "Ambient" then
         return Game.Lighting.CurrentAmbient
     end
 
@@ -1398,37 +1244,32 @@ end)
 
 local Terrain = Tabs.World:AddRightGroupbox("Terrain")
 
-local function SetNoWaves(Value)
-    workspace.Terrain.WaterWaveSize =
-        Value and 0 or Game.Workspace.Terrain.WaterWaveSize
-end
-
 Terrain:AddToggle("nowaves", {
     Text = "No Waves",
     Default = false,
-    Callback = SetNoWaves
+    Callback = function(Value)
+        workspace.Terrain.WaterWaveSize = Value and 0 or Game.Workspace.Terrain.WaterWaveSize
+    end,
 })
 
 RegisterHook("nowaves", workspace.Terrain, "WaterWaveSize", function(Object, Property, Old)
-    if Toggles.nowaves.Value and Object == workspace.Terrain then
+    if Utils.IsToggled("nowaves") and Object == workspace.Terrain then
         return Game.Workspace.Terrain.WaterWaveSize
     end
 
     return Old(Object, Property)
 end)
 
-local Min = getfflag("FRMMinGrassDistance")
-local Max = getfflag("FRMMaxGrassDistance")
-
-local function SetNoGrass(Value)
-    setfflag("FRMMinGrassDistance", Value and -1 or Min)
-    setfflag("FRMMaxGrassDistance", Value and -1 or Max)
-end
+const Min = getfflag("FRMMinGrassDistance")
+const Max = getfflag("FRMMaxGrassDistance")
 
 Terrain:AddToggle("nograss", {
     Text = "No Grass",
     Default = false,
-    Callback = SetNoGrass
+    Callback = function(Value)
+        setfflag("FRMMinGrassDistance", Value and -1 or Min)
+        setfflag("FRMMaxGrassDistance", Value and -1 or Max)
+    end,
 })
 
 --[[ -- This was a hidden propety anyway, so idk why I hooked it
@@ -1442,18 +1283,16 @@ RegisterHook("nograss", "Decoration", function(Object, Property, Old)
 end)
 ]]
 
-local function SetNoShadows(Value)
-    Lighting.GlobalShadows = not Value
-end
-
 Terrain:AddToggle("noshadows", {
     Text = "No Shadows",
     Default = false,
-    Callback = SetNoShadows
+    Callback = function(Value)
+        Lighting.GlobalShadows = not Value
+    end,
 })
 
 RegisterHook("noshadows", Lighting, "GlobalShadows", function(Object, Property, Old)
-    if Toggles.noshadows.Value and Object == Lighting then
+    if Utils.IsToggled("noshadows") and Object == Lighting then
         return Game.Lighting.OldShadows
     end
 
@@ -1480,9 +1319,12 @@ Utils.InputKeys = function(Keys, Delay)
     end
 end
 
+const IsGrounded = Character.IsGrounded
+const GetY = Camera.GetY
+
 local function SlideJump()
-    if Functions.IsGrounded() then
-        local cameraY = Functions.GetY() + math.pi
+    if IsGrounded() then
+        local cameraY = GetY() + math.pi
         local slideDir = Vector3.new(
             math.sin(cameraY),
             0,
@@ -1497,27 +1339,17 @@ local function SlideJump()
     end
 end
 
-Core.AutoSlideJump = {
-    Enable = function()
-        Utils.AddConnection(connections.heartbeats, "AutoSlideJump", Heartbeat:Connect(function()
-            task.wait(1)
-            SlideJump()
-        end))
-    end,
-
-    Disable = function()
-        Utils.RemoveConnection(connections.heartbeats, "AutoSlideJump")
-    end,
-}
-
 MovementTab:AddToggle("autoslidejump", {
     Text = "Auto Slide Jump",
     Default = false,
     Callback = function(Value)
         if Value then
-            Core.AutoSlideJump.Enable()
+            Utils.AddConnection(connections.heartbeats, "AutoSlideJump", Heartbeat:Connect(function()
+                task.wait(1)
+                SlideJump()
+            end))
         else
-            Core.AutoSlideJump.Disable()
+            Utils.RemoveConnection(connections.heartbeats, "AutoSlideJump")
         end
     end
 })
@@ -1545,7 +1377,7 @@ local function SetupWalkspeed()
 	task.spawn(function()
 		local LinearVelocity = _localplayer.LocalCharacter.Middle.LinearVelocity
 		LinearVelocity:GetPropertyChangedSignal("VectorVelocity"):Connect(function()
-			if not Library or not LinearVelocity or not Toggles.walkspeed.Value then
+			if not Library or not LinearVelocity or not Utils.IsToggled("walkspeed") then
 				return
 			end
 
@@ -1598,7 +1430,7 @@ OldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(Self, ...)
     local Method = getnamecallmethod()
     local Args = {...}
  
-    if Toggles.alwaysgrounded.Value and Self == workspace and Method == "Raycast" then
+    if Utils.IsToggled("alwaysgrounded") and Self == workspace and Method == "Raycast" then
         local origin = Args[1]
         local direction = Args[2]
         local params = Args[3]
@@ -1636,21 +1468,19 @@ MovementTab:AddToggle("antisprintblock", {
 
 local ExploitsTab = Tabboxes.World:AddTab("Camera")
 
-local Prism1 = _localplayer.LocalCharacter.Top.Prism1
-local OriginalPrism1 = Prism1.CFrame
-
-local function SetLongNeck(Value)
-    Prism1.CFrame = Value and (OriginalPrism1 - Vector3.yAxis * 5) or OriginalPrism1
-end
+const Prism1 = _localplayer.LocalCharacter.Top.Prism1
+const OriginalPrism1 = Prism1.CFrame
 
 ExploitsTab:AddToggle("longneck", {
     Text = "Long Neck",
     Default = false,
-    Callback = SetLongNeck
+    Callback = function(Value)
+        Prism1.CFrame = Value and (OriginalPrism1 - Vector3.yAxis * 5) or OriginalPrism1
+    end,
 })
 
 RegisterHook("longneck", Prism1, "CFrame", function(Object, Property, Old)
-    if Toggles.longneck.Value and Object == Prism1 then
+    if Utils.IsToggled("longneck") and Object == Prism1 then
         return OriginalPrism1
     end
 
@@ -1659,14 +1489,12 @@ end)
 
 ExploitsTab:AddDivider()
 
-local function SetFreecam()
-    Game.Workspace.Camera.CameraCFrame = workspace.CurrentCamera.CFrame
-end
-
 ExploitsTab:AddToggle("freecam", {
     Text = "Freecam",
     Default = false,
-    Callback = SetFreecam
+    Callback = function()
+        Game.Workspace.Camera.CameraCFrame = workspace.CurrentCamera.CFrame
+    end,
 })
 
 ExploitsTab:AddSlider("freecamspeed", {
@@ -1679,7 +1507,7 @@ ExploitsTab:AddSlider("freecamspeed", {
 })
 
 RegisterHook("CameraHook", workspace.CurrentCamera, "CFrame", function(Object, Property, Old)
-    if Toggles.freecam.Value and Object == workspace.CurrentCamera and Property == "CFrame" then
+    if Utils.IsToggled("freecam") and Object == workspace.CurrentCamera and Property == "CFrame" then
         return Game.Workspace.Camera.CameraCFrame
     end
 
@@ -1688,14 +1516,14 @@ end)
 
 ExploitsTab:AddDivider()
 
-local function SetCameraFov(Value)
-    Functions.SetBaseFOV(Value and 90 or 70)
-end
+const SetBaseFOV = Camera.SetBaseFOV
 
 ExploitsTab:AddToggle("camerafov", {
     Text = "Higher FOV",
     Default = false,
-    Callback = SetCameraFov
+    Callback = function(Value)
+        SetBaseFOV(Value and 90 or 70)
+    end,
 })
 
 local VehicleMisc = Tabs.World:AddRightGroupbox("Vehicle")
@@ -1719,31 +1547,23 @@ VehicleMisc:AddDivider()
 
 local OldCar
 
-Core.FastCar = {
-    Enable = function()
-        OldCar = Utils.AddHook("FastCar", Functions.GainControl, function(p1)
-            if not Toggles.fastcar.Value then
-                return OldCar(p1)
-            end
-            p1.TopSpeed = Options.vehiclespeed.Value
-            return p1
-        end, "Lua")
-    end,
-
-    Disable = function()
-        Utils.RemoveHook("FastCar")
-        OldCar = nil
-    end,
-}
+const GainControl = TrollyClient.GainControl
 
 VehicleMisc:AddToggle("fastcar", {
     Text = "Vehicle Speed",
     Default = false,
     Callback = function(Value)
         if Value then
-            Core.FastCar.Enable()
+            OldCar = Utils.AddHook("FastCar", GainControl, function(p1)
+                if not Utils.IsToggled("fastcar") then
+                    return OldCar(p1)
+                end
+                p1.TopSpeed = Options.vehiclespeed.Value
+                return p1
+            end, "Lua")
         else
-            Core.FastCar.Disable()
+            Utils.RemoveHook("FastCar")
+            OldCar = nil
         end
     end
 })
@@ -1785,5 +1605,5 @@ ThemeManager:SetFolder("trident")
 SaveManager:SetFolder("trident/Configs")
 
 -- Apply saved ESP settings; enable the library if any toggle was restored.
-RebuildContainers()
-UpdateEspActive()
+Core.RebuildContainers()
+Core.ESP.UpdateEspActive()

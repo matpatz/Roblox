@@ -1,5 +1,5 @@
 (function () {
-  var container = null;
+  let container = null;
 
   function ensure() {
     if (!container) {
@@ -19,8 +19,8 @@
   }
 
   function notify(type, message, time) {
-    var box = ensure();
-    var el = document.createElement('div');
+    const box = ensure();
+    const el = document.createElement('div');
     el.className = 'notify-item ' + (type || '');
     el.textContent = message;
     box.appendChild(el);

@@ -2,9 +2,13 @@ local Services = loadstring(game:HttpGet(
     "https://www.voltex.website/src/Modules/Variables.lua"
 ))()
 
-export type ContainerLocation = Instance | { Instance } | (() -> (Instance | { Instance }))
+-- A container source can be a raw Instance, or a table that overrides the ESP
+-- label: { Model = Instance, Name = string? } (Name may also be a function).
+export type ContainerSource = Instance | { Model: Instance, Name: (string | ((Target: Instance) -> string))? }
+export type ContainerLocation = Instance | { ContainerSource } | (() -> (Instance | { ContainerSource }))
 
 export type ContainerDefinition = {
+    Name: string?, -- Explicit container name; defaults to the map key (the type, e.g. an EntityList Class) when absent.
     Location: ContainerLocation?,
     Target: string?,
     Settings: { [string]: any }?,
@@ -229,6 +233,24 @@ local self = setmetatable({}, ESP)
         return self[Name]
     end
 
+    -- Custom display name: either a plain string, or a function called
+    -- with the target every frame (useful for dynamic labels).
+    local function GetTargetName(Target)
+        local Data = TargetData[Target]
+        local Custom = Data and Data.Name
+
+        if typeof(Custom) == "function" then
+            local Success, Result = pcall(Custom, Target)
+            if Success and type(Result) == "string" and Result ~= "" then
+                return Result
+            end
+        elseif type(Custom) == "string" and Custom ~= "" then
+            return Custom
+        end
+
+        return if typeof(Target) == "Instance" then Target.Name else "Target"
+    end
+
     local function ResolveLocation(Name, Definition)
         local Location = Definition.Location
         if Location == nil and Name == "Players" then
@@ -253,6 +275,19 @@ local self = setmetatable({}, ESP)
             return Location
         end
         return {}
+    end
+
+    -- Container sources may be raw Instances, or tables that describe a model
+    -- with a custom display name: { Model = Instance, Name = string }.
+    local function NormalizeSource(Source)
+        if typeof(Source) == "table" then
+            local Model = Source.Model
+            if typeof(Model) == "Instance" then
+                return Model, Source.Name
+            end
+            return nil, nil
+        end
+        return Source, nil
     end
 
     local function ResolveTarget(Source, Selector)
@@ -609,50 +644,56 @@ local self = setmetatable({}, ESP)
     end
 
     local function TrackSource(Source, ContainerName, Definition)
-        if typeof(Source) ~= "Instance" then
+        local Model, CustomName = NormalizeSource(Source)
+
+        if typeof(Model) ~= "Instance" then
             return
         end
-        if not (Source:IsA("Player") or Source:IsA("Model") or Source:IsA("BasePart")) then
+        if not (Model:IsA("Player") or Model:IsA("Model") or Model:IsA("BasePart")) then
             return
         end
-        if Source == LocalPlayer and IsPlayerContainer() then
+        if Model == LocalPlayer and IsPlayerContainer() then
             return
         end
 
-        local Data = TargetData[Source]
+        local Data = TargetData[Model]
         if Data then
             Data.Owners[ContainerName] = true
             Data.Definition = Definition
-            Data.Anchor = ResolveTarget(Source, Definition.Target)
+            if CustomName then
+                Data.Name = CustomName
+            end
+            Data.Anchor = ResolveTarget(Model, Definition.Target)
             return
         end
 
         Data = {
-            Source = Source,
-            Anchor = ResolveTarget(Source, Definition.Target),
+            Source = Model,
+            Name = CustomName,
+            Anchor = ResolveTarget(Model, Definition.Target),
             Definition = Definition,
             Owners = { [ContainerName] = true },
         }
-        TargetData[Source] = Data
-        Tracked[Source] = true
+        TargetData[Model] = Data
+        Tracked[Model] = true
 
-        NewBox(Source)
-        NewCorners(Source)
-        NewName(Source)
-        NewTracer(Source)
-        NewQuad(Source)
-        NewHealth(Source)
-        NewDistance(Source)
-        NewChams(Source)
-        NewHealthBar(Source)
-        New3DBox(Source)
-        NewSkeleton(Source)
+        NewBox(Model)
+        NewCorners(Model)
+        NewName(Model)
+        NewTracer(Model)
+        NewQuad(Model)
+        NewHealth(Model)
+        NewDistance(Model)
+        NewChams(Model)
+        NewHealthBar(Model)
+        New3DBox(Model)
+        NewSkeleton(Model)
 
-        Connections[Source] = Connections[Source] or {}
+        Connections[Model] = Connections[Model] or {}
 
-        if Source:IsA("Player") and Source.CharacterRemoving then
-            table.insert(Connections[Source], Source.CharacterRemoving:Connect(function()
-                HideTarget(Source)
+        if Model:IsA("Player") and Model.CharacterRemoving then
+            table.insert(Connections[Model], Model.CharacterRemoving:Connect(function()
+                HideTarget(Model)
             end))
         end
     end
@@ -673,8 +714,9 @@ local self = setmetatable({}, ESP)
     local function SyncContainerSources(Name, Definition)
         local CurrentSources = {}
         for _, Source in next, GetSources(Name, Definition) do
-            if typeof(Source) == "Instance" then
-                CurrentSources[Source] = true
+            local Model = NormalizeSource(Source)
+            if typeof(Model) == "Instance" then
+                CurrentSources[Model] = true
                 TrackSource(Source, Name, Definition)
             end
         end
@@ -756,7 +798,11 @@ local self = setmetatable({}, ESP)
             if typeof(Definition) == "Instance" then
                 Normalized[Name] = { Location = Definition }
             elseif typeof(Definition) == "table" then
-                Normalized[Name] = Definition
+                -- Prefer an explicit .Name on the definition (e.g. an entity's Class/type),
+                -- otherwise register under the map key (the type from EntityList).
+                local ContainerName = if typeof(Definition.Name) == "string"
+                    and Definition.Name ~= "" then Definition.Name else Name
+                Normalized[ContainerName] = Definition
             end
         end
 
@@ -791,6 +837,8 @@ local self = setmetatable({}, ESP)
     -- Public API
     -- Container definitions support Location (Instance, Instance list, or function),
     -- Target selectors such as "BasePart:Torso", and direct or nested setting overrides.
+    -- A definition may set an explicit .Name; SetContainer registers it under that name,
+    -- falling back to the map key (the type, e.g. an EntityList Class) when .Name is absent.
 
     function self:Enable()
         self.Active = true
@@ -1055,7 +1103,7 @@ local self = setmetatable({}, ESP)
                 local DistanceText = ""
 
                 if ShowName then
-                    NameText = if typeof(Target) == "Instance" then Target.Name else "Target"
+                    NameText = GetTargetName(Target)
                     if ShowHeld and Target:IsA("Player") then
                         local Tool = Character:FindFirstChildOfClass("Tool")
                         if Tool then

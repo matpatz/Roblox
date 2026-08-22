@@ -48,7 +48,7 @@
 fetch('/api/v1/stats')
   .then(function(r) { return r.json(); })
   .then(function(d) {
-    var data = d.data || d;
+    const data = d.data || d;
     document.getElementById('execCount').textContent = data.executions_last_hour || 0;
     try { localStorage.setItem('stats_cache', JSON.stringify(data)); } catch(e) {}
   })

@@ -208,6 +208,7 @@ Core.PlaceEgg = function(Uid: string)
 end
 
 const Zones = {
+    ["Cherry Blossom"] = 10,
     ["Cosmic"] = 9,
     ["Prehistoric"] = 8,
     ["Abyss Ocean"] = 7,
@@ -435,6 +436,7 @@ local tabs = {
 tabs.Eggs:CreateDropdown({
     Name = "Zone",
     Options = {
+        "Cherry Blossom",
         "Cosmic",
         "Prehistoric",
         "Abyss Ocean",

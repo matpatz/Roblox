@@ -63,7 +63,8 @@ local config = {
 		BestEgg = {
 			Area = "Forest",
 			DesireMutations = true,
-			MinimumRank = 1
+			MinimumRank = 1,
+			MaximumRank = 10
 		},
 		EggRadius = 2,
 		AutoPlace = false
@@ -226,6 +227,7 @@ Utils.GetBestEgg = function(Options)
     local Area = Options.Area
     local DesireMutations = Options.DesireMutations == true
     local MinRank = Options.MinimumRank
+    local MaxRank = Options.MaximumRank or 10
     local BestEgg
     local BestRank = -math.huge
 
@@ -241,6 +243,10 @@ Utils.GetBestEgg = function(Options)
         end
 
         if Area == "Random" and EggRank < MinRank then
+            continue
+        end
+
+        if Area == "Random" and EggRank > MaxRank then
             continue
         end
 
@@ -290,7 +296,7 @@ Utils.TweenTo = function(Area, SpeedMultiplier)
     local Start = HumanoidRootPart.Position
 
     local Distance = (Start - Target.Position).Magnitude
-    local Duration = Distance / (Humanoid.WalkSpeed * (SpeedMultiplier or 1.1))
+    local Duration = Distance / (Humanoid.WalkSpeed * (SpeedMultiplier or 0.9))
 
     local Gravity = workspace.Gravity
     local VelocityY = 0
@@ -512,6 +518,18 @@ tabs.Eggs:CreateSlider({
     Flag = "MinEggRank",
     Callback = function(Value)
         config.Eggs.BestEgg.MinimumRank = Value
+    end
+})
+
+tabs.Eggs:CreateSlider({
+    Name = "Maximum Zone Rank",
+    Range = {1, 10},
+    Increment = 1,
+    Suffix = "",
+    CurrentValue = config.Eggs.BestEgg.MaximumRank,
+    Flag = "MaxEggRank",
+    Callback = function(Value)
+        config.Eggs.BestEgg.MaximumRank = Value
     end
 })
 

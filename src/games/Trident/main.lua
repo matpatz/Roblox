@@ -300,7 +300,8 @@ local function Filter(Entity)
 	local Default = {
 		Type = Type,
 		Model = Entity.model,
-		Position = Entity.pos
+		Position = Entity.pos,
+		Name = Entity.Name
 	}
 
 	local HandModel = Entity.handModel
@@ -687,6 +688,8 @@ local function SettingsFrom(Values, Color)
     Color = Color or Color3.new(1, 1, 1)
 
     return {
+        -- Base color for the whole container (corners/quad inherit it too).
+        Color = Color,
         ShowBox = Values["Box"] == true,
         ShowName = Values["Name"] == true,
         ShowTracer = Values["Tracer"] == true,
@@ -701,9 +704,7 @@ local function SettingsFrom(Values, Color)
     }
 end
 
--- Everything not in here is an "entity" for the Entity container.
-const NON_ENTITY_CLASSES = { "Player", "Vehicle" }
-
+-- The Entity container only ever renders classes that have a sub-toggle in EntityKeys.
 const EntityKeys = {
     Nitrate = "NitrateEsp",
     Iron = "IronEsp",
@@ -728,15 +729,26 @@ local function GetModels(Container)
             Show = (Class == "Player" and Utils.IsToggled("playeresp"))
                 or (Class == "NPC" and Utils.IsToggled("npccheck"))
         elseif Container == "Entity" then
-            -- Sub-toggles (EntityKeys) override the master entityesp toggle.
-            Show = not table.find(NON_ENTITY_CLASSES, Class)
-                and (Utils.IsToggled(EntityKeys[Class]) or Utils.IsToggled("entityesp"))
+            -- Entity Esp is a pure master toggle: it only gates the per-category
+            -- sub-toggles (EntityKeys). NPCs/Walls/buildings are never part of it.
+            const Key = EntityKeys[Class]
+            Show = Utils.IsToggled("entityesp")
+                and Key ~= nil
+                and Utils.IsToggled(Key)
         elseif Container == "Vehicle" then
             Show = Class == "Vehicle" and Utils.IsToggled("vehicleesp")
         end
 
         if Model and Show then
-            Models[#Models + 1] = Model
+            -- Label each source: prefer the entity's .Name (players), else its type.
+            local Label = Entity.Basic.Name
+            if typeof(Label) ~= "string" or Label == "" then
+                Label = Entity.Basic.Type
+            end
+            Models[#Models + 1] = {
+                Model = Model,
+                Name = Label,
+            }
         end
     end
 
@@ -766,6 +778,8 @@ const CONTAINERS = {
 }
 
 Core.RebuildContainers = function()
+    Utils.UpdateEntities()
+
     const Containers = {}
 
     for _, Container in next, CONTAINERS do

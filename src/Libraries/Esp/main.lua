@@ -9,6 +9,7 @@ export type ContainerLocation = Instance | { ContainerSource } | (() -> (Instanc
 
 export type ContainerDefinition = {
     Name: string?, -- Explicit container name; defaults to the map key (the type, e.g. an EntityList Class) when absent.
+    Color: Color3?, -- Base color for the container; falls back to per-element colors, then White.
     Location: ContainerLocation?,
     Target: string?,
     Settings: { [string]: any }?,
@@ -47,6 +48,7 @@ export type ESP = {
     HealthTextColor: Color3,
     DistanceColor: Color3,
     ChamsColor: Color3,
+    Color: Color3?, -- Base color; falls back to per-element colors, then White.
     HealthBarColorOverride: Color3?,
 
     TracerThickness: number,
@@ -119,6 +121,7 @@ local self = setmetatable({}, ESP)
     self.DistanceColor = Color3.fromRGB(255, 255, 255)
     self.ChamsColor = Color3.fromRGB(255, 255, 255)
     self.HealthBarColorOverride = nil
+    self.Color = nil -- per-container base color (see ContainerDefinition.Color)
 
     self.TracerThickness = 1
     self.BoxWidthScale = 0.6
@@ -911,6 +914,7 @@ local self = setmetatable({}, ESP)
         HealthTextColor = true,
         DistanceColor = true,
         ChamsColor = true,
+        Color = true,
         HealthBarColorOverride = true,
         TracerThickness = true,
         BoxWidthScale = true,
@@ -1007,7 +1011,7 @@ local self = setmetatable({}, ESP)
 
             local ModelOnScreen, MinX, MinY, MaxX, MaxY, HRPPos, HRPOnScreen, HeadPos, HeadOnScreen = GetModelCorners(Character, HRP, Head, Humanoid ~= nil)
 
-            local BaseCol = White
+            local BaseCol = GetTargetSetting(Target, "Color") or White
             if Target:IsA("Player") and TeamColor then
                 if Target.Team == LocalPlayer.Team then
                     BaseCol = Target.TeamColor.Color

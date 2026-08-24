@@ -2,6 +2,7 @@ local aimbot = {}
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
+
 function aimbot.Range(PlayerRoot: BasePart, TargetRoot: BasePart): number
 	return (PlayerRoot.Position - TargetRoot.Position).Magnitude
 end
@@ -28,7 +29,7 @@ function aimbot.GetTargets(PlayerRoot: BasePart, Range: number, EntityList): { P
 				continue
 			end
 
-			local TargetRoot = Character:WaitForChild("HumanoidRootPart", 2)
+			local TargetRoot = Character:FindFirstChild("HumanoidRootPart")
 			if not TargetRoot then
 				continue
 			end

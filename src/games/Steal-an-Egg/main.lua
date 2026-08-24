@@ -1,5 +1,4 @@
 --[[ TODO:
-	[+] Auto Place Egg (after finishing a steal)
 	[+] Min Egg Size Slider
 --]]
 

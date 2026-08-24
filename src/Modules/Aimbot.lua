@@ -47,7 +47,7 @@ end
 -- local Camera = workspace.CurrentCamera
 -- local Origin = Camera.CFrame.Position
 
-function aimbot.Raycast(Origin: Vector3, Target: Model): Vector3?
+function aimbot.Raycast(Origin: Vector3, Target: Model?): Vector3?
 	local Root = Target:FindFirstChild("HumanoidRootPart")
 	if not Root then
 		return nil

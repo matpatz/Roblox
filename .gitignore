@@ -12,6 +12,8 @@ supabase-schema.sql
 **/source/
 # tests
 tests
+# dump scripts
+**/*ignore*/
 
 ignore-key-system
 TODO

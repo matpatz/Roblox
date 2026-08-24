@@ -70,3 +70,18 @@ end
 function Utils.writefile(Table)
 	writefile("table_dump.txt", Serialize(Table))
 end
+
+function Utils.print(Table)
+	print(Serialize(Table))
+end
+
+--[[ better print:
+local Old
+Old = hookfunction(print, newcclosure(function(...)
+    if checkcaller() then
+        return Old(Serialize(...))
+    end
+
+    return Old(...)
+end))
+--]]

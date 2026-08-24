@@ -63,16 +63,19 @@ end
 local __namecall
 __namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local Method = getnamecallmethod()
+
     if Method == "FireServer" and self == Impact then
         local Args = { ... }
 
         local Target, TargetRoot = Utils["Aimbot"].GetClosest()
-        if Target and TargetRoot then
+        if Target ~= nil and TargetRoot ~= nil then
             Args[2] = TargetRoot
             Args[3] = TargetRoot.Position
             Args[4] = Utils["Aimbot"].GetDirection(TargetRoot)
         end
+
+        return __namecall(self, table.unpack(Args, 1, #Args))
     end
 
-    return __namecall(self, table.unpack(Args, 1, Args.n))
+    return __namecall(self, ...)
 end)

@@ -40,46 +40,39 @@ local Core = cheat.Core
 
 local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot.lua"))()
 
-Utils["Aimbot"].GetClosest = function(): Player?
-    local Targets = Aimbot.GetTargets(HumanoidRootPart, 500, {})
-    return Aimbot.GetClosest(HumanoidRootPart, 500, Targets)
+Utils["Aimbot"].GetClosest = function(): (Player?, BasePart?)
+    local Targets = Aimbot.GetTargets(HumanoidRootPart, 1000, {})
+    return Aimbot.GetClosest(HumanoidRootPart, 1000, Targets)
 end
 
-Utils["Aimbot"].Raycast = function(Target): Vector3?
-    local Origin = Camera.CFrame.Position
-    return Aimbot.Raycast(Origin, Target)
+Utils["Aimbot"].GetDirection = function(TargetRoot: BasePart): Vector3
+    return TargetRoot.Position - Camera.CFrame.Position
 end
 
-Utils["Aimbot"].GetDirection = function(Target): Vector3
-    if not Target then
-        local Target = Utils["Aimbot"].GetClosest()
-    end
-    local Direction = Utils["Aimbot"].Raycast(Target)
+--[[
+	SentImpact: {
+		[1]: number,
+		[2]: Instance,
+		[3]: Vector3,
+		[4]: Vector3,
+		[5]: Vector3,
+	}
+]]
 
-    return Direction
-end
-
-type SentImpact = {
-    [1]: number,
-    [2]: Instance,
-    [3]: Vector3,
-    [4]: Vector3,
-    [5]: Vector3,
-}
-
-local __namecall; __namecall = hookmetamethod(game, "__namecall", function(self, ...)
+-- Impact:FireServer(shotId, hitInstance, hitPos, dir * len, normal)
+local __namecall
+__namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local Method = getnamecallmethod()
-    local Args = table.unpack(...)
-
     if Method == "FireServer" and self == Impact then
-        local Target = Utils["Aimbot"].GetClosest()
-        local Direction = Utils["Aimbot"].Raycast(Target)
+        local Args = { ... }
 
-        if Target and Direction then
-            Args[1] = Target
-            Args[4] = Direction
+        local Target, TargetRoot = Utils["Aimbot"].GetClosest()
+        if Target and TargetRoot then
+            Args[2] = TargetRoot
+            Args[3] = TargetRoot.Position
+            Args[4] = Utils["Aimbot"].GetDirection(TargetRoot)
         end
     end
 
-    return __namecall(self, ...)
+    return __namecall(self, table.unpack(Args, 1, Args.n))
 end)

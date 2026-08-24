@@ -35,8 +35,8 @@ local Core = cheat.Core
 local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot.lua"))()
 
 Utils["Aimbot"].GetClosest = function(): Player?
-    local Targets = Aimbot.GetTargets(HumanoidRootPart, 500, {})
-    return Aimbot.GetClosest(HumanoidRootPart, 500, Targets)
+    local Targets = Aimbot.GetTargets(HumanoidRootPart, 2000, {})
+    return Aimbot.GetClosest(HumanoidRootPart, 2000, Targets)
 end
 
 Utils["Aimbot"].Lock = function()

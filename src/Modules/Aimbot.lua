@@ -73,7 +73,9 @@ function aimbot.GetClosest(PlayerRoot: BasePart, Range: number, Targets: { Playe
 	local Closest = nil
 
 	for _, Target in next, Targets do
-		local TargetRoot = Target:FindFirstChild("HumanoidRootPart")
+		local Character = Target.Character
+		
+		local TargetRoot = Character and Character:FindFirstChild("HumanoidRootPart")
 		if not TargetRoot then
 			continue
 		end

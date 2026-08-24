@@ -4,11 +4,8 @@ const Players = game:GetService("Players")
 const TweenService = game:GetService("TweenService")
 const RunService = game:GetService("RunService")
 
--- // Events
-const Impact = ReplicatedStorage.GunRemotes.Impact
-
---// Workspace
-local Camera = workspace.CurrentCamera -- whatever lol
+-- // Modules
+const SimpleCast = require(ReplicatedStorage.SimpleCast)
 
 --// LocalPlayer
 const LocalPlayer = Players.LocalPlayer
@@ -45,37 +42,13 @@ Utils["Aimbot"].GetClosest = function(): (Player?, BasePart?)
     return Aimbot.GetClosest(HumanoidRootPart, 1000, Targets)
 end
 
-Utils["Aimbot"].GetDirection = function(TargetRoot: BasePart): Vector3
-    return TargetRoot.Position - Camera.CFrame.Position
-end
+local OldFire = SimpleCast.Fire
+SimpleCast.Fire = function(self, Origin, Direction, Velocity, Config)
+    local Target, TargetRoot = Utils["Aimbot"].GetClosest()
 
---[[
-	SentImpact: {
-		[1]: number,
-		[2]: Instance,
-		[3]: Vector3,
-		[4]: Vector3,
-		[5]: Vector3,
-	}
-]]
-
--- Impact:FireServer(shotId, hitInstance, hitPos, dir * len, normal)
-local __namecall
-__namecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local Method = getnamecallmethod()
-
-    if Method == "FireServer" and self == Impact then
-        local Args = { ... }
-
-        local Target, TargetRoot = Utils["Aimbot"].GetClosest()
-        if Target ~= nil and TargetRoot ~= nil then
-            Args[2] = TargetRoot
-            Args[3] = TargetRoot.Position
-            Args[4] = Utils["Aimbot"].GetDirection(TargetRoot)
-        end
-
-        return __namecall(self, table.unpack(Args, 1, #Args))
+    if Target ~= nil and TargetRoot ~= nil then
+        Direction = (TargetRoot.Position - Origin).Unit
     end
 
-    return __namecall(self, ...)
-end)
+    return OldFire(self, Origin, Direction, Velocity, Config)
+end

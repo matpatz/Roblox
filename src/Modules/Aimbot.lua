@@ -69,12 +69,21 @@ function aimbot.Raycast(Origin: Vector3, Target: Model?): Vector3?
 	return Origin + Direction
 end
 
-function aimbot.GetClosest(PlayerRoot: BasePart, Range: number, Targets: { Player }): (Player?, BasePart?)
+function aimbot.GetClosest(PlayerRoot: BasePart, Range: number, Targets: { Instance }): (Instance?, BasePart?)
 	local Closest = nil
 	local ClosestRoot = nil
 
 	for _, Target in next, Targets do
-		local Character = Target.Character
+		local Character = nil
+		if Target:IsA("Player") then
+			Character = Target.Character
+		elseif Target:IsA("Model") then
+			Character = Target
+		elseif Target:IsA("BasePart") and Target.Parent then
+			Character = Target.Parent
+		else
+			continue
+		end
 
 		local TargetRoot = nil
 		if Character ~= nil then

@@ -59,13 +59,15 @@ local config = {
 const Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
 
 Utils["Aimbot"].GetClosest = function(): (BasePart?)
+    config["Origin"] = HumanoidRootPart.Position
+    config["EntityLists"] = Zombies:GetChildren()
+
     const Target, AimPart = Aimbot.GetClosest(config)
 
     return AimPart
 end
 
 local old; old = hookfunction(u1.rcm.Raycast, function(p1, p2, p3, p4, p5)
-    config["Origin"] = HumanoidRootPart.Position
     const TargetRoot = Utils["Aimbot"].GetClosest()
 
     if TargetRoot then

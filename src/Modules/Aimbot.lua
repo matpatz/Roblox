@@ -3,11 +3,18 @@ local aimbot = {}
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 
-function aimbot.Range(PlayerRoot: BasePart, TargetRoot: BasePart): number
-	return (PlayerRoot.Position - TargetRoot.Position).Magnitude
+local function GetOrigin(PlayerRoot: BasePart | Vector3): Vector3
+	if typeof(PlayerRoot) == "Vector3" then
+		return PlayerRoot
+	end
+	return PlayerRoot.Position
 end
 
-function aimbot.GetTargets(PlayerRoot: BasePart, Range: number, EntityList: { Instance }): { Instance }
+function aimbot.Range(PlayerRoot: BasePart | Vector3, TargetRoot: BasePart): number
+	return (GetOrigin(PlayerRoot) - TargetRoot.Position).Magnitude
+end
+
+function aimbot.GetTargets(PlayerRoot: BasePart | Vector3, Range: number, EntityList: { Instance }): { Instance }
 	local Targets = {}
 
 	if EntityList ~= nil then
@@ -72,7 +79,7 @@ function aimbot.Raycast(Origin: Vector3, Target: Model?): Vector3?
 	return Origin + Direction
 end
 
-function aimbot.GetClosest(PlayerRoot: BasePart, Range: number, Targets: { Instance }): (Instance?, BasePart?)
+function aimbot.GetClosest(PlayerRoot: BasePart | Vector3, Range: number, Targets: { Instance }): (Instance?, BasePart?)
 	local Closest = nil
 	local ClosestRoot = nil
 

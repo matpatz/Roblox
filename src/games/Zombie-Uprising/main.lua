@@ -46,8 +46,8 @@ local Core = cheat.Core
 
 local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot.lua"))()
 
-Utils["Aimbot"].GetClosest = function(): (Player?, BasePart?)
-    local Targets = Aimbot.GetTargets(HumanoidRootPart, 200, Zombies:GetChildren())
+Utils["Aimbot"].GetClosest = function(): (Instance?, BasePart?)
+    local Targets = Aimbot.GetTargets(HumanoidRootPart, 200, Zombies:QueryDescendants("Model:has(#Head)"))
     return Aimbot.GetClosest(HumanoidRootPart, 200, Targets)
 end
 

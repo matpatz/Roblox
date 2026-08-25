@@ -7,39 +7,42 @@ function aimbot.Range(PlayerRoot: BasePart, TargetRoot: BasePart): number
 	return (PlayerRoot.Position - TargetRoot.Position).Magnitude
 end
 
-function aimbot.GetTargets(PlayerRoot: BasePart, Range: number, EntityList): { Player }
+function aimbot.GetTargets(PlayerRoot: BasePart, Range: number, EntityList: { Instance }): { Instance }
 	local Targets = {}
 
-	if #EntityList ~= 0 then
+	if EntityList ~= nil then
 		for _, Object in next, EntityList do
-			local TargetRoot = Object:WaitForChild("HumanoidRootPart", 2)
+			local TargetRoot = Object:FindFirstChild("HumanoidRootPart", true)
 			if not TargetRoot then
 				continue
 			end
 
 			table.insert(Targets, Object)
 		end
-	else
-		for _, Object in next, Players:GetPlayers() do
-			if Object == Player then
-				continue
-			end
-			local Character = Object.Character
-			if not Character then
-				continue
-			end
 
-			local TargetRoot = Character:FindFirstChild("HumanoidRootPart")
-			if not TargetRoot then
-				continue
-			end
+		return Targets
+	end
 
-			if aimbot.Range(PlayerRoot, TargetRoot) > Range then
-				continue
-			end
-
-			table.insert(Targets, Object)
+	-- Only used when no entity list is provided (fallback to other players)
+	for _, Object in next, Players:GetPlayers() do
+		if Object == Player then
+			continue
 		end
+		local Character = Object.Character
+		if not Character then
+			continue
+		end
+
+		local TargetRoot = Character:FindFirstChild("HumanoidRootPart")
+		if not TargetRoot then
+			continue
+		end
+
+		if aimbot.Range(PlayerRoot, TargetRoot) > Range then
+			continue
+		end
+
+		table.insert(Targets, Object)
 	end
 
 	return Targets

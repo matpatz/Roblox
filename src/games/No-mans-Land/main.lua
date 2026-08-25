@@ -1,54 +1,73 @@
+-- // Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local LP = Players.LocalPlayer
 
-local PH = require(game.ReplicatedStorage.Modules.Other.WeaponStuff.ProjectileHandler)
+-- // Modules
+local ProjectileHandler = require(game.ReplicatedStorage.Modules.Other.WeaponStuff.ProjectileHandler)
 
--- HandleBullets upvalues (decompiler comment order):
--- 1 WeaponAttributes, 2 GetBulletVectors, 3 u1, 4 LocalPlayer,
--- 5 DoSuppression, 6 PartStoresClient, 7 GetBulletStore, 8 PropagateBullet
-local upvalues = debug.getupvalues(PH.HandleBullets)
-local OldPropagate = upvalues[8]
-assert(OldPropagate, "PropagateBullet not found")
+-- // LocalPlayer
+const LocalPlayer = Players.LocalPlayer
 
-local Enabled   = true
-local MaxRange  = 400
-local FOV       = 30          -- degrees off crosshair before we snap
-local AimPart   = "HumanoidRootPart"  -- or "Head"
+if not LocalPlayer.Character then
+	LocalPlayer.CharacterAdded:Wait()
+end
+local Character = LocalPlayer.Character
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Humanoid = Character:WaitForChild("Humanoid")
 
-local function closestEnemy(origin, lookDir)
-    local best, bestScore
-    for _, plr in Players:GetPlayers() do
-        if plr == LP then continue end
-        local char = plr.Character
-        if not char then continue end
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if not hum or hum.Health <= 0 then continue end
-        local part = char:FindFirstChild(AimPart) or char:FindFirstChild("Torso")
-        if not part then continue end
+LocalPlayer.CharacterAdded:Connect(function(NewCharacter)
+	Character = NewCharacter
+	HumanoidRootPart = NewCharacter:WaitForChild("HumanoidRootPart")
+	Humanoid = NewCharacter:WaitForChild("Humanoid")
+end)
 
-        local to    = part.Position - origin
-        local dist  = to.Magnitude
-        if dist > MaxRange then continue end
+-- // Variables
+local PropagateBullet = debug.getupvalue(ProjectileHandler.HandleBullets, 8)
+assert(PropagateBullet, "PropagateBullet not found")
 
-        local angle = math.deg(math.acos(math.clamp(lookDir:Dot(to.Unit), -1, 1)))
-        if angle > FOV then continue end
+-- // cheat
+local cheat = {
+	Utils = {
+        ["Aimbot"] = {}
+	},
+	Core = {
 
-        local score = dist * (1 + angle / 180)   -- prefer close + near crosshair
-        if not bestScore or score < bestScore then
-            best, bestScore = part, score
-        end
-    end
-    return best
+	}
+}
+local Utils = cheat.Utils
+local Core = cheat.Core
+
+-- // config
+local config = {
+    Origin,
+    Range = 400,
+    TeamCheck = true,
+    AimPart = "Head",
+    Visible = true,
+    EntityLists = {
+        Players:GetPlayers()
+    },
+}
+
+local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
+
+Utils["Aimbot"].GetClosest = function(): (BasePart?)
+    -- local Targets = Aimbot.GetTargets(HumanoidRootPart, 400, nil)
+    local Target, AimPart = Aimbot.GetClosest(config)
+
+    return AimPart
 end
 
-debug.setupvalue(PH.HandleBullets, 8, function(v14, u1)
-    if Enabled and v14.IsMainClient then          -- only redirect YOUR shots
-        local origin  = v14.StartCFrame.Position  -- muzzle
-        local target  = closestEnemy(origin, v14.BulletVector.Unit)
-        if target then
-            local speed = v14.BulletVector.Magnitude
-            v14.BulletVector = (target.Position - origin).Unit * speed  -- keep speed
+debug.setupvalue(ProjectileHandler.HandleBullets, 8, function(v14, u1)
+    if v14.IsMainClient then
+        local Origin = v14.StartCFrame.Position  -- muzzle
+        config["Origin"] = Origin
+
+        local AimPart = Utils["Aimbot"].GetClosest()
+        if AimPart then
+            local Speed = v14.BulletVector.Magnitude
+            v14.BulletVector = (AimPart.Position - Origin).Unit * Speed
         end
     end
-    return OldPropagate(v14, u1)
+    return PropagateBullet(v14, u1)
 end)

@@ -1,9 +1,9 @@
 -- // Services
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const Players = game:GetService("Players")
 
 -- // Workspace
-local Zombies = workspace.Zombies
+const Zombies = workspace.Zombies
 
 -- // LocalPlayer
 const LocalPlayer = Players.LocalPlayer
@@ -24,11 +24,11 @@ end)
 -- // Variables
 local u1 = {} -- Functions Module (it gets deleted)
 
-local Conn = getconnection(Zombies.ChildAdded, 1)
+const Conn = getconnection(Zombies.ChildAdded, 1)
 if (Conn or Conn.Function) == nil then
     error("conn or function missing")
 else
-    local Function = Conn.Function
+    const Function = Conn.Function
     u1 = debug.getupvalue(Function, 1)
 end
 
@@ -44,18 +44,32 @@ local cheat = {
 local Utils = cheat.Utils
 local Core = cheat.Core
 
-local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot.lua"))()
+-- // config
+local config = {
+    Origin,
+    Range = 400,
+    TeamCheck = true,
+    AimPart = "Head",
+    Visible = true,
+    EntityLists = {
+        Zombies:GetChildren()
+    },
+}
 
-Utils["Aimbot"].GetClosest = function(): (Instance?, BasePart?)
-    local Targets = Aimbot.GetTargets(HumanoidRootPart, 200, Zombies:QueryDescendants("Model:has(#Head)"))
-    return Aimbot.GetClosest(HumanoidRootPart, 200, Targets)
+const Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
+
+Utils["Aimbot"].GetClosest = function(): (BasePart?)
+    const Target, AimPart = Aimbot.GetClosest(config)
+
+    return AimPart
 end
 
 local old; old = hookfunction(u1.rcm.Raycast, function(p1, p2, p3, p4, p5)
-    local Target, TargetRoot = Utils["Aimbot"].GetClosest()
+    config["Origin"] = HumanoidRootPart.Position
+    const TargetRoot = Utils["Aimbot"].GetClosest()
 
-    if Target and TargetRoot then
-        local Direction = (TargetRoot.Position - p1.Position).Unit
+    if TargetRoot then
+        const Direction = (TargetRoot.Position - p1.Position).Unit
         return old(p1, Direction, p3, p4, p5)
     end
 

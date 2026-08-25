@@ -1,9 +1,9 @@
 -- // Services
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const Players = game:GetService("Players")
 
 -- // Modules
-local ProjectileHandler = require(game.ReplicatedStorage.Modules.Other.WeaponStuff.ProjectileHandler)
+const ProjectileHandler = require(game.ReplicatedStorage.Modules.Other.WeaponStuff.ProjectileHandler)
 
 -- // LocalPlayer
 const LocalPlayer = Players.LocalPlayer

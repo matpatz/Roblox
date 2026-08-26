@@ -26,11 +26,6 @@ rep["Modules"]["Velocity"]["Settings"]["BanServiceSettings"]["BanDefaultReason"]
     end)
 ]]
 
-pcall(function()
-    local kbp = game["ReplicatedStorage"]["InbuiltEvents"]["kickedBannedPlayer"]
-    if kbp then kbp:Destroy() end
-end)
-
 local gname = marketplace:GetProductInfo(game.PlaceId).Name
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))(); --local flags = Rayfield.Flags
@@ -63,59 +58,17 @@ local function gclosest()
 
     return nearest
 end
+-- require(rep["Modules"]["ProjectileHandler"])
 
-local sam, projh, rifle = false, require(rep["Modules"]["ProjectileHandler"]), require(rep["Classes"]["Rifle"])
+local SilentAim = false
 combat:CreateToggle({
     Name = "Silent Aim",
     CurrentValue = false,
     Flag = "sa",
     Callback = function(v)
-        sam = v
+        SilentAim = v
     end,
 })
-
-local old
-old = hookfunction(rifle.Fire, function(self, ...)
-    
-    if sam then
-        local target = gclosest()
-        if target then
-            local camera = workspace.CurrentCamera
-            local oldCF = camera.CFrame
-            
-            camera.CFrame = CFrame.new(
-                oldCF.Position,
-                target.Position
-            )
-
-            local result = old(self, ...)
-            camera.CFrame = oldCF
-            return result
-        end
-    end
-
-    return old(self, ...)
-end)
-
---[[
-    local old
-    old = hookmetamethod(game, "__namecall", function(self, ...)
-        local method = getnamecallmethod()
-        local args = {...}
-
-        if silentAim and method == "Fire" and self == projh then
-            local origin, direction, speed = args[1], args[2], args[3]
-            local target = gclosest()
-            if targfet then
-                -- dir vector
-                args[2] = (target.Position - origin).Unit
-            end
-            return old(self, unpack(args))
-        end
-
-        return old(self, ...)
-    end)
---]]
 
 combat:CreateLabel("Weapon Mods")
 
@@ -126,85 +79,69 @@ local function restore(func)
     end
 end
 
-local rmod = require(rep["Classes"]["Rifle"])
-
-local ogAmmo = function() end
+local InfiniteAmmo = false
 combat:CreateToggle({
     Name = "Infinite Ammo",
     CurrentValue = false,
     Flag = "ia",
     Callback = function(v)
-        if v then
-            ogAmmo = hookfunction(rmod.Fire, function(self, ...)
-                print(v)
-                print("mag:", self.BulletsInMagazine)
-
-                if v then self.BulletsInMagazine = self.MagazineCapacity + 1 end
-                self.CanReload = v
-
-                return ogAmmo(self, ...)
-            end)
-        else
-            restore(ogAmmo)
-        end
+        InfiniteAmmo = v
     end,
 })
 
-local ogHit = function() end
+local InstantHit = false
 combat:CreateToggle({
     Name = "Insta Hit",
     CurrentValue = false,
     Flag = "ih",
     Callback = function(v)
-        if v then
-            ogHit = hookfunction(rmod.Fire, function(self, ...)
-                local oldVelocity = self.MuzzleVelocity
-                self.MuzzleVelocity = 1e4
-                local result = ogHit(self, ...)
-                --self.MuzzleVelocity = oldVelocity -- restored
-                return result
-            end)
-        else
-            restore(ogHit)
-        end
+        InstantHit = v
     end,
 })
 
-local ogFire = function() end
+local FastFirerate = false
 combat:CreateToggle({
     Name = "Fast Firerate",
     CurrentValue = false,
     Flag = "ffr",
     Callback = function(v)
-        if v then
-            ogFire = hookfunction(rmod.Fire, function(self, ...)
-                local oldRate = self.FireRate
-                self.FireRate = 1e2
-                local result = ogFire(self, ...)
-                --self.FireRate = oldRate -- restored
-                return result
-            end)
-        else
-            restore(ogFire)
-        end
+        FastFirerate = v
     end,
 })
 
-combat:CreateToggle({
-    Name = "No Shoot Sound",
-    CurrentValue = false,
-    Flag = "nss",
-    Callback = function(v)
-        if rmod and rmod.LoadedSounds then
-            for _, snd in ipairs(rmod.LoadedSounds:GetDescendants()) do
-                print(snd)
-                if snd:IsA("Sound") and string.find(string.lower(snd.Name), "fire") then
-                    snd.Volume = v and 0 or 1
-                end
-            end
+local rifle = require(rep.ReservesCommon.Equipment.Rifle)
+local camera = workspace.CurrentCamera
+
+local old
+old = hookfunction(rifle.Fire, function(self)
+    if InfiniteAmmo then
+        self.BulletsInMagazine = self.MagazineCapacity + 1
+    end
+    if InstantHit then
+        self.MuzzleVelocity = 1000
+    end
+    if FastFirerate then
+        self.FireRate = 1e2
+    end
+    
+    if SilentAim then
+        local target = gclosest()
+        if target then
+            local oldCF = camera.CFrame
+            
+            camera.CFrame = CFrame.new(
+                oldCF.Position,
+                target.Position
+            )
+
+            local result = old(self)
+            camera.CFrame = oldCF
+            return result
         end
-    end,
-})
+    end
+
+    return old(self)
+end)
 
 combat:CreateLabel("Hitbox")
 
@@ -531,7 +468,8 @@ if gname ~= "Thabisa Valley" then
         Callback = function()
             for _, item in ipairs(workspace["Lodges"]:GetChildren()) do
                 if item:GetAttribute("Owner") == players["LocalPlayer"].UserId then
-                    hrp.CFrame = item["BoundingBox"].CFrame
+                    local tp = item:FindFirstChildWhichIsA("BasePart")
+                    hrp.CFrame = tp.CFrame
                 end
             end
         end,
@@ -642,6 +580,7 @@ misc:CreateLabel("Misc")
 
 local games = require(rep["GameSettings"])
 
+--[[
 local inchav = false; local oldharv
 misc:CreateToggle({
 	Name = "Increased Harvest",
@@ -660,6 +599,7 @@ misc:CreateToggle({
         end
 	end,
 })
+--]]
 
 --[[
     misc:CreateButton({

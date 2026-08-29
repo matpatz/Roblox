@@ -1,5 +1,6 @@
 .history
 .vercel
+.vscode/
 
 .env
 .env.*
@@ -10,7 +11,9 @@ supabase-schema.sql
 # development stuff
 **/Scripts/
 **/source/
-# tests
+workspace
+
+# tests (performance stuff)
 tests
 # dump scripts
 **/*ignore*/

@@ -1,6 +1,6 @@
 -- Aimbot Module
 -- src/Modules/Aimbot/main.lua
--- Config-table based aimbot: origin / range / teamcheck / aimpart / visibility.
+-- Config-table based aimbot: origin / range / teamcheck / aimpart / visibility / blacklist.
 
 local aimbot = {}
 
@@ -18,6 +18,10 @@ type AimPartType = string | { string } | Instance
 
 -- Ignore can be a single Instance or a list of Instances.
 type IgnoreType = Instance | { Instance }
+
+-- Blacklist can be a single Instance or a list of Instances
+-- (Players, Models, parts) that should never be targeted.
+type BlacklistType = Instance | { Instance }
 
 -- A single target list (Models/Players/Parts).
 type EntityListType = { Instance }
@@ -43,6 +47,8 @@ export type AimbotConfig = {
 	Visible: boolean?,
 	-- Extra parts/models to ignore during raycast visibility checks.
 	Ignore: IgnoreType?,
+	-- Players/instances to never target (single or list).
+	Blacklist: BlacklistType?,
 	-- One explicit target list (Models/Players/Parts).
 	EntityList: EntityListType?,
 	-- Multiple explicit target lists (NPCs, players, ...) to combine.
@@ -61,6 +67,7 @@ type ResolvedConfig = {
 	AimPart: AimPartType?,
 	Visible: boolean,
 	Ignore: IgnoreType?,
+	Blacklist: BlacklistType?,
 	EntityList: EntityListType?,
 	EntityLists: EntityListsType?,
 	MaxTargets: number,
@@ -138,6 +145,7 @@ local function NormalizeConfig(Config: AimbotConfig?): ResolvedConfig
 	Normalized.MaxTargets = ValidateNumber(Config.MaxTargets, "MaxTargets", DefaultConfig.MaxTargets)
 	Normalized.AimPart = Config.AimPart
 	Normalized.Ignore = Config.Ignore
+	Normalized.Blacklist = Config.Blacklist
 	if Config.EntityList ~= nil then
 		assert(type(Config.EntityList) == "table", "Aimbot: EntityList must be a table of targets")
 		Normalized.EntityList = Config.EntityList
@@ -219,6 +227,36 @@ local function IsEnemy(Target: Instance, TeamCheck: boolean): boolean
 	return true
 end
 
+-- Check whether a target is on the blacklist.
+-- Matches by instance or by character model, so blacklisting a Player
+-- also blocks their character (and vice versa). No special-casing of
+-- the local player: whatever is blacklisted is simply never a target.
+local function IsBlacklisted(Target: Instance, Blacklist: BlacklistType?): boolean
+	if Blacklist == nil then
+		return false
+	end
+	const TargetCharacter = GetCharacter(Target)
+	local function Matches(Item: Instance): boolean
+		if Item == Target then
+			return true
+		end
+		const ItemCharacter = GetCharacter(Item)
+		if ItemCharacter and TargetCharacter then
+			return ItemCharacter == TargetCharacter
+		end
+		return false
+	end
+	if typeof(Blacklist) == "Instance" then
+		return Matches(Blacklist :: Instance)
+	end
+	for _, Item in (Blacklist :: { Instance }) do
+		if Matches(Item) then
+			return true
+		end
+	end
+	return false
+end
+
 local function InRange(OriginPosition: Vector3, TargetPosition: Vector3, MinDistance: number, MaxDistance: number): boolean
 	const Distance = (OriginPosition - TargetPosition).Magnitude
 	return Distance >= MinDistance and Distance <= MaxDistance
@@ -252,6 +290,9 @@ end
 
 -- Validate a single candidate target against the resolved config.
 local function IsValidTarget(Target: Instance, Config: ResolvedConfig, OriginPosition: Vector3): boolean
+	if IsBlacklisted(Target, Config.Blacklist) then
+		return false
+	end
 	if not IsEnemy(Target, Config.TeamCheck) then
 		return false
 	end
@@ -449,6 +490,7 @@ local Target, AimPart = Aimbot.GetClosest({
     TeamCheck = true,
     AimPart = "Head",
     Visible = true,
+    Blacklist = { myFriend, adminPlayer },  -- Player/Instance or list, never targeted
     EntityLists = {
         NPCs    = workspace.Zombies:GetChildren(),
         Players = Players:GetPlayers(),

@@ -49,13 +49,15 @@ local config = {
     AimPart = "Head",
     Visible = true,
     EntityLists = {
-        Players:GetPlayers()
+        {}
     },
 }
 
 local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
 
 Utils["Aimbot"].GetClosest = function(p11): (BasePart?)
+    config["Origin"] = HumanoidRootPart.Position
+
     local Targets = {}
     for _, Target in next, workspace:QueryDescendants("Model:has(Humanoid)") do
         const AimPart = config["AimPart"]
@@ -64,6 +66,8 @@ Utils["Aimbot"].GetClosest = function(p11): (BasePart?)
             table_insert(Targets, Target.AimPart)
         end
     end
+    config["EntityList"][1] = Targets
+
     local Target, AimPart = Aimbot.GetClosest(config)
 
     return AimPart

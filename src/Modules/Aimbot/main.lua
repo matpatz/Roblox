@@ -19,9 +19,10 @@ type AimPartType = string | { string } | Instance
 -- Ignore can be a single Instance or a list of Instances.
 type IgnoreType = Instance | { Instance }
 
--- Blacklist can be a single Instance or a list of Instances
--- (Players, Models, parts) that should never be targeted.
-type BlacklistType = Instance | { Instance }
+-- Blacklist can be a single Instance, a list of Instances
+-- (Players, Models, parts), or name strings (matched by name, e.g.
+-- "ViewModel") that should never be targeted.
+type BlacklistType = Instance | string | { Instance | string }
 
 -- A single target list (Models/Players/Parts).
 type EntityListType = { Instance }
@@ -249,16 +250,23 @@ end
 
 -- Check whether a target is on the blacklist.
 -- Matches by instance or by character model, so blacklisting a Player
--- also blocks their character (and vice versa). No special-casing of
--- the local player: whatever is blacklisted is simply never a target.
+-- also blocks their character (and vice versa). String entries are
+-- matched by name (target instance name or character model name), so
+-- you can blacklist e.g. "ViewModel" without resolving the instance.
+-- No special-casing of the local player: whatever is blacklisted is
+-- simply never a target.
 local function IsBlacklisted(Target: Instance, Blacklist: BlacklistType?): boolean
 	if Blacklist == nil then
 		return false
 	end
 	const TargetCharacter = GetCharacter(Target)
-	local function Matches(Item: Instance): boolean
+	local function Matches(Item: Instance | string): boolean
 		if Item == Target then
 			return true
+		end
+		if type(Item) == "string" then
+			-- Name-based blacklist entry.
+			return Target.Name == Item or (TargetCharacter ~= nil and TargetCharacter.Name == Item)
 		end
 		const ItemCharacter = GetCharacter(Item)
 		if ItemCharacter and TargetCharacter then
@@ -269,7 +277,7 @@ local function IsBlacklisted(Target: Instance, Blacklist: BlacklistType?): boole
 	if typeof(Blacklist) == "Instance" then
 		return Matches(Blacklist :: Instance)
 	end
-	for _, Item in (Blacklist :: { Instance }) do
+	for _, Item in (Blacklist :: { Instance | string }) do
 		if Matches(Item) then
 			return true
 		end

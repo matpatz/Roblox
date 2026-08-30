@@ -3,7 +3,15 @@ const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
 
 -- // Modules
-const ProjectileHandler = require(game.ReplicatedStorage.Modules.Other.WeaponStuff.ProjectileHandler)
+local ProjectileHandler = ReplicatedStorage.Modules.Other.WeaponStuff.ProjectileHandler
+
+local PropagateBullet = require(ProjectileHandler.Functions.PropagateBullet)
+assert(PropagateBullet, "PropagateBullet not found")
+
+-- // Variables
+--local HandleBullets = ProjectileHandler.HandleBullets
+
+const table_insert = table.insert -- + zeptosecond 
 
 -- // LocalPlayer
 const LocalPlayer = Players.LocalPlayer
@@ -20,10 +28,6 @@ LocalPlayer.CharacterAdded:Connect(function(NewCharacter)
 	HumanoidRootPart = NewCharacter:WaitForChild("HumanoidRootPart")
 	Humanoid = NewCharacter:WaitForChild("Humanoid")
 end)
-
--- // Variables
-local PropagateBullet = debug.getupvalue(ProjectileHandler.HandleBullets, 8)
-assert(PropagateBullet, "PropagateBullet not found")
 
 -- // cheat
 local cheat = {
@@ -51,23 +55,34 @@ local config = {
 
 local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
 
-Utils["Aimbot"].GetClosest = function(): (BasePart?)
-    -- local Targets = Aimbot.GetTargets(HumanoidRootPart, 400, nil)
+Utils["Aimbot"].GetClosest = function(p11): (BasePart?)
+    local Targets = {}
+    for _, Target in next, workspace:QueryDescendants("Model:has(Humanoid)") do
+        const AimPart = config["AimPart"]
+
+        if p11.Player.Team ~= LocalPlayer.Team then
+            table_insert(Targets, Target.AimPart)
+        end
+    end
     local Target, AimPart = Aimbot.GetClosest(config)
 
     return AimPart
 end
 
-debug.setupvalue(ProjectileHandler.HandleBullets, 8, function(v14, u1)
+if isfunctionhooked(PropagateBullet) then
+    restorefunction(PropagateBullet)
+end
+
+local Old; Old = hookfunction(PropagateBullet, function(v14, u1)
     if v14.IsMainClient then
         local Origin = v14.StartCFrame.Position  -- muzzle
         config["Origin"] = Origin
 
-        local AimPart = Utils["Aimbot"].GetClosest()
+        local AimPart = Utils["Aimbot"].GetClosest(v14)
         if AimPart then
             local Speed = v14.BulletVector.Magnitude
             v14.BulletVector = (AimPart.Position - Origin).Unit * Speed
         end
     end
-    return PropagateBullet(v14, u1)
+    return Old(v14, u1)
 end)

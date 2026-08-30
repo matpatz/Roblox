@@ -56,6 +56,9 @@ local config = {
 const Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
 
 Utils["Aimbot"].GetClosest = function(): (BasePart?)
+    config["Origin"] = HumanoidRootPart.Position
+    config["EntityLists"] = { Killers:GetChildren() }
+    
     const Target, AimPart = Aimbot.GetClosest(config)
 
     return AimPart
@@ -67,9 +70,6 @@ local v266, v267 = Utilities:cast_ray(v265, Head.Position, v260.Position - Head.
 
 -- Silent Aim
 local old; old = hookfunction(Utilities["cast_ray"], function(p63, p64, p65, p66, p67)
-    config["Origin"] = HumanoidRootPart.Position
-    config["EntityLists"] = { Killers:GetChildren() }
-
     if p66.Magnitude > 30 then
         const AimPart = Utils["Aimbot"].GetClosest()
 

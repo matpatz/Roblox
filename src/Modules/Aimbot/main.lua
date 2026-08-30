@@ -217,14 +217,34 @@ local function GetAimPart(Target: Instance, AimPart: AimPartType?): BasePart?
 end
 
 -- Team check: when enabled, same-team players are not valid targets.
+-- Resolves Models/BaseParts to their owning player, so TeamCheck still works
+-- when callers pass character Models instead of Player objects.
 local function IsEnemy(Target: Instance, TeamCheck: boolean): boolean
 	if not TeamCheck then
 		return true
 	end
+
+	-- Resolve Player | Model | BasePart to the owning player (if any).
+	local TargetPlayer: Player? = nil
 	if Target:IsA("Player") then
-		return Target.Team ~= LocalPlayer.Team
+		TargetPlayer = Target :: Player
+	else
+		const Character = GetCharacter(Target)
+		if Character then
+			-- pcall: GetPlayerFromCharacter can fail on NPCs/non-character models.
+			local Success, Player = pcall(Players.GetPlayerFromCharacter, Players, Character)
+			if Success then
+				TargetPlayer = Player
+			end
+		end
 	end
-	return true
+
+	if not TargetPlayer then
+		-- NPCs, bots, and non-player targets are always valid enemies.
+		return true
+	end
+
+	return TargetPlayer.Team ~= LocalPlayer.Team
 end
 
 -- Check whether a target is on the blacklist.

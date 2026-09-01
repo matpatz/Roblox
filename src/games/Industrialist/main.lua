@@ -1,10 +1,7 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
 local antiafk =  true	
 
 local player = game:GetService("Players").LocalPlayer
-local vu = game:GetService("VirtualUser")
+local vu = cloneref(game:GetService("VirtualUser"))
 
 player.Idled:Connect(function()
 	if not antiafk then return end
@@ -13,7 +10,7 @@ player.Idled:Connect(function()
     vu:ClickButton2(Vector2.new())
 end)
 
--- == --
+-- Lighting
 
 local lighting = game:GetService("Lighting")
 

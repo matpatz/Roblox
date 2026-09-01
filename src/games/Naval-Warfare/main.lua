@@ -1,9 +1,9 @@
 --// Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
-const TweenService = game:GetService("TweenService")
+--[[const TweenService = game:GetService("TweenService")
 const RunService = game:GetService("RunService")
-const CoreGui = cloneref(game:GetService("CoreGui"))
+const CoreGui = cloneref(game:GetService("CoreGui"))]]
 
 --// Events
 local Event = ReplicatedStorage.Event

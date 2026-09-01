@@ -1,32 +1,29 @@
-local cup
-local highest = 0
-for _, model in ipairs(workspace.Folder:GetChildren()) do
-    local button = model:FindFirstChild("button1")
-    local addCount = button and button:FindFirstChild("AddCount")
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const _GrowCharacter = ReplicatedStorage.GrowCharacter
 
-    if addCount then
-        if addCount.Value > highest then
-            highest = addCount.Value
-            cup = button
-        end
-    end
+local Character = game.Players.LocalPlayer.Character
+local HumanoidRootPart = Character.HumanoidRootPart
+
+const FolderChildren = workspace:QueryDescendants("Folder > #Button > MeshPart#button1")
+local function Activate(Child)
+	firetouchinterest(HumanoidRootPart, Child, true)
+	firetouchinterest(HumanoidRootPart, Child, false)
 end
 
-local lp = game.Players.LocalPlayer
+local function _ClaimWins()
+	for _, Child in next, FolderChildren do
+		Activate(Child)
+	end
+end
 
--- grow
-for i = 1, 50 do
-    task.spawn(function()
-        while task.wait() do
-            game:GetService("ReplicatedStorage").GrowCharacter:FireServer()
+local function GrowCharacter()
+	for i = 1, 20 do
+		_GrowCharacter:FireServer()
+	end
+end
 
-            if cup then
-                local hrp = lp["Character"]["HumanoidRootPart"]
-                hrp.CFrame = cup.CFrame
+while task.wait() do
+	task.spawn(GrowCharacter)
 
-                --local tint = cup:FindFirstChildWhichIsA("TouchTransmitter")
-                firetouchinterest(hrp, cup, true); firetouchinterest(hrp, cup, false)
-            end
-        end
-    end)
+	task.delay(3, _ClaimWins) -- large queue will prolly error sometime
 end

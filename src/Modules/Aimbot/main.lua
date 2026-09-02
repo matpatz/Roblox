@@ -59,7 +59,7 @@ export type AimbotConfig = {
 	MaxTargets: number?,
 }
 
--- Fully resolved config (defaults filled in, every field type-checked).
+-- Fully resolved config (defaults filled rin, every field type-checked).
 type ResolvedConfig = {
 	Origin: OriginType?,
 	Range: number,

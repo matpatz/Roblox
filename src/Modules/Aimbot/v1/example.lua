@@ -1,14 +1,18 @@
-const Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/v1/main.lua"))()
+local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/v1/main.lua"))()
+local Players = game:GetService("Players")
 
-local Target, AimPart = Aimbot.GetClosest({
-    Origin = v14.StartCFrame,          -- CFrame / Vector3 / BasePart all work
+local hrp = Players.LocalPlayer.Character.HumanoidRootPart
+
+local Target, AimPart = Aimbot.GetTarget({
+    Origin = hrp.Position,
     Range = 200,
-    TeamCheck = true,
+    TeamCheck = false,
     AimPart = "Head",
     Visible = true,
-    Blacklist = { myFriend, adminPlayer },  -- Player/Instance or list, never targeted
+    Blacklist = {}, 
     EntityLists = {
-        NPCs    = workspace.Zombies:GetChildren(),
         Players = Players:GetPlayers(),
     },
 })
+
+print(Target, AimPart)

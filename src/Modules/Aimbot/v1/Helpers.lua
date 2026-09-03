@@ -29,20 +29,32 @@ type AimbotConfig = {
 
 local Helpers = { ["Get"] = {}, ["Is"] = {}, ["Validate"] = {}, ["Collect"] = {} }
 
+-- Classify any value: "Players" for Player objects, "BasePart" for any part,
+-- else ClassName for Instances, and the value's kind otherwise (CFrame,
+-- Vector3, table, ...). The only place that uses typeof/IsA.
+Helpers["Get"].Type = function(Object: any): string
+	const Kind = typeof(Object)
+	if Kind ~= "Instance" then
+		return Kind
+	end
+	if Object:IsA("Player") then
+		return "Players"
+	elseif Object:IsA("BasePart") then
+		return "BasePart"
+	end
+	return Object.ClassName
+end
+
 -- Origin resolution
 
 Helpers["Get"].Origin = function(Origin: OriginType): Vector3
-	const Kind = typeof(Origin)
+	const Kind = Helpers["Get"].Type(Origin)
 	if Kind == "CFrame" then
 		return (Origin :: CFrame).Position
 	elseif Kind == "Vector3" then
 		return Origin :: Vector3
-	elseif Kind == "Instance" then
-		const Part = Origin :: Instance
-		if Part:IsA("BasePart") then
-			return Part.Position
-		end
-		error("Aimbot.GetOrigin: origin instance must be a BasePart, got " .. Part.ClassName)
+	elseif Kind == "BasePart" then
+		return (Origin :: BasePart).Position
 	end
 	error("Aimbot.GetOrigin: expected CFrame, Vector3, or BasePart, got " .. tostring(Kind))
 end
@@ -50,11 +62,12 @@ end
 -- Target helpers
 
 Helpers["Get"].Character = function(Target: Instance): Model?
-	if Target:IsA("Player") then
-		return Target.Character
-	elseif Target:IsA("Model") then
-		return Target
-	elseif Target:IsA("BasePart") and Target.Parent then
+	const TargetType = Helpers["Get"].Type(Target)
+	if TargetType == "Players" then
+		return (Target :: Player).Character
+	elseif TargetType == "Model" then
+		return Target :: Model
+	elseif TargetType == "BasePart" and Target.Parent then
 		return Target.Parent :: Model
 	end
 	return nil
@@ -66,10 +79,10 @@ Helpers["Get"].AimPart = function(Target: Instance, AimPart: AimPartType?): Base
 		return nil
 	end
 
-	if typeof(AimPart) == "Instance" then
+	if AimPart ~= nil and type(AimPart) ~= "string" and type(AimPart) ~= "table" then
 		const Part = AimPart :: Instance
-		if Part:IsA("BasePart") and Part:IsDescendantOf(Character) then
-			return Part
+		if Helpers["Get"].Type(Part) == "BasePart" and Part:IsDescendantOf(Character) then
+			return Part :: BasePart
 		end
 		return nil
 	end
@@ -77,8 +90,8 @@ Helpers["Get"].AimPart = function(Target: Instance, AimPart: AimPartType?): Base
 	if AimPart == "Random" then
 		local Candidates: { BasePart } = {}
 		for _, Descendant in Character:GetDescendants() do
-			if Descendant:IsA("BasePart") then
-				table.insert(Candidates, Descendant)
+			if Helpers["Get"].Type(Descendant) == "BasePart" then
+				table.insert(Candidates, Descendant :: BasePart)
 			end
 		end
 		if #Candidates == 0 then
@@ -99,14 +112,12 @@ Helpers["Get"].AimPart = function(Target: Instance, AimPart: AimPartType?): Base
 	return Character:FindFirstChild(Name, true) :: BasePart?
 end
 
--- TeamCheck: skip same-team players; Models/BaseParts resolve to their owner.
+-- Is the candidate usable as a target? Never the local player; with TeamCheck
+-- on, same-team players are skipped too. Models/BaseParts resolve to their owner.
 Helpers["Is"].Target = function(Target: Instance, TeamCheck: boolean?): boolean
-	if not TeamCheck then
-		return true
-	end
-
+	-- Resolve Player | Model | BasePart to the owning player (if any).
 	local TargetPlayer: Player? = nil
-	if Target:IsA("Player") then
+	if Helpers["Get"].Type(Target) == "Players" then
 		TargetPlayer = Target :: Player
 	else
 		const Character = Helpers["Get"].Character(Target)
@@ -119,8 +130,23 @@ Helpers["Is"].Target = function(Target: Instance, TeamCheck: boolean?): boolean
 		end
 	end
 
+	-- Never aim at the local player's own character.
+	if TargetPlayer == LocalPlayer then
+		return false
+	end
+
+	if not TeamCheck then
+		return true
+	end
+
+	-- Non-players (NPCs, bots) are always valid targets when TeamCheck is on.
 	if not TargetPlayer then
 		return true
+	end
+
+	-- TeamCheck compares teams, so both must have one.
+	if TargetPlayer.Team == nil or LocalPlayer.Team == nil then
+		error("Aimbot.IsTarget: TeamCheck is on, but one or both players have no Team")
 	end
 
 	return TargetPlayer.Team ~= LocalPlayer.Team
@@ -145,15 +171,15 @@ Helpers["Is"].Blacklisted = function(Target: Instance, Blacklist: BlacklistType?
 		end
 		return false
 	end
-	if typeof(Blacklist) == "Instance" then
-		return Matches(Blacklist :: Instance)
-	end
-	for _, Item in (Blacklist :: { Instance | string }) do
-		if Matches(Item) then
-			return true
+	if type(Blacklist) == "table" then
+		for _, Item in (Blacklist :: { Instance | string }) do
+			if Matches(Item) then
+				return true
+			end
 		end
+		return false
 	end
-	return false
+	return Matches(Blacklist :: Instance | string)
 end
 
 Helpers["Is"].InRange = function(OriginPosition: Vector3, TargetPosition: Vector3, MinDistance: number, MaxDistance: number): boolean
@@ -165,12 +191,12 @@ Helpers["Get"].IgnoreList = function(Target: Instance, Config: AimbotConfig): { 
 	const IgnoreList: { Instance } = {}
 
 	if Config.Ignore ~= nil then
-		if typeof(Config.Ignore) == "Instance" then
-			table.insert(IgnoreList, Config.Ignore :: Instance)
-		elseif type(Config.Ignore) == "table" then
+		if type(Config.Ignore) == "table" then
 			for _, Item in (Config.Ignore :: { Instance }) do
 				table.insert(IgnoreList, Item)
 			end
+		else
+			table.insert(IgnoreList, Config.Ignore :: Instance)
 		end
 	end
 

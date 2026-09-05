@@ -16,6 +16,7 @@ import { createClient } from '@supabase/supabase-js';
 import { handler, successResponse } from '../../_lib/response.js';
 import { handleOptions } from '../../_lib/cors.js';
 import { ApiError } from '../../_lib/errors.js';
+import { gzipSync, gunzipSync } from 'node:zlib';
 
 export const config = { runtime: 'nodejs' };
 
@@ -25,30 +26,40 @@ const TITLE_MODEL = 'openai';
 const CONTEXT = 20;
 const MAX_MSG = 4000;
 
-// lz-string loaded lazily; also handles ESM/CJS interop (exports on .default in Node).
+// Message `content` is compressed at rest with Node's built-in zlib (gzip → base64),
+// stored in the TEXT column under a `~z:` marker. Short messages stay as-is so the
+// column remains human-readable when skimming the DB.
+const Z = '~z:';
+// Legacy marker for rows written with lz-string — read-only so old chats still load.
 const LZ = '~lz:';
-let lzPromise;
-function lz() {
-  if (!lzPromise) lzPromise = import('lz-string').catch(() => null);
-  return lzPromise;
+function pack(content) {
+  if (typeof content !== 'string' || !content) return content;
+  const gz = gzipSync(Buffer.from(content, 'utf8'), { level: 9 }).toString('base64');
+  return gz.length + Z.length < content.length ? Z + gz : content;
 }
-async function lzLib() {
-  const m = await lz();
-  if (!m) return null;
-  return m.compressToBase64 ? m : m.default?.compressToBase64 ? m.default : null;
-}
-async function pack(content) {
-  const lib = await lzLib();
-  if (!lib) return content;
-  const c = lib.compressToBase64(content);
-  return c && c.length + LZ.length < content.length ? LZ + c : content;
-}
+
 async function unpack(content) {
-  if (typeof content !== 'string' || !content.startsWith(LZ)) return content;
-  const lib = await lzLib();
-  if (!lib) return content;
-  const d = lib.decompressFromBase64(content.slice(LZ.length));
-  return d !== null && d !== undefined ? d : content;
+  if (typeof content !== 'string') return content;
+  if (content.startsWith(Z)) {
+    try {
+      return gunzipSync(Buffer.from(content.slice(Z.length), 'base64')).toString('utf8');
+    } catch {
+      return content; // corrupt/undecodable — surface raw rather than fail the read
+    }
+  }
+  if (content.startsWith(LZ)) {
+    // Old lz-string rows (pre-zlib): decompress lazily so they stay readable.
+    try {
+      const m = await import('lz-string');
+      const lib = m?.decompressFromBase64 ? m : m?.default;
+      if (!lib) return content;
+      const d = lib.decompressFromBase64(content.slice(LZ.length));
+      return d !== null && d !== undefined ? d : content;
+    } catch {
+      return content;
+    }
+  }
+  return content;
 }
 
 function parseBody(req) {

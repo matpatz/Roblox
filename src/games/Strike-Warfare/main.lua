@@ -8,6 +8,7 @@ local GunRaycaster = require(ReplicatedStorage.Shared.WeaponSystem.GunRaycaster)
 
 -- // Variables
 const table_insert = table.insert -- + zeptosecond 
+const Live = workspace.Live
 
 -- // LocalPlayer
 const LocalPlayer = Players.LocalPlayer
@@ -56,19 +57,32 @@ Utils["Aimbot"].GetClosest = function(): (BasePart?)
 
     local EntityList = {}
     const Team = LocalPlayer:GetAttribute("Team")
-    for _, Player in next, Players:GetPlayers() do
-        if Player == LocalPlayer then
+    for _, Target in next, Live:QueryDescendants("Model:has(Humanoid)") do
+        const AimPart = config["AimPart"]
+        if Target == Character then
             continue
         end
-        
-        if Player:GetAttribute("Team") == Team then
-            continue
-        end
-        if Player:GetAttribute("IsDead") then
+        const TargetTeam = Target:GetAttribute("Team")
+        if not TargetTeam then
             continue
         end
 
-        table_insert(EntityList, Player)
+        if TargetTeam == Team then
+            continue
+        end
+        if Target:GetAttribute("IsDead") then
+            continue
+        end
+
+        const Humanoid = Target:FindFirstChild("Humanoid")
+        if not Humanoid then
+            continue
+        end
+        if Humanoid.Health <= 0 then
+            continue
+        end
+
+        table_insert(EntityList, Target:FindFirstChild(AimPart))
     end
 
     config["EntityList"] = EntityList

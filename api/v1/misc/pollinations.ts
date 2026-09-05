@@ -27,15 +27,14 @@ const CONTEXT = 20;
 const MAX_MSG = 4000;
 
 // Message `content` is compressed at rest with Node's built-in zlib (gzip → base64),
-// stored in the TEXT column under a `~z:` marker. Short messages stay as-is so the
-// column remains human-readable when skimming the DB.
+// stored in the TEXT column under a `~z:` marker. Every non-empty value is compressed
+// so nothing lands in the DB as plaintext. Empty strings are left as-is.
 const Z = '~z:';
 // Legacy marker for rows written with lz-string — read-only so old chats still load.
 const LZ = '~lz:';
 function pack(content) {
   if (typeof content !== 'string' || !content) return content;
-  const gz = gzipSync(Buffer.from(content, 'utf8'), { level: 9 }).toString('base64');
-  return gz.length + Z.length < content.length ? Z + gz : content;
+  return Z + gzipSync(Buffer.from(content, 'utf8'), { level: 9 }).toString('base64');
 }
 
 async function unpack(content) {

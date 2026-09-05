@@ -10,7 +10,6 @@
 // POLLINATIONS, POLLINATIONS_SUPABASE_URL,
 // POLLINATIONS_SUPABASE_SERVICE_ROLE_KEY, POLLINATIONS_SUPABASE_ANON_KEY
 
-import { compressToBase64, decompressFromBase64 } from 'lz-string';
 import { createClient } from '@supabase/supabase-js';
 import { handler, successResponse } from '../../_lib/response.js';
 import { handleOptions } from '../../_lib/cors.js';
@@ -26,18 +25,27 @@ const MAX_MSG = 4000;
 // Compress message content at rest with lz-string (base64 is ASCII-safe for
 // TEXT columns / JSON). Old uncompressed rows stay readable because we only
 // treat content as compressed when it starts with the marker.
+// lz-string is loaded lazily: if it isn't installed in a given deployment the
+// module still loads fine and we just store/read plain text instead.
 const LZ = '~lz:';
-function pack(content) {
-  const c = compressToBase64(content);
+let lzPromise;
+function lz() {
+  if (!lzPromise) lzPromise = import('lz-string').catch(() => null);
+  return lzPromise;
+}
+async function pack(content) {
+  const lib = await lz();
+  if (!lib) return content;
+  const c = lib.compressToBase64(content);
   // Only keep it compressed if it actually shrank (tiny messages inflate in base64).
   return c && c.length + LZ.length < content.length ? LZ + c : content;
 }
-function unpack(content) {
-  if (typeof content === 'string' && content.startsWith(LZ)) {
-    const d = decompressFromBase64(content.slice(LZ.length));
-    if (d !== null && d !== undefined) return d;
-  }
-  return content;
+async function unpack(content) {
+  if (typeof content !== 'string' || !content.startsWith(LZ)) return content;
+  const lib = await lz();
+  if (!lib) return content;
+  const d = lib.decompressFromBase64(content.slice(LZ.length));
+  return d !== null && d !== undefined ? d : content;
 }
 
 function parseBody(req) {
@@ -100,7 +108,9 @@ async function history(userId) {
     .order('created_at', { ascending: true })
     .limit(200);
   if (error) throw new ApiError(500, 'Failed to load history');
-  return (data || []).map((m) => ({ ...m, content: unpack(m.content) }));
+  return Promise.all(
+    (data || []).map(async (m) => ({ ...m, content: await unpack(m.content) }))
+  );
 }
 
 async function chat(req, res, userId) {
@@ -128,7 +138,7 @@ async function chat(req, res, userId) {
 
   const { error: saveErr } = await db()
     .from('chat_messages')
-    .insert({ user_id: userId, role: 'user', content: pack(message), model });
+    .insert({ user_id: userId, role: 'user', content: await pack(message), model });
   if (saveErr) throw new ApiError(500, 'Failed to save message');
 
   let up;
@@ -210,7 +220,7 @@ async function chat(req, res, userId) {
   if (out.trim()) {
     const { error } = await db()
       .from('chat_messages')
-      .insert({ user_id: userId, role: 'assistant', content: pack(out.trim()), model });
+      .insert({ user_id: userId, role: 'assistant', content: await pack(out.trim()), model });
     if (error) console.error('Failed to save reply:', error.message);
   }
 }

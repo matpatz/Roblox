@@ -1,7 +1,7 @@
 --[[
 	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
 ]]
-loadstring(game:HttpGet("https://github.com/matpatz/luau/raw/main/public/code/loader/u/device.lua"))()
+loadstring(game:HttpGet("https://www.voltex.website/src/Modules/Platform.lua"))()
 local device = getgenv()["device"]
 
 local get = (type(cloneref) == "function") and cloneref or function(x) return x end

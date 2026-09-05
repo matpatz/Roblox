@@ -1,4 +1,4 @@
-loadstring(game:HttpGet("https://github.com/matpatz/luau/raw/main/public/code/loader/u/device.lua"))()
+loadstring(game:HttpGet("https://www.voltex.website/src/Modules/Platform.lua"))()
 local device = getgenv()["device"]
 
 getgenv().PlayerHelper = true

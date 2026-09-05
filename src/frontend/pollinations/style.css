@@ -31,14 +31,14 @@ html, body {
 
 .hidden { display: none !important; }
 
-/* ─── App Shell ─────────────────────────────────── */
+/* App Shell */
 .app {
   display: flex;
   height: 100vh;
   overflow: hidden;
 }
 
-/* ─── Sidebar ───────────────────────────────────── */
+/* Sidebar */
 .sidebar {
   width: 240px;
   flex-shrink: 0;
@@ -183,7 +183,7 @@ html, body {
 
 .logout-btn:hover { color: var(--text); }
 
-/* ─── Main Area ─────────────────────────────────── */
+/* Main Area */
 .main {
   flex: 1;
   min-width: 0;
@@ -193,7 +193,7 @@ html, body {
   background: var(--bg);
 }
 
-/* ─── Auth View ─────────────────────────────────── */
+/* Auth View */
 .auth-wrapper {
   display: flex;
   flex: 1;
@@ -294,7 +294,7 @@ html, body {
 
 .msg.error { color: #e07a7a; }
 
-/* ─── Chat View ─────────────────────────────────── */
+/* Chat View */
 .chat-view {
   flex: 1;
   display: flex;
@@ -375,7 +375,7 @@ html, body {
   color: var(--text);
 }
 
-/* ─── Composer (floating, centered) ─────────────── */
+/* Composer */
 .composer-wrap {
   position: absolute;
   bottom: 100px;

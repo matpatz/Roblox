@@ -1,10 +1,12 @@
 // @ts-nocheck
-// Long-lived, streaming proxy to Pollinations + per-user chat history.
-// Not a classic serverless function — it holds a stream open, so run on Fluid compute.
+// Long-lived, streaming proxy to Pollinations + per-user conversations.
+// Not a classic serverless function — it holds a stream open, run on Fluid compute.
 //
-// GET ?type=config  → public supabase config for the client
-// GET               → (auth) this user's history
-// POST              → (auth) stream an assistant reply (SSE)
+// GET ?type=config   public supabase config for the client
+// GET                 (auth) list this user's conversations
+// GET ?conv=<id>      (auth) messages in one conversation
+// POST                (auth) send a message (creates a conversation if none given)
+// DELETE ?conv=<id>   (auth) delete a conversation and its messages
 //
 // Uses its own supabase project (NOT the roblox one):
 // POLLINATIONS, POLLINATIONS_SUPABASE_URL,
@@ -19,22 +21,17 @@ export const config = { runtime: 'nodejs' };
 
 const POLL_URL = 'https://gen.pollinations.ai/text';
 const DEFAULT_MODEL = 'openai';
+const TITLE_MODEL = 'openai';
 const CONTEXT = 20;
 const MAX_MSG = 4000;
 
-// Compress message content at rest with lz-string (base64 is ASCII-safe for
-// TEXT columns / JSON). Old uncompressed rows stay readable because we only
-// treat content as compressed when it starts with the marker.
-// lz-string is loaded lazily: if it isn't installed in a given deployment the
-// module still loads fine and we just store/read plain text instead.
+// lz-string loaded lazily; also handles ESM/CJS interop (exports on .default in Node).
 const LZ = '~lz:';
 let lzPromise;
 function lz() {
   if (!lzPromise) lzPromise = import('lz-string').catch(() => null);
   return lzPromise;
 }
-// Resolve the module regardless of ESM/CJS interop: real named exports may sit
-// on the namespace, or on `.default` (Node's CJS interop).
 async function lzLib() {
   const m = await lz();
   if (!m) return null;
@@ -44,7 +41,6 @@ async function pack(content) {
   const lib = await lzLib();
   if (!lib) return content;
   const c = lib.compressToBase64(content);
-  // Only keep it compressed if it actually shrank (tiny messages inflate in base64).
   return c && c.length + LZ.length < content.length ? LZ + c : content;
 }
 async function unpack(content) {
@@ -64,10 +60,7 @@ function parseBody(req) {
   }
 }
 
-// Rate limiting backed by Vercel KV. @vercel/kv is imported lazily (and its
-// failures swallowed) because it instantiates its client at import time and
-// throws when the deployment has no KV linked — that would crash this whole
-// function at module load. No KV available = no rate limiting, chat still works.
+// KV-backed rate limiting; lazy import + swallowed failures so missing KV never breaks the chat.
 async function limit(key, { limit, window: secs }) {
   try {
     const { kv } = await import('@vercel/kv');
@@ -107,17 +100,91 @@ async function getUser(req) {
   return data.user;
 }
 
-async function history(userId) {
+async function listConversations(userId) {
+  const { data, error } = await db()
+    .from('conversations')
+    .select('id, title, updated_at')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false });
+  if (error) throw new ApiError(500, 'Failed to load chats');
+  return data || [];
+}
+
+async function findConversation(userId, convId) {
+  const { data, error } = await db()
+    .from('conversations')
+    .select('id, title')
+    .eq('id', convId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw new ApiError(500, 'Failed to load chat');
+  return data || null;
+}
+
+async function messagesFor(convId) {
   const { data, error } = await db()
     .from('chat_messages')
     .select('id, role, content, created_at')
-    .eq('user_id', userId)
+    .eq('conversation_id', convId)
     .order('created_at', { ascending: true })
     .limit(200);
-  if (error) throw new ApiError(500, 'Failed to load history');
-  return Promise.all(
-    (data || []).map(async (m) => ({ ...m, content: await unpack(m.content) }))
-  );
+  if (error) throw new ApiError(500, 'Failed to load messages');
+  return Promise.all((data || []).map(async (m) => ({ ...m, content: await unpack(m.content) })));
+}
+
+async function deleteConversation(userId, convId) {
+  const conv = await findConversation(userId, convId);
+  if (!conv) throw new ApiError(404, 'Chat not found');
+  await db().from('chat_messages').delete().eq('conversation_id', convId);
+  const { error } = await db().from('conversations').delete().eq('id', convId);
+  if (error) throw new ApiError(500, 'Delete failed');
+}
+
+async function generateTitle(text) {
+  try {
+    const r = await fetch(POLL_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.POLLINATIONS}`
+      },
+      body: JSON.stringify({
+        model: TITLE_MODEL,
+        messages: [
+          { role: 'system', content: 'Write a short chat title, 2 to 5 words. No quotes, no period. Reply with only the title.' },
+          { role: 'user', content: text }
+        ],
+        stream: false,
+        temperature: 0.4
+      })
+    });
+    if (!r.ok) return null;
+    const raw = ((await r.text()) || '').trim();
+    let title = raw;
+    if (raw && (raw[0] === '{' || raw[0] === '[')) {
+      try {
+        const o = JSON.parse(raw);
+        const c = o?.choices?.[0]?.message?.content ?? o?.content;
+        if (typeof c === 'string') title = c;
+      } catch {}
+    }
+    title = title.replace(/["'\n]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+    return title || null;
+  } catch {
+    return null;
+  }
+}
+
+async function createConversation(userId, firstMessage) {
+  const generated = await generateTitle(firstMessage);
+  const title = generated || firstMessage.slice(0, 40) || 'New chat';
+  const { data, error } = await db()
+    .from('conversations')
+    .insert({ user_id: userId, title })
+    .select('id, title')
+    .single();
+  if (error) throw new ApiError(500, 'Failed to create chat');
+  return data;
 }
 
 async function chat(req, res, userId) {
@@ -132,12 +199,22 @@ async function chat(req, res, userId) {
   const rawT = Number(body.temperature);
   const temperature = Number.isFinite(rawT) ? Math.min(2, Math.max(0, rawT)) : 0.7;
 
-  // Only charge rate limits after the request is valid.
-  await limit(`u:${userId}`, { limit: 20, window: 60 }); // msgs / minute
-  await limit(`u:${userId}`, { limit: 400, window: 86400 }); // msgs / day
+  await limit(`u:${userId}`, { limit: 20, window: 60 });
+  await limit(`u:${userId}`, { limit: 400, window: 86400 });
 
-  const past = await history(userId);
-  const messages = [
+  // Resolve (or create) the conversation this message belongs to.
+  let conv;
+  const given = typeof body.conversation_id === 'string' ? body.conversation_id.trim() : '';
+  if (given) {
+    conv = await findConversation(userId, given);
+    if (!conv) throw new ApiError(404, 'Chat not found');
+  } else {
+    conv = await createConversation(userId, message);
+  }
+  const convId = conv.id;
+
+  const past = await messagesFor(convId);
+  const upstream = [
     { role: 'system', content: 'You are a helpful assistant.' },
     ...past.slice(-CONTEXT).map((m) => ({ role: m.role, content: m.content })),
     { role: 'user', content: message }
@@ -145,8 +222,9 @@ async function chat(req, res, userId) {
 
   const { error: saveErr } = await db()
     .from('chat_messages')
-    .insert({ user_id: userId, role: 'user', content: await pack(message), model });
+    .insert({ user_id: userId, conversation_id: convId, role: 'user', content: await pack(message), model });
   if (saveErr) throw new ApiError(500, 'Failed to save message');
+  await db().from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', convId);
 
   let up;
   try {
@@ -156,7 +234,7 @@ async function chat(req, res, userId) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.POLLINATIONS}`
       },
-      body: JSON.stringify({ model, messages, stream: true, temperature })
+      body: JSON.stringify({ model, messages: upstream, stream: true, temperature })
     });
   } catch {
     throw new ApiError(502, 'Upstream request failed');
@@ -177,6 +255,8 @@ async function chat(req, res, userId) {
   let out = '';
 
   try {
+    emit({ conv: { id: convId, title: conv.title } });
+
     if (!up.body || !(up.headers.get('content-type') || '').includes('text/event-stream')) {
       // Non-streaming response: plain text, or a JSON completion to unpack.
       const t = ((await up.text()) || '').trim();
@@ -210,14 +290,12 @@ async function chat(req, res, userId) {
             done = true;
             break;
           }
-          // Tolerate every common shape: OpenAI JSON deltas, a JSON string, or
-          // plain-text tokens (Pollinations' /text SSE streams raw text).
+          // Tolerate OpenAI JSON deltas, JSON strings, or plain-text tokens.
           let text = null;
           try {
             const j = JSON.parse(p);
-            if (typeof j === 'string') {
-              text = j;
-            } else {
+            if (typeof j === 'string') text = j;
+            else
               text =
                 j?.choices?.[0]?.delta?.content ??
                 j?.choices?.[0]?.message?.content ??
@@ -225,10 +303,9 @@ async function chat(req, res, userId) {
                 j?.content ??
                 j?.delta ??
                 j?.text;
-              if (typeof text !== 'string') text = null;
-            }
+            if (typeof text !== 'string') text = null;
           } catch {
-            text = p; // not JSON → raw token
+            text = p;
           }
           if (text && typeof text === 'string') {
             out += text;
@@ -250,7 +327,7 @@ async function chat(req, res, userId) {
   if (out.trim()) {
     const { error } = await db()
       .from('chat_messages')
-      .insert({ user_id: userId, role: 'assistant', content: await pack(out.trim()), model });
+      .insert({ user_id: userId, conversation_id: convId, role: 'assistant', content: await pack(out.trim()), model });
     if (error) console.error('Failed to save reply:', error.message);
   }
 }
@@ -268,8 +345,13 @@ async function handler_fn(req, res) {
       });
     }
     const user = await getUser(req);
-    await limit(`h:${user.id}`, { limit: 120, window: 60 });
-    return successResponse(res, req, await history(user.id));
+    await limit(`u:${user.id}`, { limit: 120, window: 60 });
+    if (req.query?.conv) {
+      const conv = await findConversation(user.id, req.query.conv);
+      if (!conv) throw new ApiError(404, 'Chat not found');
+      return successResponse(res, req, await messagesFor(req.query.conv));
+    }
+    return successResponse(res, req, await listConversations(user.id));
   }
 
   if (req.method === 'POST') {
@@ -277,12 +359,18 @@ async function handler_fn(req, res) {
     try {
       await chat(req, res, user.id);
     } catch (err) {
-      // surface the real cause instead of a generic 500
       if (err instanceof ApiError) throw err;
       console.error('Chat crashed:', err?.stack || err);
       throw new ApiError(500, `Chat failed: ${err?.message || err}`);
     }
     return;
+  }
+
+  if (req.method === 'DELETE') {
+    const user = await getUser(req);
+    if (!req.query?.conv) throw new ApiError(400, 'Missing chat id');
+    await deleteConversation(user.id, req.query.conv);
+    return successResponse(res, req, { deleted: true });
   }
 
   throw new ApiError(405, 'Method not allowed');

@@ -28,7 +28,6 @@
   { "label": "GPT-5.4 Mini", "id": "gpt-5.4-mini" },
   { "label": "Meta Llama 3.3 70B", "id": "llama" },
   { "label": "GPT-5.6 Terra", "id": "gpt-5.6-terra" },
-  { "label": "GPT Audio Mini", "id": "openai-audio" },
   { "label": "Cohere Command A+", "id": "command-a-plus" },
   { "label": "Mistral Small 4", "id": "mistral" },
   { "label": "Muse Glimmer 30B", "id": "muse-glimmer" },
@@ -80,6 +79,5 @@
   { "label": "NVIDIA Nemotron 3 Ultra", "id": "nemotron" },
   { "label": "Qwen3.8 Max 0902", "id": "qwen/qwen3.8-max-0902" },
   { "label": "Mercury 2.5 Preview", "id": "inception/mercury-2.5-preview" },
-  { "label": "GPT Audio 1.5", "id": "openai-audio-large" },
   { "label": "MiniMax M2.7", "id": "minimax-m2.7" }
 ]

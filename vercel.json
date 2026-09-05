@@ -12,13 +12,14 @@
     { "source": "/setup", "destination": "/src/frontend/setup.html" },
     { "source": "/key-system", "destination": "/src/frontend/key-system/index.html" },
     { "source": "/notepad", "destination": "/src/frontend/notepad/index.html" },
-    { "source": "/calculator", "destination": "/src/frontend/calculator/index.html" },
+    { "source": "/calculator/", "destination": "/src/frontend/calculator/index.html" },
     { "source": "/calculator/:path*", "destination": "/src/frontend/calculator/:path*" },
     { "source": "/pollinations/", "destination": "/src/frontend/pollinations/index.html" },
     { "source": "/pollinations/:path*", "destination": "/src/frontend/pollinations/:path*" }
   ],
   "redirects": [
-    { "source": "/pollinations", "destination": "/pollinations/", "permanent": true }
+    { "source": "/pollinations", "destination": "/pollinations/", "permanent": true },
+    { "source": "/calculator", "destination": "/calculator/", "permanent": true }
   ],
   "headers": [
     {

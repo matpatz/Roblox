@@ -385,6 +385,30 @@ html, body {
   z-index: 10;
 }
 
+.model-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+#modelSelect {
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  max-width: 100%;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#modelSelect:hover:not(:disabled) { border-color: var(--muted2); }
+#modelSelect:focus { border-color: var(--accent); }
+#modelSelect:disabled { opacity: 0.4; cursor: default; }
+
 .composer-box {
   background: var(--input-bg);
   border: 1px solid var(--line);

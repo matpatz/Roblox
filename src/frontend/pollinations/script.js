@@ -10,6 +10,7 @@ const el = {
   emptyState:   $('emptyState'),
   input:        $('input'),
   sendBtn:      $('send'),
+  modelSelect:  $('modelSelect'),
   chatMsg:      $('chatMsg'),
   authMsg:      $('authMsg'),
   form:         $('authForm'),
@@ -32,6 +33,16 @@ let supabase = null;
 let session  = null;
 let busy     = false;
 let mode     = 'login';
+let MODELS   = []; // loaded from MODELS.json in init()
+
+// [{ label, id }, ...] — first entry is the default model
+const loadModels = async () => {
+  try {
+    const data = await (await fetch('MODELS.json')).json();
+    if (Array.isArray(data)) return data;
+  } catch {}
+  return [{ label: 'GPT-5.4 Nano', id: 'openai' }]; // fallback if fetch fails
+};
 
 // ── helpers ──────────────────────────────────────────────
 const setMsg = (node, text = '', error = false) => {
@@ -63,6 +74,7 @@ const renderAuth = () => {
   el.sidebar.classList.toggle('hidden', !authed);
   el.input.disabled   = !authed;
   el.sendBtn.disabled = !authed;
+  el.modelSelect.disabled = !authed;
   setMsg(el.chatMsg);
 
   if (authed) {
@@ -94,6 +106,13 @@ const submitAuth = async (e) => {
   const email    = el.email.value.trim();
   const password = el.password.value;
   if (!email || !password) return;
+
+  // supabase is created asynchronously in init(); config failure or a fast
+  // submit leaves it null until then.
+  if (!supabase) {
+    setMsg(el.authMsg, 'Still connecting — try again in a moment.', true);
+    return;
+  }
 
   el.submit.disabled = true;
   try {
@@ -224,7 +243,7 @@ const send = async () => {
     const res = await fetch(API, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body:    JSON.stringify({ message: text })
+      body:    JSON.stringify({ message: text, model: el.modelSelect.value || 'openai' })
     });
     if (!res.ok) {
       const json = await res.json().catch(() => null);
@@ -270,6 +289,15 @@ const newChat = () => {
 // ── init ─────────────────────────────────────────────────
 const init = async () => {
   setMode('login');
+
+  MODELS = await loadModels();
+  for (const { label, id } of MODELS) {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = label;
+    el.modelSelect.appendChild(opt);
+  }
+
   let cfg = {};
   try {
     cfg = (await (await fetch(`${API}?type=config`)).json())?.data || {};
@@ -300,7 +328,7 @@ el.tabSignup.onclick = () => setMode('signup');
 el.form.onsubmit     = submitAuth;
 el.sendBtn.onclick   = send;
 el.newChatBtn.onclick = newChat;
-el.logoutBtn.onclick = () => supabase.auth.signOut();
+el.logoutBtn.onclick = () => { if (supabase) supabase.auth.signOut(); };
 
 el.input.onkeydown = (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {

@@ -12,7 +12,11 @@
     { "source": "/setup", "destination": "/src/frontend/setup.html" },
     { "source": "/key-system", "destination": "/src/frontend/key-system/index.html" },
     { "source": "/notepad", "destination": "/src/frontend/notepad/index.html" },
-    { "source": "/pollinations", "destination": "/src/frontend/pollinations/index.html" }
+    { "source": "/pollinations/", "destination": "/src/frontend/pollinations/index.html" },
+    { "source": "/pollinations/:path*", "destination": "/src/frontend/pollinations/:path*" }
+  ],
+  "redirects": [
+    { "source": "/pollinations", "destination": "/pollinations/", "permanent": true }
   ],
   "headers": [
     {

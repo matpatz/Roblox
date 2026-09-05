@@ -11,36 +11,91 @@
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand">Pollinations Chat</div>
-  <div id="authBox" class="auth-box"></div>
-</header>
+<div class="app">
 
-<main class="layout">
-  <section id="authView" class="card hidden">
-    <div class="tabs">
-      <button id="tabLogin" class="tab active" type="button">Log in</button>
-      <button id="tabSignup" class="tab" type="button">Sign up</button>
+  <!-- ─── Sidebar ───────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <span class="brand">Pollinations</span>
     </div>
-    <form id="authForm" autocomplete="on">
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" required placeholder="you@example.com">
-      <label for="password">Password</label>
-      <input id="password" name="password" type="password" required minlength="6" placeholder="••••••••">
-      <button id="authSubmit" type="submit">Continue</button>
-    </form>
-    <p id="authMsg" class="msg"></p>
-  </section>
 
-  <section id="chatView" class="chat hidden">
-    <div id="messages" class="messages" aria-live="polite"></div>
-    <div class="composer">
-      <textarea id="input" rows="1" placeholder="Message…" disabled></textarea>
-      <button id="send" type="button" disabled>Send</button>
+    <button id="newChatBtn" class="new-chat-btn" type="button">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      New chat
+    </button>
+
+    <p class="history-label">Recent</p>
+
+    <div id="historyList" class="history-list">
+      <!-- populated by JS -->
     </div>
-    <p id="chatMsg" class="msg"></p>
-  </section>
-</main>
+
+    <!-- Account — pinned to bottom -->
+    <div id="accountBlock" class="account-block hidden">
+      <div class="account-inner">
+        <div id="accountAvatar" class="account-avatar">?</div>
+        <span id="accountEmail" class="account-email">—</span>
+        <button id="logoutBtn" class="logout-btn" type="button" title="Log out">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 2H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3M9.5 9.5 13 7m0 0-3.5-2.5M13 7H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── Main ──────────────────────────── -->
+  <main class="main">
+
+    <!-- Auth view -->
+    <div id="authView" class="auth-wrapper hidden">
+      <div class="card">
+        <div class="tabs">
+          <button id="tabLogin"  class="tab active" type="button">Log in</button>
+          <button id="tabSignup" class="tab"        type="button">Sign up</button>
+        </div>
+        <form id="authForm" autocomplete="on">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required placeholder="you@example.com">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required minlength="6" placeholder="••••••••">
+          <button id="authSubmit" type="submit">Continue</button>
+        </form>
+        <p id="authMsg" class="msg"></p>
+      </div>
+    </div>
+
+    <!-- Chat view -->
+    <div id="chatView" class="chat-view hidden">
+
+      <div id="messages" class="messages" aria-live="polite">
+        <div class="empty-state" id="emptyState">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 3C9.72 3 3 9.16 3 16.75c0 3.97 1.8 7.55 4.7 10.09L6 30.75l5.3-1.98A16.1 16.1 0 0 0 18 30.5c8.28 0 15-6.16 15-13.75S26.28 3 18 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+          <p>Send a message to start the conversation.</p>
+        </div>
+      </div>
+
+      <!-- Floating composer -->
+      <div class="composer-wrap">
+        <div class="composer-box">
+          <textarea id="input" rows="1" placeholder="Message…" disabled></textarea>
+          <button id="send" class="send-btn" type="button" disabled>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 13V3M3 8l5-5 5 5" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <p id="chatMsg" class="chat-status"></p>
+      </div>
+
+    </div>
+
+  </main>
+</div>
 
 <script type="module" src="/src/frontend/pollinations/script.js"></script>
 </body>

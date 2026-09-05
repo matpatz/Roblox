@@ -10,9 +10,12 @@
 // POLLINATIONS, POLLINATIONS_SUPABASE_URL,
 // POLLINATIONS_SUPABASE_SERVICE_ROLE_KEY, POLLINATIONS_SUPABASE_ANON_KEY
 
+import { kv } from '@vercel/kv';
+import { compressToBase64, decompressFromBase64 } from 'lz-string';
 import { createClient } from '@supabase/supabase-js';
 import { handler, successResponse } from '../../_lib/response.js';
 import { handleOptions } from '../../_lib/cors.js';
+import { extractIp } from '../../_lib/validate.js';
 import { ApiError } from '../../_lib/errors.js';
 
 export const config = { runtime: 'nodejs' };
@@ -21,6 +24,45 @@ const POLL_URL = 'https://gen.pollinations.ai/text';
 const DEFAULT_MODEL = 'openai';
 const CONTEXT = 20;
 const MAX_MSG = 4000;
+
+// Compress message content at rest with lz-string (base64 is ASCII-safe for
+// TEXT columns / JSON). Old uncompressed rows stay readable because we only
+// treat content as compressed when it starts with the marker.
+const LZ = '~lz:';
+function pack(content) {
+  const c = compressToBase64(content);
+  // Only keep it compressed if it actually shrank (tiny messages inflate in base64).
+  return c && c.length + LZ.length < content.length ? LZ + c : content;
+}
+function unpack(content) {
+  if (typeof content === 'string' && content.startsWith(LZ)) {
+    const d = decompressFromBase64(content.slice(LZ.length));
+    if (d !== null && d !== undefined) return d;
+  }
+  return content;
+}
+
+function parseBody(req) {
+  if (typeof req.body !== 'string') return req.body || {};
+  try {
+    return JSON.parse(req.body);
+  } catch {
+    throw new ApiError(400, 'Invalid JSON');
+  }
+}
+
+// Fixed-window rate limiting by key. KV failures are swallowed so an outage
+// never bricks the chat — only genuine over-limit (429) responses propagate.
+async function limit(key, { limit, window: secs }) {
+  const k = `poll:${key}:${Math.floor(Date.now() / (secs * 1000))}`;
+  try {
+    const count = await kv.incr(k);
+    if (count === 1) await kv.expire(k, secs);
+    if (count > limit) throw new ApiError(429, 'Too many requests');
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+  }
+}
 
 let client;
 function db() {
@@ -50,18 +92,24 @@ async function history(userId) {
     .order('created_at', { ascending: true })
     .limit(200);
   if (error) throw new ApiError(500, 'Failed to load history');
-  return data || [];
+  return (data || []).map((m) => ({ ...m, content: unpack(m.content) }));
 }
 
 async function chat(req, res, userId) {
-  const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+  const body = parseBody(req);
   const message = typeof body.message === 'string' ? body.message.trim() : '';
-  if (!message || message.length > MAX_MSG) throw new ApiError(400, 'Invalid message');
+  if (!message) throw new ApiError(400, 'Message is required');
+  if (message.length > MAX_MSG) throw new ApiError(400, 'Message too long');
   const model =
     typeof body.model === 'string' && /^[A-Za-z0-9._/:+-]{1,64}$/.test(body.model)
       ? body.model
       : DEFAULT_MODEL;
-  const temperature = Math.min(2, Math.max(0, Number(body.temperature) || 0.7));
+  const rawT = Number(body.temperature);
+  const temperature = Number.isFinite(rawT) ? Math.min(2, Math.max(0, rawT)) : 0.7;
+
+  // Only charge rate limits after the request is valid.
+  await limit(`u:${userId}`, { limit: 20, window: 60 }); // msgs / minute
+  await limit(`u:${userId}`, { limit: 400, window: 86400 }); // msgs / day
 
   const past = await history(userId);
   const messages = [
@@ -72,7 +120,7 @@ async function chat(req, res, userId) {
 
   const { error: saveErr } = await db()
     .from('chat_messages')
-    .insert({ user_id: userId, role: 'user', content: message, model });
+    .insert({ user_id: userId, role: 'user', content: pack(message), model });
   if (saveErr) throw new ApiError(500, 'Failed to save message');
 
   let up;
@@ -154,7 +202,7 @@ async function chat(req, res, userId) {
   if (out.trim()) {
     const { error } = await db()
       .from('chat_messages')
-      .insert({ user_id: userId, role: 'assistant', content: out.trim(), model });
+      .insert({ user_id: userId, role: 'assistant', content: pack(out.trim()), model });
     if (error) console.error('Failed to save reply:', error.message);
   }
 }
@@ -164,6 +212,7 @@ async function handler_fn(req, res) {
 
   if (req.method === 'GET') {
     if (req.query?.type === 'config') {
+      await limit(`ip:${extractIp(req)}`, { limit: 60, window: 60 });
       return successResponse(res, req, {
         supabaseUrl: process.env.POLLINATIONS_SUPABASE_URL || '',
         supabaseAnonKey: process.env.POLLINATIONS_SUPABASE_ANON_KEY || '',
@@ -171,6 +220,7 @@ async function handler_fn(req, res) {
       });
     }
     const user = await getUser(req);
+    await limit(`h:${user.id}`, { limit: 120, window: 60 });
     return successResponse(res, req, await history(user.id));
   }
 

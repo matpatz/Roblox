@@ -4,56 +4,92 @@ const API = '/api/v1/misc/pollinations';
 const $ = (id) => document.getElementById(id);
 
 const el = {
-  authBox: $('authBox'), authView: $('authView'), chatView: $('chatView'),
-  messages: $('messages'), input: $('input'), sendBtn: $('send'),
-  chatMsg: $('chatMsg'), authMsg: $('authMsg'), form: $('authForm'),
-  email: $('email'), password: $('password'), submit: $('authSubmit'),
-  tabLogin: $('tabLogin'), tabSignup: $('tabSignup')
+  authView:     $('authView'),
+  chatView:     $('chatView'),
+  messages:     $('messages'),
+  emptyState:   $('emptyState'),
+  input:        $('input'),
+  sendBtn:      $('send'),
+  chatMsg:      $('chatMsg'),
+  authMsg:      $('authMsg'),
+  form:         $('authForm'),
+  email:        $('email'),
+  password:     $('password'),
+  submit:       $('authSubmit'),
+  tabLogin:     $('tabLogin'),
+  tabSignup:    $('tabSignup'),
+  // sidebar
+  newChatBtn:   $('newChatBtn'),
+  historyList:  $('historyList'),
+  accountBlock: $('accountBlock'),
+  accountEmail: $('accountEmail'),
+  accountAvatar:$('accountAvatar'),
+  logoutBtn:    $('logoutBtn'),
 };
 
 let supabase = null;
-let session = null;
-let busy = false;
-let mode = 'login';
+let session  = null;
+let busy     = false;
+let mode     = 'login';
 
+// ── helpers ──────────────────────────────────────────────
 const setMsg = (node, text = '', error = false) => {
   node.textContent = text;
   node.classList.toggle('error', error && !!text);
 };
-const scrollBottom = () => (el.messages.scrollTop = el.messages.scrollHeight);
-const authHeaders = () => (session ? { Authorization: `Bearer ${session.access_token}` } : {});
 
+const scrollBottom = () => {
+  el.messages.scrollTop = el.messages.scrollHeight;
+};
+
+const authHeaders = () =>
+  session ? { Authorization: `Bearer ${session.access_token}` } : {};
+
+// ── auth mode ────────────────────────────────────────────
 const setMode = (next) => {
   mode = next;
-  el.tabLogin.classList.toggle('active', mode === 'login');
+  el.tabLogin.classList.toggle('active',  mode === 'login');
   el.tabSignup.classList.toggle('active', mode === 'signup');
   el.submit.textContent = mode === 'login' ? 'Log in' : 'Create account';
   setMsg(el.authMsg);
 };
 
+// ── render layout based on auth ──────────────────────────
 const renderAuth = () => {
   const authed = !!session;
   el.authView.classList.toggle('hidden', authed);
   el.chatView.classList.toggle('hidden', !authed);
-  el.input.disabled = !authed;
+  el.input.disabled   = !authed;
   el.sendBtn.disabled = !authed;
   setMsg(el.chatMsg);
 
-  el.authBox.innerHTML = '';
-  if (!authed) return;
-
-  const who = document.createElement('span');
-  who.textContent = session.user?.email || 'Signed in';
-  const out = document.createElement('button');
-  out.type = 'button';
-  out.textContent = 'Log out';
-  out.onclick = () => supabase.auth.signOut();
-  el.authBox.append(who, out);
+  if (authed) {
+    const email = session.user?.email || 'Signed in';
+    el.accountEmail.textContent  = email;
+    el.accountAvatar.textContent = email[0].toUpperCase();
+    el.accountBlock.classList.remove('hidden');
+  } else {
+    el.accountBlock.classList.add('hidden');
+  }
 };
 
+// ── sidebar history ──────────────────────────────────────
+const addHistoryItem = (label, active = false) => {
+  // Remove empty-state placeholder text if present
+  const placeholder = el.historyList.querySelector('.history-placeholder');
+  if (placeholder) placeholder.remove();
+
+  const item = document.createElement('div');
+  item.className = 'history-item' + (active ? ' active' : '');
+  item.textContent = label;
+  el.historyList.prepend(item);
+  return item;
+};
+
+// ── submit auth ──────────────────────────────────────────
 const submitAuth = async (e) => {
   e.preventDefault();
-  const email = el.email.value.trim();
+  const email    = el.email.value.trim();
   const password = el.password.value;
   if (!email || !password) return;
 
@@ -67,12 +103,12 @@ const submitAuth = async (e) => {
       });
       if (error) throw error;
       if (!data.session) {
-        // Email confirmation is enabled — user must verify before they can log in.
         setMode('login');
-        setMsg(el.authMsg, `Account created. Verify your email first — we sent a confirmation link to ${email}. Check your inbox (and spam) before logging in.`);
+        setMsg(el.authMsg,
+          `Account created. Check your inbox for a confirmation link before logging in.`
+        );
         return;
       }
-      // Auto-confirmed (email verification off) — session is live, nothing to do.
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -85,38 +121,59 @@ const submitAuth = async (e) => {
   }
 };
 
+// ── messages ─────────────────────────────────────────────
 const addMessage = (role, content) => {
-  const text = document.createElement('div');
-  text.textContent = content;
-  const row = document.createElement('div');
-  row.className = `row ${role}`;
-  row.appendChild(text);
-  el.messages.appendChild(row);
-  return text;
+  // Remove empty state
+  if (el.emptyState) el.emptyState.remove();
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = content;
+
+  const group = document.createElement('div');
+  group.className = `msg-group ${role}`;
+  group.appendChild(bubble);
+  el.messages.appendChild(group);
+  return bubble;
 };
 
 const loadHistory = async () => {
-  el.messages.innerHTML = '';
+  // Clear messages but keep empty state structure
+  el.messages.innerHTML = `
+    <div class="empty-state" id="emptyState">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 3C9.72 3 3 9.16 3 16.75c0 3.97 1.8 7.55 4.7 10.09L6 30.75l5.3-1.98A16.1 16.1 0 0 0 18 30.5c8.28 0 15-6.16 15-13.75S26.28 3 18 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+      <p>Send a message to start the conversation.</p>
+    </div>`;
+
   try {
-    const res = await fetch(API, { headers: authHeaders() });
+    const res  = await fetch(API, { headers: authHeaders() });
     if (!res.ok) return;
     const list = (await res.json())?.data || [];
-    if (!list.length) {
-      const empty = document.createElement('div');
-      empty.className = 'empty';
-      empty.textContent = 'No messages yet.';
-      el.messages.appendChild(empty);
-      return;
-    }
-    list.forEach((m) => addMessage(m.role === 'assistant' ? 'assistant' : 'user', m.content || ''));
+    if (!list.length) return;
+
+    // Clear empty state since we have messages
+    el.messages.innerHTML = '';
+    list.forEach((m) =>
+      addMessage(m.role === 'assistant' ? 'assistant' : 'user', m.content || '')
+    );
     scrollBottom();
+
+    // Add a sidebar entry for the restored session
+    if (list.length) {
+      const firstUser = list.find(m => m.role === 'user');
+      const label = firstUser?.content?.slice(0, 36) || 'Previous chat';
+      addHistoryItem(label, true);
+    }
   } catch {
     setMsg(el.chatMsg, 'Could not load history.', true);
   }
 };
 
+// ── SSE reader ───────────────────────────────────────────
 const readSSE = async (res, onData, onError) => {
-  const reader = res.body.getReader();
+  const reader  = res.body.getReader();
   const decoder = new TextDecoder();
   let buf = '';
   for (;;) {
@@ -125,23 +182,20 @@ const readSSE = async (res, onData, onError) => {
     buf += decoder.decode(value, { stream: true });
     let i;
     while ((i = buf.indexOf('\n')) !== -1) {
-      const line = buf.slice(0, i).replace(/\r$/, '');
-      buf = buf.slice(i + 1);
+      const line    = buf.slice(0, i).replace(/\r$/, '');
+      buf           = buf.slice(i + 1);
       if (!line.startsWith('data:')) continue;
       const payload = line.slice(5).trim();
       if (!payload || payload === '[DONE]') return;
       let obj;
-      try {
-        obj = JSON.parse(payload);
-      } catch {
-        continue;
-      }
-      if (obj.error) return onError(obj.error);
+      try { obj = JSON.parse(payload); } catch { continue; }
+      if (obj.error)   return onError(obj.error);
       if (obj.content) onData(obj.content);
     }
   }
 };
 
+// ── send ─────────────────────────────────────────────────
 const send = async () => {
   const text = el.input.value.trim();
   if (!text || busy || !session) return;
@@ -150,19 +204,25 @@ const send = async () => {
   el.sendBtn.disabled = true;
   setMsg(el.chatMsg);
 
-  addMessage('user', text);
-  const assistantText = addMessage('assistant', '');
-  assistantText.textContent = '…';
-  el.input.value = '';
+  const userBubble = addMessage('user', text);
+  const botBubble  = addMessage('assistant', '');
+  botBubble.textContent = '…';
+  el.input.value        = '';
   el.input.style.height = 'auto';
   scrollBottom();
+
+  // Add to sidebar history on first message of the session
+  if (el.historyList.children.length === 0 ||
+      el.historyList.querySelector('.active') === null) {
+    addHistoryItem(text.slice(0, 36), true);
+  }
 
   let received = false;
   try {
     const res = await fetch(API, {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ message: text })
+      body:    JSON.stringify({ message: text })
     });
     if (!res.ok) {
       const json = await res.json().catch(() => null);
@@ -171,9 +231,9 @@ const send = async () => {
     await readSSE(
       res,
       (chunk) => {
-        if (!received) assistantText.textContent = '';
+        if (!received) botBubble.textContent = '';
         received = true;
-        assistantText.textContent += chunk;
+        botBubble.textContent += chunk;
         scrollBottom();
       },
       (msg) => setMsg(el.chatMsg, msg, true)
@@ -181,13 +241,31 @@ const send = async () => {
   } catch (err) {
     setMsg(el.chatMsg, err.message || 'Network error', true);
   } finally {
-    if (!received) assistantText.textContent = '(no response)';
+    if (!received) botBubble.textContent = '(no response)';
     busy = false;
     el.sendBtn.disabled = false;
     el.input.focus();
   }
 };
 
+// ── new chat ─────────────────────────────────────────────
+const newChat = () => {
+  // Clear messages, restore empty state
+  el.messages.innerHTML = `
+    <div class="empty-state" id="emptyState">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 3C9.72 3 3 9.16 3 16.75c0 3.97 1.8 7.55 4.7 10.09L6 30.75l5.3-1.98A16.1 16.1 0 0 0 18 30.5c8.28 0 15-6.16 15-13.75S26.28 3 18 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+      <p>Send a message to start the conversation.</p>
+    </div>`;
+  setMsg(el.chatMsg);
+
+  // Deselect history items
+  document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
+  el.input.focus();
+};
+
+// ── init ─────────────────────────────────────────────────
 const init = async () => {
   setMode('login');
   let cfg = {};
@@ -202,7 +280,7 @@ const init = async () => {
   }
 
   supabase = createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
-  session = (await supabase.auth.getSession()).data?.session || null;
+  session  = (await supabase.auth.getSession()).data?.session || null;
 
   supabase.auth.onAuthStateChange((_e, next) => {
     session = next;
@@ -214,16 +292,21 @@ const init = async () => {
   if (session) loadHistory();
 };
 
-el.tabLogin.onclick = () => setMode('login');
+// ── event bindings ───────────────────────────────────────
+el.tabLogin.onclick  = () => setMode('login');
 el.tabSignup.onclick = () => setMode('signup');
-el.form.onsubmit = submitAuth;
-el.sendBtn.onclick = send;
+el.form.onsubmit     = submitAuth;
+el.sendBtn.onclick   = send;
+el.newChatBtn.onclick = newChat;
+el.logoutBtn.onclick = () => supabase.auth.signOut();
+
 el.input.onkeydown = (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     send();
   }
 };
+
 el.input.oninput = () => {
   el.input.style.height = 'auto';
   el.input.style.height = Math.min(el.input.scrollHeight, 140) + 'px';

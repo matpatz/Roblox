@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Calculator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="device">
+  <div class="screen-wrap">
+    <div class="screen" id="screen">
+      <span class="paste-flash" id="pasteFlash">PASTED</span>
+      <div class="screen-history" id="history">&nbsp;</div>
+      <div class="screen-main" id="display">0</div>
+    </div>
+  </div>
+
+  <div class="keys" id="keys">
+    <button class="key clear" data-action="clear">C</button>
+    <button class="key fn" data-action="backspace">⌫</button>
+    <button class="key fn" data-action="percent">%</button>
+    <button class="key op" data-action="divide">÷</button>
+
+    <button class="key" data-digit="7">7</button>
+    <button class="key" data-digit="8">8</button>
+    <button class="key" data-digit="9">9</button>
+    <button class="key op" data-action="multiply">×</button>
+
+    <button class="key" data-digit="4">4</button>
+    <button class="key" data-digit="5">5</button>
+    <button class="key" data-digit="6">6</button>
+    <button class="key op" data-action="subtract">−</button>
+
+    <button class="key" data-digit="1">1</button>
+    <button class="key" data-digit="2">2</button>
+    <button class="key" data-digit="3">3</button>
+    <button class="key op" data-action="add">+</button>
+
+    <button class="key zero" data-digit="0">0</button>
+    <button class="key" data-action="decimal">.</button>
+    <button class="key eq" data-action="equals">=</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

@@ -33,8 +33,15 @@ function lz() {
   if (!lzPromise) lzPromise = import('lz-string').catch(() => null);
   return lzPromise;
 }
+// Resolve the module regardless of ESM/CJS interop: real named exports may sit
+// on the namespace, or on `.default` (Node's CJS interop).
+async function lzLib() {
+  const m = await lz();
+  if (!m) return null;
+  return m.compressToBase64 ? m : m.default?.compressToBase64 ? m.default : null;
+}
 async function pack(content) {
-  const lib = await lz();
+  const lib = await lzLib();
   if (!lib) return content;
   const c = lib.compressToBase64(content);
   // Only keep it compressed if it actually shrank (tiny messages inflate in base64).
@@ -42,7 +49,7 @@ async function pack(content) {
 }
 async function unpack(content) {
   if (typeof content !== 'string' || !content.startsWith(LZ)) return content;
-  const lib = await lz();
+  const lib = await lzLib();
   if (!lib) return content;
   const d = lib.decompressFromBase64(content.slice(LZ.length));
   return d !== null && d !== undefined ? d : content;

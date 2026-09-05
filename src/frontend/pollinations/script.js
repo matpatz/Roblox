@@ -19,6 +19,7 @@ const el = {
   tabLogin:     $('tabLogin'),
   tabSignup:    $('tabSignup'),
   // sidebar
+  sidebar:      $('sidebar'),
   newChatBtn:   $('newChatBtn'),
   historyList:  $('historyList'),
   accountBlock: $('accountBlock'),
@@ -59,6 +60,7 @@ const renderAuth = () => {
   const authed = !!session;
   el.authView.classList.toggle('hidden', authed);
   el.chatView.classList.toggle('hidden', !authed);
+  el.sidebar.classList.toggle('hidden', !authed);
   el.input.disabled   = !authed;
   el.sendBtn.disabled = !authed;
   setMsg(el.chatMsg);
@@ -274,8 +276,8 @@ const init = async () => {
   } catch {}
 
   if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) {
-    setMsg(el.authMsg, 'Server missing POLLINATIONS_SUPABASE_* env vars.', true);
-    el.authView.classList.remove('hidden');
+    renderAuth();
+    setMsg(el.authMsg, 'Server config unavailable — check the API env/logs.', true);
     return;
   }
 

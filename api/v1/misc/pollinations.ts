@@ -10,12 +10,10 @@
 // POLLINATIONS, POLLINATIONS_SUPABASE_URL,
 // POLLINATIONS_SUPABASE_SERVICE_ROLE_KEY, POLLINATIONS_SUPABASE_ANON_KEY
 
-import { kv } from '@vercel/kv';
 import { compressToBase64, decompressFromBase64 } from 'lz-string';
 import { createClient } from '@supabase/supabase-js';
 import { handler, successResponse } from '../../_lib/response.js';
 import { handleOptions } from '../../_lib/cors.js';
-import { extractIp } from '../../_lib/validate.js';
 import { ApiError } from '../../_lib/errors.js';
 
 export const config = { runtime: 'nodejs' };
@@ -51,17 +49,27 @@ function parseBody(req) {
   }
 }
 
-// Fixed-window rate limiting by key. KV failures are swallowed so an outage
-// never bricks the chat — only genuine over-limit (429) responses propagate.
+// Rate limiting backed by Vercel KV. @vercel/kv is imported lazily (and its
+// failures swallowed) because it instantiates its client at import time and
+// throws when the deployment has no KV linked — that would crash this whole
+// function at module load. No KV available = no rate limiting, chat still works.
 async function limit(key, { limit, window: secs }) {
-  const k = `poll:${key}:${Math.floor(Date.now() / (secs * 1000))}`;
   try {
+    const { kv } = await import('@vercel/kv');
+    const k = `poll:${key}:${Math.floor(Date.now() / (secs * 1000))}`;
     const count = await kv.incr(k);
     if (count === 1) await kv.expire(k, secs);
     if (count > limit) throw new ApiError(429, 'Too many requests');
   } catch (err) {
     if (err instanceof ApiError) throw err;
   }
+}
+
+function ip(req) {
+  const fwd = req.headers?.['x-forwarded-for'];
+  const raw = Array.isArray(fwd) ? fwd[0] : (fwd || '');
+  const left = raw.split(',')[0].trim();
+  return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(left) ? left : 'unknown';
 }
 
 let client;
@@ -212,7 +220,7 @@ async function handler_fn(req, res) {
 
   if (req.method === 'GET') {
     if (req.query?.type === 'config') {
-      await limit(`ip:${extractIp(req)}`, { limit: 60, window: 60 });
+      await limit(`ip:${ip(req)}`, { limit: 60, window: 60 });
       return successResponse(res, req, {
         supabaseUrl: process.env.POLLINATIONS_SUPABASE_URL || '',
         supabaseAnonKey: process.env.POLLINATIONS_SUPABASE_ANON_KEY || '',

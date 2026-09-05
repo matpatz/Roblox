@@ -60,13 +60,19 @@ const submitAuth = async (e) => {
   el.submit.disabled = true;
   try {
     if (mode === 'signup') {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/pollinations` }
+      });
       if (error) throw error;
       if (!data.session) {
-        setMsg(el.authMsg, 'Check your email for a confirmation link, then log in.');
+        // Email confirmation is enabled — user must verify before they can log in.
         setMode('login');
+        setMsg(el.authMsg, `Account created. Verify your email first — we sent a confirmation link to ${email}. Check your inbox (and spam) before logging in.`);
         return;
       }
+      // Auto-confirmed (email verification off) — session is live, nothing to do.
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;

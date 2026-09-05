@@ -170,7 +170,11 @@ const loadHistory = async () => {
 
   try {
     const res  = await fetch(API, { headers: authHeaders() });
-    if (!res.ok) return;
+    if (!res.ok) {
+      const j = await res.json().catch(() => null);
+      setMsg(el.chatMsg, j?.error?.message || 'Could not load history.', true);
+      return;
+    }
     const list = (await res.json())?.data || [];
     if (!list.length) return;
 

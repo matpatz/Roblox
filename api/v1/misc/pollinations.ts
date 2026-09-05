@@ -267,7 +267,14 @@ async function handler_fn(req, res) {
 
   if (req.method === 'POST') {
     const user = await getUser(req);
-    await chat(req, res, user.id);
+    try {
+      await chat(req, res, user.id);
+    } catch (err) {
+      // surface the real cause instead of a generic 500
+      if (err instanceof ApiError) throw err;
+      console.error('Chat crashed:', err?.stack || err);
+      throw new ApiError(500, `Chat failed: ${err?.message || err}`);
+    }
     return;
   }
 

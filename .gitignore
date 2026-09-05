@@ -7,6 +7,7 @@
 !.env.example
 
 supabase-schema.sql
+supabase-pollinations-schema.sql
 
 # development stuff
 **/Scripts/
@@ -15,7 +16,7 @@ workspace
 
 # tests (performance stuff)
 tests
-# dump scripts
+# dumb scripts
 **/*ignore*/
 
 ignore-key-system

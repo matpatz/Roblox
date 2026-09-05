@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat — Pollinations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/frontend/pollinations/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">Pollinations Chat</div>
+  <div id="authBox" class="auth-box"></div>
+</header>
+
+<main class="layout">
+  <section id="authView" class="card hidden">
+    <div class="tabs">
+      <button id="tabLogin" class="tab active" type="button">Log in</button>
+      <button id="tabSignup" class="tab" type="button">Sign up</button>
+    </div>
+    <form id="authForm" autocomplete="on">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required placeholder="you@example.com">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required minlength="6" placeholder="••••••••">
+      <button id="authSubmit" type="submit">Continue</button>
+    </form>
+    <p id="authMsg" class="msg"></p>
+  </section>
+
+  <section id="chatView" class="chat hidden">
+    <div id="messages" class="messages" aria-live="polite"></div>
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="Message…" disabled></textarea>
+      <button id="send" type="button" disabled>Send</button>
+    </div>
+    <p id="chatMsg" class="msg"></p>
+  </section>
+</main>
+
+<script type="module" src="/src/frontend/pollinations/script.js"></script>
+</body>
+</html>

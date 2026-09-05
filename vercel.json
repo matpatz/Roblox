@@ -11,7 +11,8 @@
     { "source": "/stats", "destination": "/src/frontend/stats.html" },
     { "source": "/setup", "destination": "/src/frontend/setup.html" },
     { "source": "/key-system", "destination": "/src/frontend/key-system/index.html" },
-    { "source": "/notepad", "destination": "/src/frontend/notepad/index.html" }
+    { "source": "/notepad", "destination": "/src/frontend/notepad/index.html" },
+    { "source": "/pollinations", "destination": "/src/frontend/pollinations/index.html" }
   ],
   "headers": [
     {

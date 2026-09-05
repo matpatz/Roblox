@@ -171,7 +171,17 @@ async function chat(req, res, userId) {
 
   try {
     if (!up.body || !(up.headers.get('content-type') || '').includes('text/event-stream')) {
-      out = (await up.text()) || '';
+      // Non-streaming response: plain text, or a JSON completion to unpack.
+      const t = ((await up.text()) || '').trim();
+      let content = t;
+      if (t && (t[0] === '{' || t[0] === '[')) {
+        try {
+          const o = JSON.parse(t);
+          const c = o?.choices?.[0]?.message?.content ?? o?.choices?.[0]?.text ?? o?.content ?? o?.output_text;
+          if (typeof c === 'string') content = c;
+        } catch {}
+      }
+      out = content;
       if (out) emit({ content: out });
     } else {
       const reader = up.body.getReader();
@@ -193,14 +203,27 @@ async function chat(req, res, userId) {
             done = true;
             break;
           }
-          let j;
+          // Tolerate every common shape: OpenAI JSON deltas, a JSON string, or
+          // plain-text tokens (Pollinations' /text SSE streams raw text).
+          let text = null;
           try {
-            j = JSON.parse(p);
+            const j = JSON.parse(p);
+            if (typeof j === 'string') {
+              text = j;
+            } else {
+              text =
+                j?.choices?.[0]?.delta?.content ??
+                j?.choices?.[0]?.message?.content ??
+                j?.choices?.[0]?.text ??
+                j?.content ??
+                j?.delta ??
+                j?.text;
+              if (typeof text !== 'string') text = null;
+            }
           } catch {
-            continue;
+            text = p; // not JSON → raw token
           }
-          const text = j?.choices?.[0]?.delta?.content ?? j?.choices?.[0]?.message?.content ?? j?.content;
-          if (typeof text === 'string' && text) {
+          if (text && typeof text === 'string') {
             out += text;
             emit({ content: text });
           }

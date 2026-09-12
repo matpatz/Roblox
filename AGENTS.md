@@ -4,5 +4,8 @@ The domains: https://roblox-alpha-murex.vercel.app and https://www.voltex.websit
 if I didnt tell you to do something dont do it, no stupid ui
 
 potassium workspace: C:\Users\$env:USERPROFILE\AppData\Local\Potassium\workspace
+    instead of reading the workspace contents with some commandprompt command just use execute_script: listfiles("")
+
+when modying GetTargets dont forget GetClosest (of the Aimbot Module) filters hp and such already
 
 the chance Aimbot.GetClosest is the issue is almost zero, I have likely checked if a target is actually found

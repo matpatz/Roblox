@@ -9,26 +9,18 @@ const TweenService = game:GetService("TweenService")
 const RunService = game:GetService("RunService")
 
 -- // Modules
-const EggCmds = require(ReplicatedStorage.Library.Client.EggCmds)
-const AreaEggResetTimeUtil = require(ReplicatedStorage.Library.Util.AreaEggResetTimeUtil)
-const PlotCmds = require(ReplicatedStorage.Library.Client.PlotCmds)
-const EggToolDisplay = require(ReplicatedStorage.Library.Client.Eggs.EggToolDisplay)
+const Remotes = require(ReplicatedStorage.Shared.Remotes)
+const EggState = require(ReplicatedStorage.Client.EggState)
+const PlotState = require(ReplicatedStorage.Client.PlotState)
+const AreaEggCycle = require(ReplicatedStorage.Shared.Util.AreaEggCycle)
+const AreaEggSlotIdentity = require(ReplicatedStorage.Shared.Util.AreaEggSlotIdentity)
+const EggToolDisplay = require(ReplicatedStorage.Shared.Eggs.EggToolDisplay)
+const Trails = require(ReplicatedStorage.Data.Trails)
 
 const Anticheat = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/Steal-an-Egg/bypass.lua"))()
 
--- // Events
-const Network = ReplicatedStorage.Network
-const RequestHatchEgg = Network["Eggs: RequestHatchEgg"]
-const RequestCompleteHatchEgg = Network["Eggs: RequestCompleteHatchEgg"]
-const RequestAreaEggCarry = Network["Eggs: RequestAreaEggCarry"]
-const ActiveRenderStateChanged = Network["Treadmills: ActiveRenderStateChanged"]
-const RequestUnequip = Network["Treadmills: RequestUnequip"] -- rf
-const RequestPurchase = Network["Trails: RequestPurchase"]
-const RequestBaseUpgrade = Network["Plots: RequestBaseUpgrade"]
-
 -- // Workspace
 const SpawmPoint = workspace:FindFirstChildWhichIsA("SpawnLocation")
-const Eggs = workspace.AreaEggSlotsClient
 
 -- // LocalPlayer
 const LocalPlayer = Players.LocalPlayer
@@ -54,8 +46,10 @@ Flags.__index = Flags
 --const Trails = ReplicatedStorage.Directory.Trails._Index
 
 local OnTreadmill = false
-ActiveRenderStateChanged.OnClientEvent:Connect(function(a1, active, a3)
-    OnTreadmill = active
+Remotes.Treadmill.RenderStateShifted.OnClientEvent:Connect(function(Player, Active)
+    if Player == LocalPlayer then
+        OnTreadmill = Active
+    end
 end)
 
 -- // config
@@ -91,25 +85,68 @@ local cheat = {
 local Utils = cheat.Utils
 local Core = cheat.Core
 
--- Get the Uid of the egg tool currently equipped in the character, if any
-Utils.GetEquippedEggUid = function()
-    if not Character then
-        return nil
-    end
+-- A steal only keeps the egg carried for about a second before the game drops it -- but the egg
+-- lands in your inventory as an owned, unplaced record, and PlantEgg expects *that* record's
+-- Uid (the field egg's Uid is not a plantable identity).
+Utils.GetUnplacedEggUid = function()
+    for _, Owner in next, EggState.ReadOwnedEggs() do
+        if Owner.OwnerUserId ~= UserId then
+            continue
+        end
 
-    for _, Child in next, Character:GetChildren() do
-        if Child.ClassName == "Tool" and EggToolDisplay.IsEggTool(Child) then
-            return EggToolDisplay.GetToolUid(Child)
+        for Uid, Egg in next, Owner.Records do
+            if not Egg.Placement then
+                return Uid
+            end
         end
     end
 
     return nil
 end
 
+Utils.WaitForUnplacedEggUid = function(Timeout: number)
+    local Deadline = os.clock() + (Timeout or 3)
+
+    repeat
+        local Uid = Utils.GetUnplacedEggUid()
+
+        if Uid then
+            return Uid
+        end
+
+        task.wait(.1)
+    until os.clock() >= Deadline
+
+    return nil
+end
+
+-- Where to stand to steal an egg: next to it, never on top of it. Landing on the egg makes the
+-- physics engine eject and ragdoll the character, and the server refuses the carry until it gets up
+Utils.GetEggStandCFrame = function(Egg, Angle)
+    local Radius = math.max(Egg.BoundsSize.X, Egg.BoundsSize.Z) / 2 + 5
+    local Direction = (Egg.BoundsCFrame * CFrame.Angles(0, Angle or 0, 0)).LookVector
+
+    return CFrame.lookAt(Egg.BottomCFrame.Position + Direction * Radius, Egg.BoundsCFrame.Position)
+end
+
+-- The server also refuses the carry while the character is airborne or knocked down
+Utils.CanCarryEgg = function()
+    if Humanoid == nil or Humanoid.FloorMaterial == Enum.Material.Air then
+        return false
+    end
+
+    local State = Humanoid:GetState()
+
+    return State ~= Enum.HumanoidStateType.Physics
+        and State ~= Enum.HumanoidStateType.GettingUp
+        and State ~= Enum.HumanoidStateType.FallingDown
+        and State ~= Enum.HumanoidStateType.Ragdoll
+end
+
 -- thank you great and mighty chatgpt
 Utils.GetOccupiedEggPositions = function()
     local Occupied = {}
-    local Snapshot = EggCmds.GetRuntimeSnapshot()
+    local Snapshot = EggState.ReadOwnedEggs()
 
     for _, Owner in next, Snapshot do
         if Owner.OwnerUserId ~= UserId then
@@ -126,26 +163,32 @@ Utils.GetOccupiedEggPositions = function()
     return Occupied
 end
 
-Utils.GetFreeEggPosition = function(Plot, EggRadius, CenterPoint)
+Utils.GetFreeEggPositions = function(Plot, EggRadius, CenterPoint, PlotFolder)
     local PlacementArea = Plot:FindFirstChild("PlacementArea") or Plot
 
     if not PlacementArea or not PlacementArea:IsA("BasePart") then
-        return nil
+        return {}
     end
 
     local Occupied = Utils.GetOccupiedEggPositions()
     local Size = PlacementArea.Size
+    local Candidates = {}
 
     for X = -Size.X / 2, Size.X / 2, EggRadius * 2 do
         for Z = -Size.Z / 2, Size.Z / 2, EggRadius * 2 do
-            local LocalPosition = Vector3.new(X, 0, Z)
-            local Position = PlacementArea.CFrame:PointToWorldSpace(LocalPosition)
+            local Position = PlacementArea.CFrame:PointToWorldSpace(Vector3.new(X, 0, Z))
+
+            -- The server only accepts placements inside the plot bounds, which are smaller than PetArea
+            if PlotFolder and not PlotState.ContainsLocalPoint(Position) then
+                continue
+            end
 
             local Free = true
 
             for _, OccupiedLocalCFrame in next, Occupied do
                 -- Convert LocalCFrame to world space for comparison
                 local OccupiedWorldPos = CenterPoint.CFrame:PointToWorldSpace(OccupiedLocalCFrame.Position)
+
                 if (Position - OccupiedWorldPos).Magnitude < EggRadius * 2 then
                     Free = false
                     break
@@ -153,65 +196,81 @@ Utils.GetFreeEggPosition = function(Plot, EggRadius, CenterPoint)
             end
 
             if Free then
-                return CFrame.new(Position)
+                Candidates[#Candidates + 1] = CFrame.new(Position)
             end
         end
     end
 
-    return nil
+    -- Closest to the base first, so eggs stack in a tidy cluster
+    table.sort(Candidates, function(A, B)
+        return (A.Position - CenterPoint.Position).Magnitude < (B.Position - CenterPoint.Position).Magnitude
+    end)
+
+    return Candidates
 end
 
 Core.PlaceEgg = function(Uid: string)
-    -- Use the equipped tool's Uid (matches the server's expected egg identity)
-    local ToolUid = Utils.GetEquippedEggUid()
-    if ToolUid then
-        Uid = ToolUid
+    local Record = Uid and EggState.ReadOwnedEgg(UserId, Uid)
+
+    -- The stolen egg only becomes an owned, unplaced record a moment after the carry, so fall
+    -- back to whatever unplaced egg we own
+    if not Record or Record.Placement then
+        Uid = Utils.WaitForUnplacedEggUid(3)
     end
 
-    -- Wait for the stolen egg to become an owned runtime record
-    for _ = 1, 10 do
-        local Found = false
-        local Snapshot = EggCmds.GetRuntimeSnapshot()
-        for _, Owner in next, Snapshot do
-            if Owner.OwnerUserId == UserId then
-                for EggUid in next, Owner.Records do
-                    if EggUid == Uid then
-                        Found = true
-                        break
-                    end
-                end
-            end
-        end
-        if Found then break end
-        task.wait(.25)
+    if not Uid then
+        return false
     end
 
-    local PlotData = PlotCmds.GetPlotData()
+    local PlotData = PlotState.ResolvePlot()
     if not PlotData then
         return false
     end
 
-    local CFrame = Utils.GetFreeEggPosition(PlotData.PetArea, config.Eggs.EggRadius, PlotData.CenterPoint)
+    local Candidates = Utils.GetFreeEggPositions(PlotData.PetArea, config.Eggs.EggRadius, PlotData.CenterPoint, PlotData.PlotFolder)
 
-    if not CFrame then
+    if #Candidates == 0 then
         return false
     end
 
-    -- Tween to the placement position
-    Utils.TweenTo(CFrame)
-    task.wait(.50)
+    -- The server rejects some spots ("Get closer to your area to place an egg!"), so walk the
+    -- candidates from the base outwards until one sticks
+    local Message
 
-    -- Convert world space CFrame to object space relative to CenterPoint
-    local LocalCFrame = PlotData.CenterPoint.CFrame:ToObjectSpace(CFrame)
-    
-    local Success = EggCmds.RequestPlaceEgg(Uid, LocalCFrame)
+    for Index = 1, math.min(#Candidates, 12) do
+        local CFrame = Candidates[Index]
+
+        Utils.TweenTo(CFrame)
+
+        -- The server refuses the placement while the character is airborne or knocked down
+        for _ = 1, 20 do
+            if Utils.CanCarryEgg() then
+                break
+            end
+
+            task.wait(.1)
+        end
+
+        task.wait(.15)
+
+        local Success
+        Success, Message = EggState.PlantEgg(Uid, PlotData.CenterPoint.CFrame:ToObjectSpace(CFrame))
+
+        if Success then
+            return true
+        end
+    end
+
+    warn("Failed to place egg " .. Uid .. ": " .. tostring(Message))
 
     --Utils.TweenTo(SpawmPoint) -- otherwise you noclip = lotta problems
 
-    return Success == true
+    return false
 end
 
 const Zones = {
+    ["Light Dark"] = 12,
+    ["Titan Temple"] = 11,
     ["Cherry Blossom"] = 10,
     ["Cosmic"] = 9,
     ["Prehistoric"] = 8,
@@ -234,7 +293,7 @@ Utils.GetBestEgg = function(Options)
     local BestEgg
     local BestRank = -math.huge
 
-    for _, Egg in next, (EggCmds.GetAreaEggSnapshot().Records) do
+    for _, Egg in next, (EggState.ReadFieldEggs().Records) do
         if Egg.State ~= "Slot" then
             continue
         end
@@ -264,12 +323,8 @@ Utils.GetBestEgg = function(Options)
         end
 
         if Rank > BestRank then
-            local Instance = Eggs:FindFirstChild(Egg.Uid)
-
-            if Instance then
-                BestRank = Rank
-                BestEgg = Instance
-            end
+            BestRank = Rank
+            BestEgg = Egg
         end
     end
 
@@ -277,8 +332,7 @@ Utils.GetBestEgg = function(Options)
 end
 
 Utils.IsNight = function()
-	local Time = workspace:GetServerTimeNow()
-	return AreaEggResetTimeUtil.IsNight(Time)
+	return AreaEggCycle.IsNightPhase(workspace:GetServerTimeNow())
 end
 
 -- for a larger script it would have other checks
@@ -288,7 +342,7 @@ Utils.VerifySteal = function()
 		return false
 	end
     if OnTreadmill then
-        RequestUnequip:InvokeServer()
+        Remotes.Treadmill.AskDoff:InvokeServer()
     end
 
 	return true
@@ -357,38 +411,68 @@ Utils.TweenTo = function(Area, SpeedMultiplier)
     until not Connection.Connected
 end
 
-local function GetSlot(Name: string)
-    return Name:match("([^_]+:.-)$")
-end
-
 Core.StealBestEgg = function(Options)
 	if not Utils.VerifySteal() then
 		return false
 	end
 
-	local Egg = Utils.GetBestEgg(Options):WaitForChild("Hitbox")
+	local Egg = Utils.GetBestEgg(Options)
 	if not Egg then
 		return false
 	end
-	local Name = Egg.Parent.Name
+
+	local Uid = Egg.Uid
+
+	local Stand = Utils.GetEggStandCFrame(Egg, math.rad(90))
 
     Utils.TweenTo(SpawmPoint)
-	Utils.TweenTo(Egg)
-	task.wait(.8)
+	Utils.TweenTo(Stand)
+	task.wait(.2)
 
-	if Name:find("FirstAreaEgg") then
-		RequestAreaEggCarry:InvokeServer(
-			{
-				FirstAreaSlotKey = GetSlot(Name),
-				Uid = Name
-			}
-		)
-	else
-		RequestAreaEggCarry:InvokeServer(
-			{
-				Uid = Name
-			}
-		)
+	-- Wait until the character has landed and is not knocked down
+	for _ = 1, 20 do
+		if Utils.CanCarryEgg() then
+			break
+		end
+
+		task.wait(.1)
+	end
+
+	-- The server needs time to accept where a teleport put us, and the further we jumped the longer
+	-- that takes -- so hold the position and retry instead of guessing a wait. Every teleport
+	-- restarts it, so we only move again if we actually got pushed off the spot
+	local Success, Message
+	local Deadline = os.clock() + (config.AnticheatBypass and 6 or 2)
+
+	while os.clock() < Deadline do
+		if HumanoidRootPart and (HumanoidRootPart.Position - Stand.Position).Magnitude > 6 then
+			Utils.TweenTo(Stand)
+			task.wait(.3)
+		end
+
+		if Utils.CanCarryEgg() then
+			if AreaEggSlotIdentity.LooksLikeFirstAreaUid(Uid) then
+				Success, Message = EggState.CarryFieldEgg(Uid, AreaEggSlotIdentity.SlotKey(Egg.AreaId, Egg.NestId))
+			else
+				Success, Message = EggState.CarryFieldEgg(Uid)
+			end
+
+			if Success then
+				break
+			end
+
+			-- A carry that never dropped blocks every steal until it is cleared
+			if Message == "Already carrying an egg" then
+				EggState.DropFieldEgg("PlayerRequest")
+				task.wait(1)
+			end
+		end
+
+		task.wait(.5)
+	end
+
+	if not Success then
+		warn("Failed to carry " .. Uid .. ": " .. tostring(Message))
 	end
 
 	task.wait(.15)
@@ -398,30 +482,30 @@ Core.StealBestEgg = function(Options)
     if config.Eggs.AutoPlace then
         task.wait(.5)
 
-        Core.PlaceEgg(Name)
+        Core.PlaceEgg(Uid)
     end
 
-	return true
+	return Success == true
 end
 
 Utils.HatchEgg = function(Uid: string)
-	RequestHatchEgg:InvokeServer(
+	EggState.BeginHatch(
 		Uid
 	); task.wait(0.5) -- not sure
-	RequestCompleteHatchEgg:InvokeServer(
+	EggState.FinishHatch(
 		Uid
 	)
 end
 
 Core.HatchEggs = function()
-	const Snapshot = EggCmds.GetRuntimeSnapshot()
+	const Snapshot = EggState.ReadOwnedEggs()
 
 	for _, Owner in next, (Snapshot) do
 		if Owner.OwnerUserId ~= UserId then
 			continue
 		end
 		for Uid, Egg in next, (Owner.Records) do
-			if Egg.Placement and EggCmds.IsLocalEggReady(Uid) then
+			if Egg.Placement and EggState.IsReadyToHatch(Uid) then
 				Utils.HatchEgg(Uid)
 			end
 		end
@@ -444,6 +528,7 @@ local tabs = {
     Eggs = Window:CreateTab("Eggs"),
     Pen = Window:CreateTab("Pen"),
     Shop = Window:CreateTab("Shop"),
+    Settings = Window:CreateTab("Settings"),
 }
 
 -- // Eggs
@@ -451,6 +536,8 @@ local tabs = {
 tabs.Eggs:CreateDropdown({
     Name = "Zone",
     Options = {
+        "Light Dark",
+        "Titan Temple",
         "Cherry Blossom",
         "Cosmic",
         "Prehistoric",
@@ -584,25 +671,22 @@ tabs.Pen:CreateButton({
 
 -- // Shop
 Core.BuyTrail = function(config)
-    RequestPurchase:InvokeServer(
+    Remotes.Trailwear.AskPurchase:InvokeServer(
         config.Shop.Trail.Selected
     )
 end
 
+local TrailOptions = {}
+
+for Id in next, Trails.Directory do
+	TrailOptions[#TrailOptions + 1] = Id
+end
+
+table.sort(TrailOptions)
+
 tabs.Shop:CreateDropdown({
     Name = "Select Trail",
-    Options = {
-        "BlueTrail",
-        "DivineTrail",
-        "EternalTrail",
-        "GalaxyTrail",
-        "GoldenTrail",
-        "GreenTrail",
-        "GreyTrail",
-        "PurpleTrail",
-        "RedTrail",
-        "SecretTrail",
-    },
+    Options = TrailOptions,
     CurrentOption = {config.Shop.Trail.Selected},
     MultipleOptions = false,
     Flag = "SelectedTrail",
@@ -619,12 +703,22 @@ tabs.Shop:CreateButton({
 })
 
 Core.PetCapacityUpgrade = function()
-    RequestBaseUpgrade:FireServer()
+    Remotes.Homestead.AskBaseTierRaise:FireServer()
 end
 
 tabs.Shop:CreateButton({
     Name = "Upgrade Pet Capacity",
     Callback = function()
 		Core.PetCapacityUpgrade()
+    end,
+})
+
+-- // Settings
+tabs.Settings:CreateToggle({
+    Name = "Anticheat Bypass",
+    CurrentValue = true,
+    Flag = "AnticheatBypass",
+    Callback = function(Value)
+        config.AnticheatBypass = Value
     end,
 })

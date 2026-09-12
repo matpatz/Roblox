@@ -348,10 +348,31 @@ Utils.VerifySteal = function()
 	return true
 end
 
+Utils.AtTarget = function(Target: CFrame)
+    if HumanoidRootPart == nil then
+        return true
+    end
+
+    local Offset = HumanoidRootPart.Position - Target.Position
+
+    return Vector3.new(Offset.X, 0, Offset.Z).Magnitude < 8
+end
+
 Utils.TweenTo = function(Area, SpeedMultiplier)
     local Target: CFrame = typeof(Area) == "Instance" and Area.CFrame or Area
     if config.AnticheatBypass and Anticheat then
-        Anticheat.Core.Teleport(Target)
+        -- A teleport is silently rolled back if it lands at a bad moment, and the write itself
+        -- always looks like it worked -- so check we actually stayed there instead of trusting it
+        for _ = 1, 8 do
+            Anticheat.Core.Teleport(Target)
+
+            -- writing the position again too soon is what gets the whole move reverted
+            task.wait(.25)
+
+            if Utils.AtTarget(Target) then
+                return
+            end
+        end
 
         return
     end
@@ -425,7 +446,9 @@ Core.StealBestEgg = function(Options)
 
 	local Stand = Utils.GetEggStandCFrame(Egg, math.rad(90))
 
-    Utils.TweenTo(SpawmPoint)
+	-- The spawn hop is what gets the server to count us as being in the gameplay area; it has to
+	-- come first, and TweenTo confirms each hop actually stuck before making the next one
+	Utils.TweenTo(SpawmPoint)
 	Utils.TweenTo(Stand)
 	task.wait(.2)
 
@@ -445,9 +468,8 @@ Core.StealBestEgg = function(Options)
 	local Deadline = os.clock() + (config.AnticheatBypass and 6 or 2)
 
 	while os.clock() < Deadline do
-		if HumanoidRootPart and (HumanoidRootPart.Position - Stand.Position).Magnitude > 6 then
+		if not Utils.AtTarget(Stand) then
 			Utils.TweenTo(Stand)
-			task.wait(.3)
 		end
 
 		if Utils.CanCarryEgg() then
@@ -465,6 +487,12 @@ Core.StealBestEgg = function(Options)
 			if Message == "Already carrying an egg" then
 				EggState.DropFieldEgg("PlayerRequest")
 				task.wait(1)
+			end
+
+			-- Another player got there first -- that Uid is gone for good, so stop burning the
+			-- deadline on it and let the caller pick a fresh egg
+			if Message == "Egg not found" then
+				break
 			end
 		end
 

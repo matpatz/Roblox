@@ -14,6 +14,8 @@ const AreaEggResetTimeUtil = require(ReplicatedStorage.Library.Util.AreaEggReset
 const PlotCmds = require(ReplicatedStorage.Library.Client.PlotCmds)
 const EggToolDisplay = require(ReplicatedStorage.Library.Client.Eggs.EggToolDisplay)
 
+const Anticheat = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/Steal-an-Egg/bypass.lua"))()
+
 -- // Events
 const Network = ReplicatedStorage.Network
 const RequestHatchEgg = Network["Eggs: RequestHatchEgg"]
@@ -58,6 +60,8 @@ end)
 
 -- // config
 local config = {
+    AnticheatBypass = true,
+
 	Eggs = {
 		BestEgg = {
 			Area = "Forest",
@@ -292,6 +296,12 @@ end
 
 Utils.TweenTo = function(Area, SpeedMultiplier)
     local Target: CFrame = typeof(Area) == "Instance" and Area.CFrame or Area
+    if config.AnticheatBypass and Anticheat then
+        Anticheat.Core.Teleport(Target)
+
+        return
+    end
+
     local Start = HumanoidRootPart.Position
 
     local Distance = (Start - Target.Position).Magnitude

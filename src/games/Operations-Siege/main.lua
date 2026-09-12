@@ -1,12 +1,15 @@
+-- Detected, or it was a mod ban (I was cooking, true story)
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
 
 -- // Modules
-const SE_Client = getsenv(Players.LocalPlayer.PlayerGui.SE_Client)
+local SE_Client = getsenv(Players.LocalPlayer.PlayerGui.SE_Client)
 
 -- // Variables
 local BulletRaycast = SE_Client.BulletRaycast 
+assert(BulletRaycast, "BulletRaycast function not found")
 
 -- // LocalPlayer
 const LocalPlayer = Players.LocalPlayer
@@ -113,17 +116,33 @@ end
 
 -- // Core
 
-if isfunctionhooked(BulletRaycast) then
-    restorefunction(BulletRaycast)
+local function this()
+	if isfunctionhooked(BulletRaycast) then
+		restorefunction(BulletRaycast)
+	end
+
+	local Old; Old = hookfunction(BulletRaycast, function(Origin, LookVector, Ignore)
+		if config.SilentAim.Enabled then
+			const Target, AimPart = Utils["Aimbot"].GetClosest()
+			print("Getting closest target...")
+			if Target and AimPart then
+				print("Aimbot target acquired:", Target, AimPart)
+				const RayOrigin = Origin or workspace.CurrentCamera.CFrame.Position
+				LookVector = AimPart.Position - RayOrigin
+			end
+		end
+		return Old(Origin, LookVector, Ignore)
+	end)
 end
 
-local Old; Old = hookfunction(BulletRaycast, function(Origin, LookVector, Ignore)
-    if config.SilentAim.Enabled then
-        const Target, AimPart = Utils["Aimbot"].GetClosest()
-        if Target and AimPart then
-            const RayOrigin = Origin or workspace.CurrentCamera.CFrame.Position
-            LookVector = AimPart.Position - RayOrigin
-        end
-    end
-    return Old(Origin, LookVector, Ignore)
+local function find()
+	SE_Client = getsenv(Players.LocalPlayer.PlayerGui.SE_Client)
+	BulletRaycast = SE_Client.BulletRaycast
+end
+
+task.spawn(function()
+	while task.wait(3) do
+		find()
+		this()
+	end
 end)

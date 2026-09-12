@@ -1,12 +1,14 @@
--- // Template
--- Generic cheat scaffold. Copy to src/games/<Game>/main.lua, then fill in
--- every <Game> marker (targets / team checks / the shot hook).
-
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
 
 -- // Modules
+const Modules = ReplicatedStorage.Events.Modules
+
+local RaycastModule = require(Modules.RaycastModule)
+
+--// Functions
+local Raycast = RaycastModule.Raycast
 
 -- // LocalPlayer
 const LocalPlayer = Players.LocalPlayer
@@ -49,41 +51,21 @@ local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/sr
 
 -- // Utils
 
--- most times Players:GetPlayers() works fine
-
--- <Game>: return the valid target list. Default: other players, alive,
--- and (when TeamCheck is on) not on the local player's team.
-Utils["Aimbot"].GetTargets = function(): { Instance }
-	local Enemies: { Instance } = {}
-
+Utils["Aimbot"].GetTargets = function(): { Player }
+	local Targets: { Player } = {}
 	for _, Player in Players:GetPlayers() do
 		if Player == LocalPlayer then
 			continue
 		end
-		if not Player.Character then
-			continue
-		end
-
-		-- <Game>: swap for the game's alive / team markers
-		if Player:GetAttribute("IsDead") then
-			continue
-		end
-		if config.SilentAim.TeamCheck then
-			if Player:GetAttribute("Team") == LocalPlayer:GetAttribute("Team") then
-				continue
-			end
-		end
-
-		table.insert(Enemies, Player)
+		table.insert(Targets, Player)
 	end
-
-	return Enemies
+	return Targets
 end
 
 local aimconfig = {
-    Origin, -- <Instance / Position> / camera / muzzle
+    Origin,
     Range = config.SilentAim.Range,
-    TeamCheck = false, -- if Player.Team is nil, and there are teams. You need to filter it manually with GetTargets
+    TeamCheck = false,  
     AimPart = config.SilentAim.AimPart,
     Visible = config.SilentAim.WallCheck,
     EntityLists = {},
@@ -105,18 +87,12 @@ if isfunctionhooked(Raycast) then
     restorefunction(Raycast)
 end
 
-local Old; Old = hookfunction(Raycast, function(p1: number, p2: number, p3: number) -- use the parameter names from the original function
+local Old; Old = hookfunction(Raycast, function(p2: Vector3, p3: Vector3, p4: { Instance }?)
     if config.SilentAim.Enabled then
         const AimPart = Utils["Aimbot"].GetClosest()
         if AimPart then
-            return {
-                {
-                    Position = AimPart.Position,
-                    Instance = AimPart,
-                    Normal = (AimPart.Position - HumanoidRootPart.Position).Unit,
-                },
-            }
+            return AimPart, AimPart.Position, (AimPart.Position - p2).Unit
         end
     end
-    return Old(p1, p2, p3)
+    return Old(p2, p3, p4)
 end)

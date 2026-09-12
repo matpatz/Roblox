@@ -30,7 +30,6 @@ local tabs = {
 }
 
 local connections = {
-    communication = {},
     table = {},
     gameplay = {},
 }
@@ -39,9 +38,7 @@ local states = {
     runtime = {},
 
     values = {
-        World,
-
-        communication = Instance.new("BindableEvent"),
+        World = nil
     },
 }
 
@@ -51,11 +48,6 @@ states.values.World = workspace.Worlds:FindFirstChild("World" .. CurrentWorld)
 
 local function SetValue(obj, key, value)
     obj[key] = value
-    states.values.communication:Fire({
-        Object = obj,
-        Key = key,
-        Value = value,
-    })
 end
 
 local function addConnection(category: table, name: string, connection: RBXScriptConnection)

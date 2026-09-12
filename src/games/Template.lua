@@ -56,22 +56,12 @@ local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/sr
 Utils["Aimbot"].GetTargets = function(): { Instance }
 	local Enemies: { Instance } = {}
 
-	for _, Player in Players:GetPlayers() do
+	for _, Player in workspace:QueryDescendants("Model > Humanoid") do
 		if Player == LocalPlayer then
 			continue
 		end
 		if not Player.Character then
 			continue
-		end
-
-		-- <Game>: swap for the game's alive / team markers
-		if Player:GetAttribute("IsDead") then
-			continue
-		end
-		if config.SilentAim.TeamCheck then
-			if Player:GetAttribute("Team") == LocalPlayer:GetAttribute("Team") then
-				continue
-			end
 		end
 
 		table.insert(Enemies, Player)

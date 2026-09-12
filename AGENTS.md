@@ -3,4 +3,6 @@ The domains: https://roblox-alpha-murex.vercel.app and https://www.voltex.websit
 
 if I didnt tell you to do something dont do it, no stupid ui
 
+potassium workspace: C:\Users\$env:USERPROFILE\AppData\Local\Potassium\workspace
+
 the chance Aimbot.GetClosest is the issue is almost zero, I have likely checked if a target is actually found

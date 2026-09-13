@@ -30,7 +30,9 @@ local function isscript(script, module)
 end
 
 local function loadscript(script, module, configurable)
-    Knit.cache.set(`{module}/configurable`, configurable) -- any temp value, like getgenv().config = {} -- well you get the point
+    if configurable then
+        Knit.cache.set(`{module}/configurable`, configurable) -- any temp value, like getgenv().config = {} -- well you get the point
+    end
 
     if isscript(script, module) then
         local compiled = dofile(`voltex/{script}/{module}.lua`)

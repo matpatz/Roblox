@@ -9,7 +9,7 @@ local wrappers = Knit.wrappers
 
 local Success, Error = pcall(function()
     task.spawn(function()
-        shared.Knit = cache.set("Knit", Knit) -- Knit will exist for one second, then is deleted.
+        shared.Knit = Knit.cache.set("Knit", Knit) -- Knit will exist for one second, then is deleted.
 
         loadstring(game:HttpGet(string.format("https://roblox-alpha-murex.vercel.app/src/%s/main.lua", Script)))()
     end)

@@ -32,6 +32,7 @@ cache.set = function(key, value)
     else
         cached["keys"][key] = nil -- clear cached key
     end
+    return cached["keys"][key]
 end
 
 cache.make_cache = function(cache_table, cache_time)

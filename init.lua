@@ -9,10 +9,6 @@ local wrappers = Knit.wrappers
 
 local Success, Error = pcall(function()
     task.spawn(function()
-        task.delay(1, function() -- Knit will exist for one second, then is deleted.
-            shared.Knit = nil
-        end)
-        
         loadstring(game:HttpGet(string.format("https://roblox-alpha-murex.vercel.app/src/%s/main.lua", Script)))()
     end)
 end); if not Success then

@@ -14,6 +14,8 @@ local function writescript(script, module, content)
         return nil
     end
     writefile(`voltex/{script}/{module}.lua`, content)
+
+    return true
 end
 
 --[[
@@ -63,8 +65,8 @@ Knit.services = Knit.require(script, "services", {
 })
 Knit.cache = Knit.require(script, "cache")
 
-shared.Knit = Knit
+Knit.cache.set("Knit", Knit) -- Knit will exist for one second, then is deleted.
 
-Knit.wrappers = Knit.require(script, "function_wrappers")
+Knit.wrappers = Knit.require(script, "function_wrappers", Knit.cache)
 
 return Knit

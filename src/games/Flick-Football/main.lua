@@ -1,5 +1,5 @@
 -- // Modules
-const core = assert(loadstring(game:HttpGet("https://voltex.website/src/games/this_game/core.lua")))()
+const core = assert(loadstring(game:HttpGet("https://voltex.website/src/games/Flick-Football/core.lua")))()
 
 -- // config
 local config = {

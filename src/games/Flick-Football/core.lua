@@ -12,10 +12,12 @@
 -- locally and reports TurnResolved, which is what makes the point register and
 -- the board animate. Sending the packet directly leaves the turn unresolved.
 --
--- It also keeps the WIDEST scoring window it finds (the longest run of
--- neighbouring angles that also score) so a small desync can't turn a goal into
--- a miss, and it yields between batches of simulations so the game keeps its
--- frame rate while it searches.
+-- It aims outwards from the goal: the first candidate is the shot that sends
+-- the ball straight at the goal mouth, and it only works away from that aim
+-- until MinimumRun samples in a row score. So it reacts in a handful of
+-- simulations and takes the shot a player would have taken, instead of some
+-- wild bank off a rail. It yields on a time budget so the game keeps its frame
+-- rate while it searches.
 
 -- // Services
 
@@ -44,8 +46,7 @@ export type SolverConfig = {
 	MyDiscs: { number }?, -- disc indices we may shoot
 	Powers: { number }?, -- powers to try, in the order tried
 	AngleStep: number?, -- degrees between samples inside the ball cone
-	MinimumRun: number?, -- stop as soon as a run this wide scores
-	Thorough: boolean?, -- scan every power instead of stopping at the first run
+	MinimumRun: number?, -- scoring samples in a row needed to take the shot
 	BankStep: number?, -- degrees when sweeping the whole circle as a fallback
 	BankPowers: { number }?,
 	MaxTime: number?, -- give up on one shot after this many simulated seconds
@@ -60,12 +61,11 @@ export type SolverConfig = {
 const config = {
 	TargetGoal = 1,
 	MyDiscs = { 1, 2, 3, 4, 5 },
-	Powers = { 1, 0.85, 0.7, 0.55 },
+	Powers = { 1, 0.8 },
 	AngleStep = 0.5,
-	MinimumRun = 3,
-	Thorough = false,
-	BankStep = 4,
-	BankPowers = { 1, 0.8 },
+	MinimumRun = 2,
+	BankStep = 6,
+	BankPowers = { 1 },
 	MaxTime = 7,
 	Budget = 0.008,
 	Fire = true,
@@ -168,9 +168,11 @@ end
 
 -- // Search
 
--- Sample the cone of directions that actually reach the ball and keep the
--- longest unbroken run of scoring samples: its middle is the safest aim.
-local function ScanCone(Bodies: { any }, Disc: number, Ball: any): Shot?
+-- Sample the cone of directions that actually reach the ball, starting from the
+-- one that sends the ball straight at the goal (the shot a player would take)
+-- and working outwards. Returns as soon as MinimumRun samples in a row score,
+-- which usually means a handful of simulations instead of hundreds.
+local function ScanCone(Bodies: { any }, Disc: number, Ball: any, Goal: { x: number, y: number }): Shot?
 	const Body = Bodies[Disc]
 	const DeltaX = Ball.x - Body.x
 	const DeltaY = Ball.y - Body.y
@@ -185,60 +187,48 @@ local function ScanCone(Bodies: { any }, Disc: number, Ball: any): Shot?
 	const Spread = math.asin(math.min(1, Reach / Distance))
 	const Steps = math.max(4, math.ceil(math.deg(Spread) * 2 / config.AngleStep))
 
-	local Best: Shot? = nil
+	-- The aim that punts the ball at the goal mouth.
+	const Wanted = math.atan2(Goal.y - Ball.y, Goal.x - Ball.x)
+	const Middle = math.clamp((Wanted - (Base - Spread)) / (Spread * 2) * Steps, 0, Steps)
 
 	for _, Power in config.Powers do
-		local RunStart: number? = nil
-		local RunLength = 0
-		local BestStart: number? = nil
-		local BestLength = 0
-		local BestTime = 0
+		local Count = 0
+		local Total = 0
 
-		for Step = 0, Steps do
+		for Index = 0, Steps do
+			-- middle, then one either side, then two either side, ...
+			const Offset = math.ceil(Index / 2) * (if Index % 2 == 1 then 1 else -1)
+			const Step = Middle + Offset
+			if Step < 0 or Step > Steps then
+				continue
+			end
+
 			const Angle = Base - Spread + (Step / Steps) * Spread * 2
 			const Scored, Time = Play(Bodies, Disc, math.cos(Angle), math.sin(Angle), Power)
 
-			if Scored then
-				if RunStart == nil then
-					RunStart = Step
-				end
-				RunLength += 1
-				BestTime = Time
-				if RunLength > BestLength then
-					BestLength = RunLength
-				end
-			else
-				if RunLength > BestLength then
-					BestStart, BestLength = RunStart, RunLength
-				end
-				RunStart, RunLength = nil, 0
+			if not Scored then
+				Count, Total = 0, 0
+				continue
 			end
-		end
-		if RunLength > BestLength then
-			BestStart, BestLength = RunStart, RunLength
-		end
 
-		if BestStart ~= nil and BestLength >= config.MinimumRun then
-			const Middle = BestStart + (BestLength - 1) / 2
-			const Angle = Base - Spread + (Middle / Steps) * Spread * 2
-			const Shot: Shot = {
-				Disc = Disc,
-				DirX = math.cos(Angle),
-				DirY = math.sin(Angle),
-				Power = Power,
-				Time = BestTime,
-				Run = BestLength,
-			}
-			if not config.Thorough then
-				return Shot
-			end
-			if Best == nil or BestLength > Best.Run then
-				Best = Shot
+			Count += 1
+			Total += Step
+			if Count >= config.MinimumRun then
+				const Best = Total / Count
+				const Aim = Base - Spread + (Best / Steps) * Spread * 2
+				return {
+					Disc = Disc,
+					DirX = math.cos(Aim),
+					DirY = math.sin(Aim),
+					Power = Power,
+					Time = Time,
+					Run = Count,
+				}
 			end
 		end
 	end
 
-	return Best
+	return nil
 end
 
 -- Fallback: when the ball can't be hit straight at the goal, sweep the whole
@@ -266,8 +256,9 @@ local function ScanBank(Bodies: { any }, Disc: number): Shot?
 	return nil
 end
 
--- Every shot that scores on the current board, widest window first. Bank shots
--- are only searched when no direct hit on the ball can score.
+-- Every shot that scores on the current board, best first. The disc nearest
+-- the ball is tried first (the shot a player would actually take), and bank
+-- shots are only searched when no direct hit on the ball can score.
 function core.Find(Overrides: SolverConfig?): { Shot }
 	if Overrides ~= nil then
 		for Key, Value in Overrides do
@@ -281,11 +272,22 @@ function core.Find(Overrides: SolverConfig?): { Shot }
 	assert(Bodies ~= nil, "core: no match session yet")
 
 	const Ball = Bodies[SoccerSim.BALL]
+	const Goal = if config.TargetGoal == 1
+		then { x = GameConfig.FieldW / 2, y = 0 }
+		else { x = GameConfig.FieldW / 2, y = GameConfig.FieldH }
+
+	const Discs = table.clone(config.MyDiscs)
+	table.sort(Discs, function(A: number, B: number): boolean
+		const LeftX, LeftY = Bodies[A].x - Ball.x, Bodies[A].y - Ball.y
+		const RightX, RightY = Bodies[B].x - Ball.x, Bodies[B].y - Ball.y
+		return LeftX * LeftX + LeftY * LeftY < RightX * RightX + RightY * RightY
+	end)
+
 	const Shots: { Shot } = {}
 
-	for _, Disc in config.MyDiscs do
+	for _, Disc in Discs do
 		if not Bodies[Disc].off then
-			const Shot = ScanCone(Bodies, Disc, Ball)
+			const Shot = ScanCone(Bodies, Disc, Ball, Goal)
 			if Shot ~= nil then
 				table.insert(Shots, Shot)
 			end
@@ -293,7 +295,7 @@ function core.Find(Overrides: SolverConfig?): { Shot }
 	end
 
 	if #Shots == 0 then
-		for _, Disc in config.MyDiscs do
+		for _, Disc in Discs do
 			if not Bodies[Disc].off then
 				const Shot = ScanBank(Bodies, Disc)
 				if Shot ~= nil then
@@ -305,7 +307,10 @@ function core.Find(Overrides: SolverConfig?): { Shot }
 	end
 
 	table.sort(Shots, function(A: Shot, B: Shot): boolean
-		return A.Run > B.Run
+		if A.Run ~= B.Run then
+			return A.Run > B.Run
+		end
+		return A.Time < B.Time
 	end)
 
 	return Shots

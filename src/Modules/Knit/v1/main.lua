@@ -2,7 +2,7 @@ local Knit = {
     services = {},
     cache = {}
 }
-local script: string = "Modules/Knit/v1/"
+local script: string = "Modules/Knit/v1"
 
 if not isfolder("voltex") then
     makefolder("voltex")
@@ -62,6 +62,8 @@ Knit.services = Knit.require(script, "services", {
     PlayerHelper = false
 })
 Knit.cache = Knit.require(script, "cache")
+
+shared.Knit = Knit
 
 Knit.wrappers = Knit.require(script, "function_wrappers")
 

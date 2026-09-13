@@ -1,0 +1,11 @@
+its not like the typical knit, its my own thing
+
+instead of loadstirng maxxing you will call:
+
+```lua
+const Options = {
+    "core",
+    "utils"
+}
+Knit.require(shared.script, Options[1])
+```

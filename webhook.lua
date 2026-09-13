@@ -32,4 +32,5 @@ request({
     Body = Services["HttpService"]:JSONEncode(Payload)
 })
 
-shared.script = nil
+-- shared.script = nil
+    -- used in the Knit system

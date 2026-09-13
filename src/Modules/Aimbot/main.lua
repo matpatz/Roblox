@@ -39,6 +39,10 @@ export type AimbotConfig = {
 	Range: number?,
 	-- Minimum targeting distance.
 	MinDistance: number?,
+	-- Preferred distance: when set, GetClosest picks the target whose
+	-- distance to the origin is nearest to this value instead of the
+	-- absolute closest.
+	Distance: number?,
 	-- Skip players on the same team as the local player.
 	TeamCheck: boolean?,
 	-- Which part to aim at: "Head", "HumanoidRootPart", "Random",
@@ -64,6 +68,7 @@ type ResolvedConfig = {
 	Origin: OriginType?,
 	Range: number,
 	MinDistance: number,
+	Distance: number?,
 	TeamCheck: boolean,
 	AimPart: AimPartType?,
 	Visible: boolean,
@@ -141,6 +146,9 @@ local function NormalizeConfig(Config: AimbotConfig?): ResolvedConfig
 	end
 	Normalized.Range = ValidateNumber(Config.Range, "Range", DefaultConfig.Range)
 	Normalized.MinDistance = ValidateNumber(Config.MinDistance, "MinDistance", DefaultConfig.MinDistance)
+	if Config.Distance ~= nil then
+		Normalized.Distance = ValidateNumber(Config.Distance, "Distance", 0)
+	end
 	Normalized.TeamCheck = ValidateBoolean(Config.TeamCheck, "TeamCheck", DefaultConfig.TeamCheck)
 	Normalized.Visible = ValidateBoolean(Config.Visible, "Visible", DefaultConfig.Visible)
 	Normalized.MaxTargets = ValidateNumber(Config.MaxTargets, "MaxTargets", DefaultConfig.MaxTargets)
@@ -489,15 +497,26 @@ function aimbot.GetClosest(Config: AimbotConfig): (Instance?, BasePart?)
 	local Closest: Instance? = nil
 	local ClosestPart: BasePart? = nil
 	local ClosestDistance = math.huge
+	const WantedDistance: number? = Normalized.Distance
 
-	for _, Target in Targets do
+	-- While the config contains a Distance index, score each target by how
+	-- close its distance is to that value; otherwise pick the absolute closest.
+	local Index = 1
+	while Index <= #Targets do
+		const Target = Targets[Index]
+		Index += 1
+
 		const AimPart = GetAimPart(Target, Normalized.AimPart)
 		if not AimPart then
 			continue
 		end
 		const Distance = (OriginPosition - AimPart.Position).Magnitude
-		if Distance < ClosestDistance then
-			ClosestDistance = Distance
+		local Score = Distance
+		if WantedDistance ~= nil then
+			Score = math.abs(Distance - WantedDistance)
+		end
+		if Score < ClosestDistance then
+			ClosestDistance = Score
 			Closest = Target
 			ClosestPart = AimPart
 		end

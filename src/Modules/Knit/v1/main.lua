@@ -67,7 +67,7 @@ Knit.require = function(script: string, module: string, configurable: table?)
 end
 
 Knit.cache = Knit.require(script, "cache")
-task.wait(0.2)
+
 Knit.services = Knit.require(script, "services", {
     PlayerHelper = false
 })

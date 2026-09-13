@@ -1,50 +1,19 @@
--- // Services
-const ReplicatedStorage = game:GetService("ReplicatedStorage")
-const Players = game:GetService("Players")
-const TweenService = game:GetService("TweenService")
-const RunService = game:GetService("RunService")
-
 -- // Modules
-const core = loadstring(game:HttpGet("https://voltex.website/src/games/this_game/core.lua"))()
-
--- // LocalPlayer
-const LocalPlayer = Players.LocalPlayer
-
-if not LocalPlayer.Character then
-	LocalPlayer.CharacterAdded:Wait()
-end
-local Character = LocalPlayer.Character
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-local Humanoid = Character:WaitForChild("Humanoid")
-
-LocalPlayer.CharacterAdded:Connect(function(NewCharacter)
-	Character = NewCharacter
-	HumanoidRootPart = NewCharacter:WaitForChild("HumanoidRootPart")
-	Humanoid = NewCharacter:WaitForChild("Humanoid")
-end)
-
---// variables
-const UserId = LocalPlayer.UserId
-local Flags = {}
-Flags.__index = Flags
+const core = assert(loadstring(game:HttpGet("https://voltex.website/src/games/this_game/core.lua")))()
 
 -- // config
 local config = {
-    Goals = {
-        AutoScore = false
-    }
+	Goals = {
+		AutoScore = false,
+		Attempts = 2, -- solves per turn before giving up
+		Delay = 0.75, -- seconds to wait after the turn starts before shooting
+	},
 }
 
 -- // cheat
 local cheat = {
-	Utils = {
-
-	},
-	Core = {
-
-	}
+	Core = {},
 }
-local Utils = cheat.Utils
 local Core = cheat.Core
 
 -- // Core
@@ -55,36 +24,67 @@ end
 
 -- // Interface
 
-local Rayfield = loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua"))()
-Flags = Rayfield.Flags
+const Rayfield = assert(loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua")))()
 
-local Window = Rayfield:CreateWindow({
-    Name = "this game",
-    LoadingTitle = "Loading...",
-    LoadingSubtitle = "subtitle",
+const Window = Rayfield:CreateWindow({
+	Name = "this game",
+	LoadingTitle = "Loading...",
+	LoadingSubtitle = "subtitle",
 })
 
-local tabs = {
-    Score = Window:CreateTab("Score"),
-    Settings = Window:CreateTab("Settings"),
+const tabs = {
+	Score = Window:CreateTab("Score"),
+	Settings = Window:CreateTab("Settings"),
 }
 
--- // Eggs
-
-tabs.Score:CreateToggle({
-    Name = "Auto Score Goal",
-    CurrentValue = false,
-    Flag = "AutoScoreGoal",
-    Callback = function(Value)
-        if not Value then
-            return
-        end
-    end,
-})
+-- // Score
 
 tabs.Score:CreateButton({
-    Name = "Score Goal",
-    Callback = function()
-        Core.Score()
-    end,
+	Name = "Score Goal",
+	Callback = function()
+		Core.Score()
+	end,
 })
+
+tabs.Score:CreateToggle({
+	Name = "Auto Score Goal",
+	CurrentValue = false,
+	Flag = "AutoScoreGoal",
+	Callback = function(Value)
+		config.Goals.AutoScore = Value
+	end,
+})
+
+-- // Auto score
+
+-- One shot per turn, and only while it is our turn. core.Solve() returns nil
+-- when the board has no goal in it, so it retries a couple of times before
+-- giving the turn up.
+local LastTurn = -1
+local Attempts = 0
+
+task.spawn(function()
+	while true do
+		task.wait(0.5)
+
+		if not config.Goals.AutoScore then
+			continue
+		end
+		if not core.IsMyTurn() then
+			continue
+		end
+
+		if core.turnID ~= LastTurn then
+			LastTurn = core.turnID
+			Attempts = 0
+			task.wait(config.Goals.Delay)
+		elseif Attempts >= config.Goals.Attempts then
+			continue
+		end
+
+		Attempts += 1
+		if Core.Score() ~= nil then
+			Attempts = config.Goals.Attempts
+		end
+	end
+end)

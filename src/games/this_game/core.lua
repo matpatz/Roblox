@@ -98,6 +98,44 @@ for _, Name in { "TurnOutcome", "TurnResolved" } do
 	end
 end
 
+-- // Turn
+
+-- MatchStart says which side we are, TurnStarted says whose turn it is.
+-- turnID bumps on every turn so callers can shoot exactly once per turn.
+core.mySide = nil
+core.turnSide = nil
+core.turnID = 0
+
+if Packets.MatchStart ~= nil then
+	pcall(function()
+		Packets.MatchStart.listen(function(Data: any)
+			core.mySide = Data.mySide
+		end)
+	end)
+end
+
+if Packets.TurnStarted ~= nil then
+	pcall(function()
+		Packets.TurnStarted.listen(function(Data: any)
+			core.turnSide = Data.side
+			core.turnID += 1
+		end)
+	end)
+end
+
+-- True while the server says it is our turn to shoot. If the script was
+-- injected mid-match MatchStart was missed and mySide is unknown, so any turn
+-- counts as ours and the server just ignores a shot that wasn't ours.
+function core.IsMyTurn(): boolean
+	if core.turnSide == nil then
+		return false
+	end
+	if core.mySide == nil then
+		return true
+	end
+	return core.turnSide == core.mySide
+end
+
 -- // Simulation
 
 -- Replay a shot on a copy of the board; returns whether it scores for us and

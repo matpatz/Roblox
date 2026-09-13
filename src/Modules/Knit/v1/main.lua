@@ -63,4 +63,6 @@ Knit.services = Knit.require(script, "services", {
 })
 Knit.cache = Knit.require(script, "cache")
 
+Knit.wrappers = Knit.require(script, "function_wrappers")
+
 return Knit

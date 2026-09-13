@@ -1,8 +1,11 @@
 local wrappers = {}
 local services = shared.Knit.services
 
-wrappers.cloneref = function(x: Instance): Instance
-    return services.x
+wrappers.cloneref = function(x: string | Instance): Instance
+    if type(x) == "string" then
+        return services[x]
+    end
+    return cloneref and cloneref(x) or x
 end
 
 local RbxAnalyticsService = services.RbxAnalyticsService

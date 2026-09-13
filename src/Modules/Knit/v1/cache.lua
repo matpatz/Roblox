@@ -1,6 +1,8 @@
 local cache = {}
 
-local cached = {}
+local cached = {
+    keys = {}
+}
 _G.cached = {}
 
 local task_delay = task.delay
@@ -18,7 +20,7 @@ local function setcache(cache_table, cache_time)
         end
     })
 end
-setcache(cached, 1)
+setcache(cached.keys, 1)
 
 cache.get = function(key)
     return cached["keys"][key]

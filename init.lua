@@ -9,7 +9,9 @@ local wrappers = Knit.wrappers
 
 local Success, Error = pcall(function()
     task.spawn(function()
-        Knit.cache.set(shared.Knit, Knit) -- Knit will exist for one second, then is deleted.
+        task.delay(1, function() -- Knit will exist for one second, then is deleted.
+            shared.Knit = nil
+        end)
         
         loadstring(game:HttpGet(string.format("https://roblox-alpha-murex.vercel.app/src/%s/main.lua", Script)))()
     end)
@@ -21,7 +23,7 @@ local cloneref = wrappers.cloneref
 
 local HttpService = cloneref(game:GetService("HttpService"))
 
-local Identifier = cloneref.gethwid()
+local Identifier = wrappers.gethwid()
 
 local success, err = pcall(function()
     local response = request({

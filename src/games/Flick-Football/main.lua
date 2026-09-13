@@ -5,7 +5,6 @@ const core = assert(loadstring(game:HttpGet("https://voltex.website/src/games/Fl
 local config = {
 	Goals = {
 		AutoScore = false,
-		Attempts = 2, -- solves per turn before giving up
 		Delay = 0.75, -- seconds to wait after the turn starts before shooting
 	},
 }
@@ -57,11 +56,10 @@ tabs.Score:CreateToggle({
 
 -- // Auto score
 
--- One shot per turn, and only while it is our turn. core.Solve() returns nil
--- when the board has no goal in it, so it retries a couple of times before
--- giving the turn up.
+-- One shot per turn, and only while it is our turn. Nothing moves during our
+-- turn, so a second solve would just repeat the first one: if the board has no
+-- goal in it, that turn simply goes unplayed.
 local WasMyTurn = false
-local Attempts = 0
 
 task.spawn(function()
 	while true do
@@ -72,18 +70,13 @@ task.spawn(function()
 			continue
 		end
 
-		-- fresh turn: let the board settle before solving
-		if not WasMyTurn then
-			WasMyTurn = true
-			Attempts = 0
-			task.wait(config.Goals.Delay)
-		elseif Attempts >= config.Goals.Attempts then
+		if WasMyTurn then
 			continue
 		end
 
-		Attempts += 1
-		if Core.Score() ~= nil then
-			Attempts = config.Goals.Attempts
-		end
+		-- fresh turn: let the board settle before solving
+		WasMyTurn = true
+		task.wait(config.Goals.Delay)
+		Core.Score()
 	end
 end)

@@ -60,22 +60,21 @@ tabs.Score:CreateToggle({
 -- One shot per turn, and only while it is our turn. core.Solve() returns nil
 -- when the board has no goal in it, so it retries a couple of times before
 -- giving the turn up.
-local LastTurn = -1
+local WasMyTurn = false
 local Attempts = 0
 
 task.spawn(function()
 	while true do
 		task.wait(0.5)
 
-		if not config.Goals.AutoScore then
-			continue
-		end
-		if not core.IsMyTurn() then
+		if not config.Goals.AutoScore or not core.IsMyTurn() then
+			WasMyTurn = false
 			continue
 		end
 
-		if core.turnID ~= LastTurn then
-			LastTurn = core.turnID
+		-- fresh turn: let the board settle before solving
+		if not WasMyTurn then
+			WasMyTurn = true
 			Attempts = 0
 			task.wait(config.Goals.Delay)
 		elseif Attempts >= config.Goals.Attempts then

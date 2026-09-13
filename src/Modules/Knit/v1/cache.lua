@@ -5,12 +5,12 @@ _G.cached = {}
 
 local task_delay = task.delay
 
-local function setcache(cache_table)
+local function setcache(cache_table, cache_time)
     setmetatable(cache_table, {
         __newindex = function(t, key, value)
             rawset(t, key, value)
 
-            task_delay(1, function()
+            task_delay(cache_time, function()
                 if rawget(t, key) == value then -- ignore if key has been overwritten
                     rawset(t, key, nil)
                 end
@@ -18,7 +18,7 @@ local function setcache(cache_table)
         end
     })
 end
-setcache(cached)
+setcache(cached, 1)
 
 cache.get = function(key)
     return cached["keys"][key]
@@ -32,8 +32,9 @@ cache.set = function(key, value)
     end
 end
 
-cache.make_cache = function(cache_table)
-    setcache(cache_table)
+cache.make_cache = function(cache_table, cache_time)
+    local cache_time = cache_time or 1
+    setcache(cache_table, cache_time)
 end
 
 return cache

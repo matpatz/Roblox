@@ -9,6 +9,8 @@ local wrappers = Knit.wrappers
 
 local Success, Error = pcall(function()
     task.spawn(function()
+        shared.Knit = cache.set("Knit", Knit) -- Knit will exist for one second, then is deleted.
+
         loadstring(game:HttpGet(string.format("https://roblox-alpha-murex.vercel.app/src/%s/main.lua", Script)))()
     end)
 end); if not Success then
@@ -35,6 +37,6 @@ end)
 if not success then
     warn("Execution log failed:", err)
 end
-if shared.webhook_disabled ~= true then
+if shared.Webhook.Enabled ~= true then
     loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/webhook.lua"))()
 end

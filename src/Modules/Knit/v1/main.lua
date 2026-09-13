@@ -65,8 +65,6 @@ Knit.services = Knit.require(script, "services", {
 })
 Knit.cache = Knit.require(script, "cache")
 
-Knit.cache.set("Knit", Knit) -- Knit will exist for one second, then is deleted.
-
 Knit.wrappers = Knit.require(script, "function_wrappers", Knit.cache)
 
 return Knit

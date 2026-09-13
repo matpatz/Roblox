@@ -4,6 +4,7 @@ instead of loadstirng maxxing you will call:
 
 ```lua
 const Options = {
+    "main",
     "core",
     "utils"
 }

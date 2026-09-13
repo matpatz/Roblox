@@ -6,7 +6,7 @@ local Knit = loadstring(game:HttpGet("https://voltex.website/src/Modules/Knit/in
     
 local Success, Error = pcall(function()
     task.spawn(function()
-        Knit.cache.set(_G.Knit) -- Knit will exist for one second, then is deleted.
+        Knit.cache.set(shared.Knit, Knit) -- Knit will exist for one second, then is deleted.
         
         loadstring(game:HttpGet(string.format("https://roblox-alpha-murex.vercel.app/src/%s/main.lua", Script)))()
     end)

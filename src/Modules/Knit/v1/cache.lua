@@ -3,7 +3,7 @@ local cache = {}
 local cached = {
     keys = {}
 }
-_G.cached = {}
+-- _G.cached = {}
 
 local task_delay = task.delay
 

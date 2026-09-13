@@ -1,10 +1,9 @@
 local wrappers = {}
-local cache = getgenv().configurable
-local services = cache.get("Knit").services
+local services = shared.Knit.services
 
 wrappers.cloneref = function(x: string | Instance): Instance
     if type(x) == "string" then
-        return services[x]
+        return services[x] -- input real service names ("CoreGui", "ReplicatedStorage", etc.)
     end
     return cloneref and cloneref(x) or x
 end

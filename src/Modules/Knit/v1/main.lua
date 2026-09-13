@@ -1,6 +1,7 @@
 local Knit = {
     services = {},
-    cache = {}
+    cache = {},
+    wrappers = {}
 }
 local script: string = "Modules/Knit/v1"
 

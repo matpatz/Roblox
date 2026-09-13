@@ -59,6 +59,10 @@ Knit.require = function(script: string, module: string, configurable: table?)
     until
         isscript(script, module)
     
+    if not configurable then
+        configurable = nil
+    end
+
     return loadscript(script, module, configurable)
 end
 

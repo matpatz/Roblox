@@ -35,7 +35,7 @@ local function loadscript(script, module, configurable)
     end
 
     if isscript(script, module) then
-        local compiled = dofile(`voltex/{script}/{module}.lua`)
+        local compiled = loadstring(readfile(`voltex/{script}/{module}.lua`), `voltex/{script}/{module}.lua`)()
  
         return compiled
     end
@@ -71,6 +71,8 @@ Knit.cache = Knit.require(script, "cache")
 Knit.services = Knit.require(script, "services", {
     PlayerHelper = false
 })
+
+shared.Knit = Knit
 
 Knit.wrappers = Knit.require(script, "function_wrappers")
 

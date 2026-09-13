@@ -62,11 +62,12 @@ Knit.require = function(script: string, module: string, configurable: table?)
     return loadscript(script, module, configurable)
 end
 
+Knit.cache = Knit.require(script, "cache")
+
 Knit.services = Knit.require(script, "services", {
     PlayerHelper = false
 })
-Knit.cache = Knit.require(script, "cache")
 
-Knit.wrappers = Knit.require(script, "function_wrappers", Knit.cache)
+Knit.wrappers = Knit.require(script, "function_wrappers")
 
 return Knit

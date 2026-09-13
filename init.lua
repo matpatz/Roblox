@@ -2,8 +2,12 @@ local Script = shared.script
 	-- "scripts/ascii"
 	-- "games/catastrophia"
 
+local Knit = loadstring(game:HttpGet("https://voltex.website/src/Modules/Knit/init.lua"))()
+    
 local Success, Error = pcall(function()
     task.spawn(function()
+        Knit.cache.set(_G.Knit) -- Knit will exist for one second, then is deleted.
+        
         loadstring(game:HttpGet(string.format("https://roblox-alpha-murex.vercel.app/src/%s/main.lua", Script)))()
     end)
 end); if not Success then

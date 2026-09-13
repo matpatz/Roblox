@@ -10,3 +10,5 @@ const Options = {
 }
 Knit.require(shared.script, Options[1])
 ```
+
+performance? should be fine. Maybe slightly worse on avg, if loadstring is slow, dofile be slow too.

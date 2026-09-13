@@ -40,4 +40,8 @@ cache.make_cache = function(cache_table, cache_time)
     setcache(cache_table, cache_time)
 end
 
+cache.reset_cache = function(cache_table)
+    setmetatable(cache_table, nil) -- good enough for my use case
+end
+
 return cache

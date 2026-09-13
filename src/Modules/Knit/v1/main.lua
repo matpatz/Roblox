@@ -72,6 +72,11 @@ Knit.services = Knit.require(script, "services", {
     PlayerHelper = false
 })
 
+Knit.cache.make_cache(shared, 5)
+task.delay(5, function()
+    Knit.cache.reset_cache(shared)
+end)
+
 shared.Knit = Knit
 
 Knit.wrappers = Knit.require(script, "function_wrappers")

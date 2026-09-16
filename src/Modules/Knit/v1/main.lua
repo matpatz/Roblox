@@ -75,7 +75,7 @@ Knit.git = Knit.require(script, "git")
 
 -- so this COULD be detected, but is fairly unlikely so whatever
 
-Knit.cache.make_cache(shared, 5)
+Knit.cache.make_cache(shared, 20)
 task.delay(5, function()
     Knit.cache.reset_cache(shared)
 end)

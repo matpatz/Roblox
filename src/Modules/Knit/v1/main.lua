@@ -30,7 +30,7 @@ local function isscript(script, module)
 end
 
 local function loadscript(script, module, configurable)
-    if configurable then
+    if configurable and Knit.cache and Knit.cache.set then
         Knit.cache.set(`{module}/configurable`, configurable) -- any temp value, like getgenv().config = {} -- well you get the point
     end
 

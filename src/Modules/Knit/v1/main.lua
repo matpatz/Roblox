@@ -34,12 +34,16 @@ local function loadscript(script, module, configurable)
         Knit.cache.set(`{module}/configurable`, configurable) -- any temp value, like getgenv().config = {} -- well you get the point
     end
 
-    if isscript(script, module) then
-        local compiled = loadstring(readfile(`voltex/{script}/{module}.lua`), `voltex/{script}/{module}.lua`)()
- 
-        return compiled
+    if not isscript(script, module) then
+        return nil
     end
-    return nil
+
+    local chunk = loadstring(readfile(`voltex/{script}/{module}.lua`), `voltex/{script}/{module}.lua`)
+    if not chunk then
+        return nil
+    end
+
+    return chunk()
 end
 
 local modules = {
@@ -49,18 +53,19 @@ local modules = {
 }
 
 Knit.require = function(script: string, module: string, configurable: table?)
-    local script_content = game:HttpGet(`https://voltex.website/src/{script}/{module}.lua`)
-    if not writescript(script, module, script_content) then
-        return loadstring(script_content)()
-    end
-    
-    repeat
-        task.wait()
-    until
-        isscript(script, module)
-    
-    if not configurable then
-        configurable = nil
+    -- local copy first, only hit the website for what we dont already have
+    if not isscript(script, module) then
+        local script_content = game:HttpGet(`https://voltex.website/src/{script}/{module}.lua`)
+
+        -- a 404 still returns a body, dont cache something that wont compile
+        local chunk = loadstring(script_content)
+        if not chunk then
+            return nil
+        end
+
+        if not writescript(script, module, script_content) then
+            return chunk()
+        end
     end
 
     return loadscript(script, module, configurable)

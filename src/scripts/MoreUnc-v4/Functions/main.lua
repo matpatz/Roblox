@@ -1,7 +1,6 @@
 local init = {}
 
 local Knit = shared.Knit
-
 local globals = Knit.require(`{shared.script}/Modules`, "globals")
 
 --[[ {

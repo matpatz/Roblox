@@ -71,6 +71,9 @@ Knit.cache = Knit.require(script, "cache")
 Knit.services = Knit.require(script, "services", {
     PlayerHelper = false
 })
+Knit.git = Knit.require(script, "git")
+
+-- so this COULD be detected, but is fairly unlikely so whatever
 
 Knit.cache.make_cache(shared, 5)
 task.delay(5, function()

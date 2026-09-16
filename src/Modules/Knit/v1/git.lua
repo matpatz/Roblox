@@ -62,7 +62,8 @@ function git.clonelocal(script: string, module: string)
     return listfiles("src/" .. script .. "/" .. module)
 end
 
--- walks the github tree, writes every .lua to voltex/ and returns { module = loaded }
+-- walks the github tree, writes every .lua to voltex/{script}/{module}.lua and
+-- returns { ["crypt/encrypt"] = true, ... } -- so the caller can Knit.require each key
 function git.clone(script: string, module: string?)
     local path = if module then `{script}/{module}` else script
     local entries = listcontents(`{ROOT}/{path}`)
@@ -71,7 +72,7 @@ function git.clone(script: string, module: string?)
     end
 
     local dest = `{MIRROR}/{path}`
-    local cloned: { [string]: any } = {}
+    local cloned: { [string]: boolean } = {}
 
     local function cloneentry(entry: any, dir: string, name: string?)
         if entry.type == "dir" then
@@ -98,13 +99,7 @@ function git.clone(script: string, module: string?)
             writefile(`{dir}/{entry.name}`, content) -- voltex/{script}/{module}.lua, same as Knit.require
         end
 
-        local chunk = loadstring(content)
-        local ok, result = false, nil
-        if chunk then
-            ok, result = pcall(chunk)
-        end
-
-        cloned[rel] = if ok then result else true
+        cloned[rel] = true
     end
 
     for _, entry in next, entries do

@@ -35,4 +35,11 @@ instances.query = function(classname: string)
     return game:QueryDesendants(classname)
 end
 
+instances.assign_ui_corner = function(parent, radius: table)
+    local UiCorner = instances.new("UiCorner")
+    UiCorner.CornerRadius = radius
+
+    return UiCorner
+end
+
 return instances

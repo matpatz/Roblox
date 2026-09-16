@@ -11,7 +11,6 @@ end
 local RbxAnalyticsService = services.RbxAnalyticsService
 
 wrappers.gethwid = function()
-    print(services)
     return if gethwid then gethwid() else RbxAnalyticsService:GetClientId()
 end
 

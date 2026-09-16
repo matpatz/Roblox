@@ -9,6 +9,8 @@ local task_delay = task.delay
 
 local function setcache(cache_table, cache_time)
     setmetatable(cache_table, {
+        -- __metatable = "<protected>",
+
         __newindex = function(t, key, value)
             rawset(t, key, value)
 

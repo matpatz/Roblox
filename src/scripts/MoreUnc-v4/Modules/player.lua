@@ -1,12 +1,11 @@
 local player = {}
 
-player.localplayer = function()
-end
+local LocalPlayer
+player.localplayer = LocalPlayer
 
-player.Character = function()
-end
+local Character
+player.Character = Character
 
-player.HumanoidRootPart = function()
-end
+player.HumanoidRootPart = HumanoidRootPart
 
 return player

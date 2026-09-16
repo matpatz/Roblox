@@ -14,6 +14,4 @@ wrappers.gethwid = function()
     return if gethwid then gethwid() else RbxAnalyticsService:GetClientId()
 end
 
-
-
 return wrappers

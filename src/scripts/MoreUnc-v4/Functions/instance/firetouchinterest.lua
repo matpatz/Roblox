@@ -5,6 +5,6 @@ return function(part: Instance, target: Instance, touch: boolean)
     if touch then
         firesignal(target.Touched, part)
     else
-        firesignal(target.TouchEnded,part)
+        firesignal(target.TouchEnded, part)
     end
 end

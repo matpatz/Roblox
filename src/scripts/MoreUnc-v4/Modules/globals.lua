@@ -7,6 +7,9 @@ _G.globals = { -- this could, and probably should be a local
     ["l_closures"] = {},
 
     ["actor_threads"] = {},
+
+    ["files"] = {},
+    ["folders"] = {},
 }
 
 globals.set = function(key: string, value)

@@ -1,5 +1,6 @@
 local Knit = shared.Knit
 local instances = Knit.require(`{shared.script}/Modules`, "instances")
+local ui = Knit.require(`{shared.script}/Modules`, "ui")
 
 return function(text: string, caption: string, flag: number)
     local Window = instances.new("Frame")
@@ -10,7 +11,7 @@ return function(text: string, caption: string, flag: number)
     Window.BorderSizePixel = 0
     Window.ClipsDescendants = true
 
-    instances.assign_ui_corner(Window, {0, 8})
+    ui.assign_ui_corner(Window, {0, 8})
 
     local top_strip = Instance.new("Frame")
     top_strip.Size   = UDim2.fromOffset(349, 35)
@@ -18,7 +19,7 @@ return function(text: string, caption: string, flag: number)
     top_strip.BorderSizePixel = 0
     top_strip.ClipsDescendants = true
 
-    instances.assign_ui_corner(top_strip, {0, 8})
+    ui.assign_ui_corner(top_strip, {0, 8})
 
     local title: TextLabel = instances.new("TextLabel")
     title.Size = UDim2.fromOffset(260, 18)
@@ -42,7 +43,7 @@ return function(text: string, caption: string, flag: number)
     close.TextColor3 = Color3.fromRGB(0, 0, 0)
     close.Parent = Window
     close.MouseButton1Click:Connect(function()
-        Gui:Destroy()
+        Window:Destroy()
     end)
     close.MouseEnter:Connect(function()
         close.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
@@ -55,7 +56,7 @@ return function(text: string, caption: string, flag: number)
     message.Size = UDim2.fromOffset(250, 20)
     message.Position = UDim2.fromOffset(54, 58)
     message.BackgroundTransparency = 1
-    message.Text = Text
+    message.Text = text
     message.Font = Enum.Font.SourceSans
     message.TextSize = 14
     message.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -67,12 +68,12 @@ return function(text: string, caption: string, flag: number)
     bottom_strip.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
     bottom_strip.BorderSizePixel = 0
     bottom_strip.ClipsDescendants = true
-    instances.assign_ui_corner(bottom_strip, {0, 8}) -- or something
+    ui.assign_ui_corner(bottom_strip, {0, 8}) -- or something
 
     local function CreateButton(text: string, Position: number): TextButton
         local button = instances.new("TextButton", true, Window)
         button.Size = UDim2.fromOffset(72, 26)
-        button.Position = UDim2.fromOffset(XPos, 5.8)
+        button.Position = UDim2.fromOffset(Position, 5.8)
         button.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
         button.Text = text
         button.Font = Enum.Font.SourceSans
@@ -85,7 +86,7 @@ return function(text: string, caption: string, flag: number)
         UiCorner.Parent = button
 
         local UIStroke = instances.new("UIStroke", true, button)
-        UIStroke.Color  = Color3.fromRGB(200, 200, 200)
+        UIStroke.Color = Color3.fromRGB(200, 200, 200)
         UIStroke.Thickness = 1
         UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
@@ -94,6 +95,6 @@ return function(text: string, caption: string, flag: number)
 
     local ok_button = CreateButton("OK", 263)
     ok_button.MouseButton1Click:Connect(function()
-        Gui:Destroy()
+        Window:Destroy()
     end)
 end

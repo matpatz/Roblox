@@ -1,17 +1,34 @@
 local Knit = shared.Knit
-local random_string = Knit.require(`{shared.script}/crypt`, "random_string")
-local secure_parent = Knit.require(`{shared.script}/instance`, "gethui")()
+local secure_parent = Knit.require(`{shared.script}/Functions/instance`, "gethui")()
 
 local instances = {}
 
+local Random = Random.new()
+
 local id = 0
+
+local function random_string(length: number): string
+    local charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local parts = table.create(length)
+
+    for index = 1, length do
+        local at = Random:NextInteger(1, #charset)
+        parts[index] = charset:sub(at, at)
+    end
+
+    return table.concat(parts)
+end
+
 instances.new = function(classname: string, random_name: boolean?): Instance
     local instance = Instance.new(classname)
+
     if random_name then
-        instance.Name = random_string()
+        instance.Name = random_string(16)
     else
-        instance.Name = tostring(id += 1)
+        id += 1
+        instance.Name = tostring(id)
     end
+
     instance.Parent = secure_parent
 
     return instance
@@ -20,7 +37,7 @@ end
 instances.get = function(target: Instance | string): Instance
     local found_instance
     if type(target) == "userdata" then
-        found_instance = secure_parent[instance.Name]
+        found_instance = secure_parent[target]
     else -- string
         found_instance = secure_parent[target]
     end
@@ -32,14 +49,7 @@ instances.remove = function(instance: Instance)
 end
 
 instances.query = function(classname: string)
-    return game:QueryDesendants(classname)
-end
-
-instances.assign_ui_corner = function(parent, radius: table)
-    local UiCorner = instances.new("UiCorner")
-    UiCorner.CornerRadius = radius
-
-    return UiCorner
+    return game:QueryDescendants(classname)
 end
 
 return instances

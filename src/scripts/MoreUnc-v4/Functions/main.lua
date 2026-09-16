@@ -29,8 +29,9 @@ init.getfunction = function(name: string, tbl: string?) -- function
 end
 
 init.init = function()
-    functions = Knit.git.clone("{shared.script}/Functions")
+    functions = Knit.git.clone(`{shared.script}/Functions`)
     for func in next, functions do
+        print("Loading function:", func)
         Knit.require(`{shared.script}/Functions`, func)
     end
 end

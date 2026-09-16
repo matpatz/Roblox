@@ -4,21 +4,35 @@ local secure_parent = Knit.require(`{shared.script}/instance`, "gethui")()
 
 local instances = {}
 
-instances.new = function(classname: string): Instance
+local id = 0
+instances.new = function(classname: string, random_name: boolean?): Instance
     local instance = Instance.new(classname)
-    instance.Name = random_string()
+    if random_name then
+        instance.Name = random_string()
+    else
+        instance.Name = tostring(id += 1)
+    end
     instance.Parent = secure_parent
 
     return instance
 end
 
-instances.get = function(instance: Instance): Instance
-    local instance = secure_parent[instance.Name]
-    return instance
+instances.get = function(target: Instance | string): Instance
+    local found_instance
+    if type(target) == "userdata" then
+        found_instance = secure_parent[instance.Name]
+    else -- string
+        found_instance = secure_parent[target]
+    end
+    return found_instance
 end
 
 instances.remove = function(instance: Instance)
     instance:Destroy()
+end
+
+instances.query = function(classname: string)
+    return game:QueryDesendants(classname)
 end
 
 return instances

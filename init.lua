@@ -1,4 +1,4 @@
-local Script = shared.script --
+local Script = shared.script
 	-- "scripts/ascii"
 	-- "games/catastrophia"
 

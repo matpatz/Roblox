@@ -13,6 +13,16 @@ local globals = Knit.require(`{shared.script}/Modules`, "globals")
 local functions = {}
 local pending = {}
 
+-- these categories also get mirrored onto getgenv() as a namespace,
+-- so getgenv().crypt.hash and getgenv().cache.cloneref reach the same tables
+local exported = {
+    ["cache"] = true,
+    ["Drawing"] = true,
+    ["debug"] = true,
+    ["crypt"] = true,
+    ["raknet"] = true,
+}
+
 local function register(path: string, value)
     pending[path] = nil
 
@@ -25,6 +35,10 @@ local function register(path: string, value)
 
     functions[category] = functions[category] or {}
     functions[category][name] = value
+
+    if exported[category] then -- same table, so later functions show up too
+        getgenv()[category] = functions[category]
+    end
 
     if type(value) == "function" then -- flat lookup by bare name
         functions[name] = value

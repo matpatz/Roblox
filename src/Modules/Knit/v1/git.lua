@@ -51,7 +51,7 @@ function git.clonelocal(script: string, module: string)
     return listfiles("src/" .. script .. "/" .. module)
 end
 
--- walks the github tree, writes every .lua to voltex/{script}/{module}.lua and
+-- recreates the folders under voltex/{script}/{module}/, writes every .lua there and
 -- returns { ["crypt/encrypt"] = true, ... } -- so the caller can Knit.require each key
 function git.clone(script: string, module: string?)
     local path = if module then `{script}/{module}` else script
@@ -72,8 +72,22 @@ function git.clone(script: string, module: string?)
     local dest = `{MIRROR}/{path}`
     local cloned: { [string]: boolean } = {}
 
+    ensurefolder(dest)
+
     for _, entry in next, decoded.tree do
-        if entry.type ~= "blob" or entry.path:sub(-4) ~= ".lua" or entry.path:sub(1, #prefix) ~= prefix then
+        if entry.path:sub(1, #prefix) ~= prefix then
+            continue
+        end
+
+        local name = entry.path:sub(#prefix + 1)
+
+        if entry.type == "tree" then
+            -- git returns a folder before its contents, so this builds top down
+            ensurefolder(`{dest}/{name}`)
+            continue
+        end
+
+        if entry.type ~= "blob" or name:sub(-4) ~= ".lua" then
             continue
         end
 
@@ -82,15 +96,15 @@ function git.clone(script: string, module: string?)
             continue
         end
 
-        local name = entry.path:sub(#prefix + 1, -5) -- strip the src/ prefix and the .lua
-        local file = `{dest}/{name}.lua`
+        local key = name:sub(1, -5) -- strip the .lua
+        local file = `{dest}/{key}.lua`
 
         if writefile then
             ensurefolder(parent(file) or dest)
             writefile(file, content) -- voltex/{script}/{module}.lua, same as Knit.require
         end
 
-        cloned[name] = true
+        cloned[key] = true
     end
 
     return cloned

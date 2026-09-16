@@ -52,7 +52,16 @@ local modules = {
     "utils"
 }
 
+local loaded: { [string]: { value: any } } = {}
+
 Knit.require = function(script: string, module: string, configurable: table?)
+    -- one instance per module, otherwise every require re-runs it (Modules/globals.lua
+    -- rebuilds _G.globals on load, so a second require would wipe it)
+    local name = `{script}/{module}`
+    if loaded[name] then
+        return loaded[name].value
+    end
+
     -- local copy first, only hit the website for what we dont already have
     if not isscript(script, module) then
         local script_content = game:HttpGet(`https://voltex.website/src/{script}/{module}.lua`)
@@ -64,11 +73,17 @@ Knit.require = function(script: string, module: string, configurable: table?)
         end
 
         if not writescript(script, module, script_content) then
-            return chunk()
+            local value = chunk()
+            loaded[name] = { value = value }
+
+            return value
         end
     end
 
-    return loadscript(script, module, configurable)
+    local value = loadscript(script, module, configurable)
+    loaded[name] = { value = value }
+
+    return value
 end
 
 Knit.cache = Knit.require(script, "cache")

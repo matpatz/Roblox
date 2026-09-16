@@ -35,25 +35,14 @@ local function httpget(url: string): string?
     return if ok then body else nil
 end
 
--- contents api, a lone file comes back as an object instead of an array
-local function listcontents(path: string): { [number]: any }?
-    local body = httpget(`https://api.github.com/repos/{OWNER}/{REPO}/contents/{path}?ref={BRANCH}`)
-    if not body then
-        return nil
-    end
-
-    local ok, decoded = pcall(HttpService.JSONDecode, HttpService, body)
-    if not ok or type(decoded) ~= "table" then
-        return nil
-    end
-
-    return if decoded.type == "file" then { decoded } else decoded
-end
-
 local function ensurefolder(dir: string)
     if isfolder and makefolder and not isfolder(dir) then
         makefolder(dir)
     end
+end
+
+local function parent(path: string): string?
+    return path:match("^(.*)/[^/]*$")
 end
 
 -- @param1 shared.script ("scripts/MoreUnc-v4")
@@ -66,44 +55,42 @@ end
 -- returns { ["crypt/encrypt"] = true, ... } -- so the caller can Knit.require each key
 function git.clone(script: string, module: string?)
     local path = if module then `{script}/{module}` else script
-    local entries = listcontents(`{ROOT}/{path}`)
-    if not entries then
+    local prefix = `{ROOT}/{path}/`
+
+    -- one request for the whole repo instead of one per folder,
+    -- github only gives us 60 api calls an hour unauthenticated
+    local body = httpget(`https://api.github.com/repos/{OWNER}/{REPO}/git/trees/{BRANCH}?recursive=1`)
+    if not body then
+        return nil
+    end
+
+    local ok, decoded = pcall(HttpService.JSONDecode, HttpService, body)
+    if not ok or type(decoded) ~= "table" or type(decoded.tree) ~= "table" then
         return nil
     end
 
     local dest = `{MIRROR}/{path}`
     local cloned: { [string]: boolean } = {}
 
-    local function cloneentry(entry: any, dir: string, name: string?)
-        if entry.type == "dir" then
-            ensurefolder(dir)
-            for _, child in next, listcontents(entry.path) or {} do
-                cloneentry(child, `{dir}/{child.name}`, if name then `{name}/{child.name}` else child.name)
-            end
-            return
+    for _, entry in next, decoded.tree do
+        if entry.type ~= "blob" or entry.path:sub(-4) ~= ".lua" or entry.path:sub(1, #prefix) ~= prefix then
+            continue
         end
 
-        if entry.type ~= "file" or entry.name:sub(-4) ~= ".lua" then
-            return
-        end
-
-        local content = httpget(entry.download_url)
+        local content = httpget(`https://raw.githubusercontent.com/{OWNER}/{REPO}/{BRANCH}/{entry.path}`)
         if not content then
-            return
+            continue
         end
 
-        local rel = if name then `{name}/{entry.name}` else entry.name
+        local name = entry.path:sub(#prefix + 1, -5) -- strip the src/ prefix and the .lua
+        local file = `{dest}/{name}.lua`
 
         if writefile then
-            ensurefolder(dir)
-            writefile(`{dir}/{entry.name}`, content) -- voltex/{script}/{module}.lua, same as Knit.require
+            ensurefolder(parent(file) or dest)
+            writefile(file, content) -- voltex/{script}/{module}.lua, same as Knit.require
         end
 
-        cloned[rel] = true
-    end
-
-    for _, entry in next, entries do
-        cloneentry(entry, dest, nil)
+        cloned[name] = true
     end
 
     return cloned

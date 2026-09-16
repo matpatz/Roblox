@@ -1,5 +1,5 @@
 local Knit = shared.Knit
-local init = Knit.require(`{shared.script}/Functions`, "init")
+local init = Knit.require(`{shared.script}/Functions`, "main")
     
 local base64encode = init.getfunction("base64encode", "crypt")
 

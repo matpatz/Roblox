@@ -1,10 +1,10 @@
 local Knit = shared.Knit
-local getfunction = Knit.require(`{shared.script}/Functions`, "init")
+local getfunction = Knit.require(`{shared.script}/Functions`, "main").getfunction
 
 local firesignal = getfunction("firesignal")
 
-local players = Knit.require(`{shared.script}/Modules`, "players")
+local player = Knit.require(`{shared.script}/Modules`, "player")
 
 return function(prompt: ProximityPrompt)
-    firesignal(prompt.Triggered, players.localplayer)
+    firesignal(prompt.Triggered, player.localplayer)
 end

@@ -1,5 +1,5 @@
 local Knit = shared.Knit
-local getfunction = Knit.require(`{shared.script}/Functions`, "init")
+local getfunction = Knit.require(`{shared.script}/Functions`, "main").getfunction
 
 local gethiddenproperty = getfunction("gethiddenproperty")
 

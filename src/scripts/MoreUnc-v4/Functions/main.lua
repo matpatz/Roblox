@@ -61,6 +61,10 @@ local function register(path: string, value: any)
 
     if isfunction then -- flat lookup by bare name
         functions[name] = value
+
+        if env[name] == nil then -- never clobber an executor native
+            env[name] = value
+        end
     end
 
     return value

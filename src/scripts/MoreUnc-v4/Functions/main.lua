@@ -89,25 +89,39 @@ init.getfunction = function(name: string, tbl: string?): (...any) -> ...any?
 end
 
 init.init = function()
-    for path in pairs(Knit.git.clone(`{shared.script}/Functions`) or {}) do
+    local cloned = Knit.git.clone(`{shared.script}/Functions`) or {}
+
+    for path in pairs(cloned) do
         pending[path] = true
     end
 
     -- snapshot, register() clears pending as it goes
     local paths = table.clone(pending)
+    local total, loaded = 0, 0
 
     for path in pairs(paths) do
+        total += 1
         print(`Loading function: {path}`)
 
         -- one half finished file shouldnt take the whole loader down with it
         local ok, value = pcall(Knit.require, `{shared.script}/Functions`, path)
+
         if ok and value then
-            register(path, value)
+            local registered, err = pcall(register, path, value)
+
+            if registered then
+                loaded += 1
+            else
+                pending[path] = nil
+                warn(`failed to register {path}: {err}`)
+            end
         else
             pending[path] = nil
             warn(`failed to load {path}: {if ok then "module returned nil" else value}`)
         end
     end
+
+    print(`loaded {loaded}/{total} functions`)
 
     return functions
 end

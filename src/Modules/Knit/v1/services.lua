@@ -1,6 +1,17 @@
---[[
-    local Knit = shared.Knit
-    getgenv().PlayerHelper = Knit.config.get("PlayerHelper")
-]]
+local services = {}
 
-return loadstring(game:HttpGet("https://voltex.website/src/Modules/Variables.lua"))()
+local Cache = {}
+setmetatable(services, {
+	__index = function(_, Index)
+		local Cached = Cache[Index]
+		if Cached then
+			return Cached
+		end
+		local Service = cloneref(game:GetService(Index))
+		Cache[Index] = Service
+
+		return Cache[Index]
+	end
+})
+
+return services

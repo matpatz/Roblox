@@ -1,5 +1,5 @@
 local Knit = shared.Knit
-local getfunction = Knit.require(`{shared.script}/Functions`, "init").getfunction
+local getfunction = Knit.require(`{shared.script}/Functions`, "main").getfunction
 
 local setinfo = getfunction("setinfo", "debug")
 

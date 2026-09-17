@@ -18,7 +18,7 @@ tests.log = function(func, boolean, string)
     }
 end
 
-tests.test(func): (boolean, string?)
+tests.test = function(func): (boolean, string?)
     local name = debug.info(func, "n")
 
     if func then

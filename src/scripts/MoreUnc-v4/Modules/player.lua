@@ -1,11 +1,8 @@
-local player = {}
+local Knit = shared.Knit
+local player = Knit.player
 
-local LocalPlayer
-player.localplayer = LocalPlayer
+local lp = player.localplayer
 
-local Character
-player.Character = Character
-
-player.HumanoidRootPart = HumanoidRootPart
+player.localplayer = lp
 
 return player

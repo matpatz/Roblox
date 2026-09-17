@@ -1,7 +1,9 @@
+type func = typeof(function() end)
+
 local Knit = shared.Knit
 local globals = Knit.require(`{shared.script}/Modules`, "globals") 
 
-return function(object: function | table | thread)
+return function(object: func | table | thread)
     return globals.get("safeenv")
 end
 

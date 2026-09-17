@@ -5,11 +5,13 @@ local Script = shared.script
 local API_URL = "https://roblox-alpha-murex.vercel.app/api/v1/executions"
 
 local Knit = loadstring(game:HttpGet("https://voltex.website/src/Modules/Knit/init.lua"))()
+repeat task.wait() until Knit and Knit.wrappers and Knit.services and Knit.git -- and whatever
+
 local wrappers = Knit.wrappers
 
 local Success, Error = pcall(function()
     task.spawn(function()
-        shared.Knit = Knit.cache.set("Knit", Knit) -- Knit will exist for one second, then is deleted.
+        --shared.Knit = Knit.cache.set("Knit", Knit) -- Knit will exist for one second, then is deleted.
 
         loadstring(game:HttpGet(string.format("https://roblox-alpha-murex.vercel.app/src/%s/main.lua", Script)))()
     end)

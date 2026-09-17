@@ -11,6 +11,8 @@ local function getbytecode(func): string
     return `{debug.info(func, "l")}{#debug.info(func, "s")}`
 end
 
-return function(func: function): string
+type func = typeof(function() end)
+
+return function(func: func): string
     return hash(getbytecode(func), "sha384")
 end

@@ -6,7 +6,9 @@ local getrawmetatable = getfunction("getrawmetatable")
 local clonefunction = getfunction("clonefunction")
 local hookfunction = getfunction("hookfunction")
 
-return function(object: Instance | table | userdata, method: string, hook: function): table?
+type func = typeof(function() end)
+
+return function(object: Instance | table | userdata, method: string, hook: func): table?
     local foundmethod = getrawmetatable(object)[method]
     local clonedmethod = clonefunction(foundmethod)
     

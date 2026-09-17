@@ -1,3 +1,5 @@
-return function(function: function | number): {function} -- Impossible
+type func = typeof(function() end)
+
+return function(func: func | number): {func} -- Impossible
     return {}
 end

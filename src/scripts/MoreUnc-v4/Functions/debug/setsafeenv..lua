@@ -1,3 +1,5 @@
+type func = typeof(function() end)
+
 local Knit = shared.Knit
 local getfunction = Knit.require(`{shared.script}/Functions`, "main").getfunction
 local globals = Knit.require(`{shared.script}/Modules`, "globals") 
@@ -18,7 +20,7 @@ local function unlock()
     setrawmetatable(object, {})
 end
 
-return function(func: function | table | thread | boolean, safe: boolean?)
+return function(func: func | table | thread | boolean, safe: boolean?)
     if not object then
         object = getfenv()
     end

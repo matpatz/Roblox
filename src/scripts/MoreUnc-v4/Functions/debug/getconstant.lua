@@ -1,3 +1,5 @@
-return function(function: function | number, index: number): any -- Impossible
+type func = typeof(function() end)
+
+return function(func: func | number, index: number): any -- Impossible
 
 end

@@ -1,3 +1,5 @@
-return function (function: function | number): { any }
+type func = typeof(function() end)
+
+return function (func: func | number): { any }
     return {}
 end

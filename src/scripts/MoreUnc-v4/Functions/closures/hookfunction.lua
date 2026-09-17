@@ -3,7 +3,9 @@ local globals = Knit.require(`{shared.script}/Modules`, "globals")
 
 local hooks = globals.get("hooks")
 
-return function(func: function, hook: function)
+type func = typeof(function() end)
+
+return function(func: func, hook: func)
     if hooks[hook] then
         return
     end

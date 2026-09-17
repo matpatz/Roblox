@@ -1,3 +1,5 @@
+type func = typeof(function() end)
+
 local Knit = shared.Knit
 local init = Knit.require(`{shared.script}/Functions`, "main")
 
@@ -44,7 +46,7 @@ local function matches_table(value: table, options: { [string]: any }): boolean
     return true
 end
 
-local function matches_function(value: function, options: { [string]: any }): boolean
+local function matches_function(value: func, options: { [string]: any }): boolean
     if options.Name and debug.info(value, "n") ~= options.Name then
         return false
     end

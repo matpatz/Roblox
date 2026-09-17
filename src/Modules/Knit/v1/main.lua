@@ -72,7 +72,9 @@ Knit.require = function(script: string, module: string, configurable: table?)
             return nil
         end
 
-        if not writescript(script, module, script_content) then
+        -- writescript() only tells us writefile exists, not that the file landed
+        -- (missing folder, unwritable dir, ...) so dont trust it, check the disk
+        if not writescript(script, module, script_content) or not isscript(script, module) then
             local value = chunk()
             loaded[name] = { value = value }
 

@@ -86,6 +86,10 @@ Knit.require = function(script: string, module: string, configurable: table?)
     return value
 end
 
+Knit.getdir = function(script: string): string
+    return `voltex/{script}`
+end
+
 Knit.cache = Knit.require(script, "cache")
 
 Knit.services = Knit.require(script, "services", {

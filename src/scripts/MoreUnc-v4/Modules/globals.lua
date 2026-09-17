@@ -10,6 +10,8 @@ _G.globals = { -- this could, and probably should be a local
 
     ["files"] = {},
     ["folders"] = {},
+
+    ["safeenv"]
 }
 
 globals.set = function(key: string, value)

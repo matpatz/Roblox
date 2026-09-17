@@ -1,0 +1,12 @@
+return function(func: function, info: table)
+    -- hook getinfo, and info on func to return what we want
+end
+
+--[[ -- anything you would see in debug.getinfo
+local info = {
+  name = "bar",
+  source = "bar",
+  short_src = "bar",
+  currentline = 123
+}
+]]

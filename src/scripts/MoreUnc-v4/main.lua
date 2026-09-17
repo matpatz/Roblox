@@ -1,4 +1,4 @@
 local Knit = shared.Knit
-local init = Knit.require(`{shared.script}/Functions`, "main")
+local main = Knit.require(`{shared.script}/Functions`, "main")
 
-init.init()
+main.init()

@@ -101,11 +101,11 @@ init.init = function()
 
         -- one half finished file shouldnt take the whole loader down with it
         local ok, value = pcall(Knit.require, `{shared.script}/Functions`, path)
-        if ok then
+        if ok and value then
             register(path, value)
         else
             pending[path] = nil
-            warn(`failed to load {path}: {value}`)
+            warn(`failed to load {path}: {if ok then "module returned nil" else value}`)
         end
     end
 

@@ -5,7 +5,7 @@ local base64encode = init.getfunction("base64encode", "crypt")
 
 local RNG = Random.new(workspace:GetServerTimeNow())
 
-return function(length)
+return function(length): string
     local Generated = table.create(length)
     for i = 1, length do
         Generated[i] = string.char(RNG:NextInteger(0, 255))

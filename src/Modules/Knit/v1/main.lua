@@ -93,7 +93,9 @@ end
 Knit.cache = Knit.require(script, "cache")
 
 Knit.services = Knit.require(script, "services")
-Knit.player = Knit.require(script, "player")
+task.delay(0.2, function()
+    Knit.player = Knit.require(script, "player")
+end)
 
 Knit.git = Knit.require(script, "git")
 

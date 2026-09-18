@@ -1,21 +1,30 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
-_G.af = not _G.af
--- _G.ag = not _G.ag
+getgenv().Autofarm = true
 
-local rep = game:GetService("ReplicatedStorage")
+local Knit = shared.Knit
+local services = Knit.services
 
-while _G.af do
-    if _G.af then
-		local fps = game:GetService("Stats").Workspace.FPS:GetValue()
-        for i = 1, fps do rep.Remotes.MinigameEvent:FireServer(true) end -- less lag
+local ReplicatedStorage = services.ReplicatedStorage
+local Stats = services.Stats
 
-		if firesignal then
-			for i, v in pairs(game:GetService("Players").LocalPlayer.PlayerGui.Main.Minigame:GetChildren()) do
-				if v.Name ~= "Red" and v.Name ~= "Circle" then
-					firesignal(v.MouseButton1Click)
-				end
+local LocalPlayer = services.Players.LocalPlayer
+local PlaerGui = LocalPlayer.PlayerGui
+
+local Minigame = PlayerGui.Main.Minigame
+
+while task.wait() do
+	if not getgenv().Autofarm then
+		continue
+	end
+
+	local FPS = Stats.Workspace.FPS:GetValue()
+	for i = 1, FPS do
+		ReplicatedStorage.Remotes.MinigameEvent:FireServer(true)
+	end
+
+	if firesignal then
+		for i, v in next Minigame:GetChildren() do
+			if v.Name ~= "Red" and v.Name ~= "Circle" then
+				firesignal(v.MouseButton1Click)
 			end
 		end
 	end
@@ -33,6 +42,4 @@ while _G.af do
 		end
 		task.wait(1)
 	end --]]
-
-    task.wait()
 end

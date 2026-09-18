@@ -1,12 +1,12 @@
 local failed_response = {
     Success = false,
     StatusCode = 500,
-    StatusMessage = "somethingnotgood"
-    Body = nil
+    StatusMessage = "somethingnotgood",
+    Body = nil,
     Headers = {}, -- TODO: Get offical potassium headers
 }
 
-return function(options): table
+return function(options)
     local Method = options.Method
     local Url = options.Url
 
@@ -17,15 +17,15 @@ return function(options): table
     local response = {
         Success = true,
         StatusCode = 200,
-        StatusMessage = "Ok"
-        Body = ""
+        StatusMessage = "Ok",
+        Body = "",
         Headers = {}, -- TODO: Get offical potassium headers
     }
 
     if Method == "GET" then
-        response.Body = game:HttpGet(URL, true)
-    elseif Method = "POST" then
-        response.Body = game:HttpPost(URL, Body, Enum.HttpContentType.ApplicationUrlEncoded)
+        response.Body = game:HttpGetAsync(Url)
+    --elseif Method == "POST" then
+    --    response.Body = game:HttpPostAsync(Url, Enum.HttpContentType.ApplicationUrlEncoded)
     else
         error("Unsupported Method")
     end

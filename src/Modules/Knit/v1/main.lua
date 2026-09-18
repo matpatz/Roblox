@@ -101,14 +101,6 @@ end)
 
 Knit.git = Knit.require(script, "git")
 
-
--- so this COULD be detected, but is fairly unlikely so whatever -- or well im not actually sure
-
-Knit.cache.make_cache(shared, 20)
-task.delay(20, function()
-    Knit.cache.reset_cache(shared)
-end)
-
 shared.Knit = Knit
 
 Knit.wrappers = Knit.require(script, "function_wrappers")

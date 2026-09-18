@@ -1,18 +1,15 @@
-getgenv().PlayerHelper = true
+local Knit = shared.Knit
+local services = Knit.services
 
-local Services = loadstring(game:HttpGet(
-    "https://website-iota-ivory-12.vercel.app/code/Modules/Services.lua"
-))()
-
-local Game = Services["MarketplaceService"]:GetProductInfo(game.PlaceId).Name
+local Game = shared.game_name
 
 local Rayfield = loadstring(game:HttpGet(
     "https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"
 ))()
 
-local Player = Services["Player"]
-local Workspace = Services["Workspace"]
-local ReplicatedStorage = Services["ReplicatedStorage"]
+local Player = services.Players.LocalPlayer
+local Workspace = workspace
+local ReplicatedStorage = services.ReplicatedStorage
 
 local Window = Rayfield:CreateWindow({
     Name = Game,

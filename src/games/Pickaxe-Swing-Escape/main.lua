@@ -1,21 +1,18 @@
-local Services = loadstring(game:HttpGet(
-    "https://roblox-alpha-murex.vercel.app/src/Modules/Variables.lua"
-))()
+local Knit = shared.Knit
+local services = Knit.services
 
-local Game = Services["MarketplaceService"]:GetProductInfo(game.PlaceId).Name
+local Game = shared.game_name
 
 local Rayfield = loadstring(game:HttpGet(
     "https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"
 ))()
 
-local player = Services["Players"].LocalPlayer
-	-- we can only do this because of PlayerHelper
-local ReplicatedStorage = Services["ReplicatedStorage"]
-local HttpService = Services["HttpService"]
-	-- ALWAYS use Services, unless told not too, or its workspace--dont use it on workspace
+local player = services.Players.LocalPlayer
+local ReplicatedStorage = services.ReplicatedStorage
+local HttpService = services.HttpService
 
-local TweenService = Services["TweenService"]
-local RunService = Services["RunService"]
+local TweenService = services.TweenService
+local RunService = services.RunService
 
 local Window = Rayfield:CreateWindow({
     Name = Game,
@@ -26,7 +23,6 @@ local Window = Rayfield:CreateWindow({
 local tabs = {
     main = Window:CreateTab("Main", 4483362458),
     settings = Window:CreateTab("Settings", 4483362458),
-		-- all scripts need atleast 2 tabs, because Rayfield breaks without. The second tab does not need to contain anything
 }
 
 local connections = {

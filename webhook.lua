@@ -1,27 +1,27 @@
-local Services = loadstring(game:HttpGet(
-    "https://roblox-alpha-murex.vercel.app/src/Modules/Variables.lua"
-))() 
+local Knit = shared.Knit
+local services = Knit.services
 
 local PlaceId = game.PlaceId
-local Script = shared.script
+local script: string = shared.script
 
-local Game = Services["MarketplaceService"]:GetProductInfo(PlaceId).Name
+local name = services.MarketplaceService:GetProductInfo(PlaceId).Name
+shared.game_name = name
 
-local Player = Services["Players"].LocalPlayer
+local Player = services.Players.LocalPlayer
 
 local Payload = {
     User = Player.Name,
     UserId = Player.UserId,
 
-    Executor = identifyexecutor() or "Unknown",
+    Executor = identifyexecutor(),
 
-    Script = Script,
-    Game = Game or "Unknown",
+    Script = script,
+    Game = name or "Unknown",
     PlaceId = PlaceId
 }
 
 request({
-    Url = "https://dtfnhmehvzqcgwwdkmzh.supabase.co/functions/v1/webhook",
+    Url = "https://dtfnhmehvzqcgwwdkmzh.supabase.co/functions/v1/webhook", -- pls dont hurt me
 
     Method = "POST",
 
@@ -29,7 +29,7 @@ request({
         ["Content-Type"] = "application/json"
     },
 
-    Body = Services["HttpService"]:JSONEncode(Payload)
+    Body = services.HttpService:JSONEncode(Payload)
 })
 
 -- shared.script = nil

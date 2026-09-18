@@ -1,3 +1,3 @@
 return function(input: string)
-    print(input)
+    print("[setclipboard]", input)
 end

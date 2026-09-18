@@ -1,7 +1,11 @@
 local Knit = {
     services = {},
     cache = {},
-    wrappers = {}
+    wrappers = {},
+    git = {},
+    player = {},
+    ui = {},
+    instances = {}
 }
 shared.Knit = Knit
 
@@ -104,5 +108,10 @@ end)
 Knit.git = Knit.require(script, "git")
 
 Knit.wrappers = Knit.require(script, "function_wrappers")
+
+Knit.player = Knit.require(script, "player") 
+
+Knit.instances = Knit.require(script, "instances")
+Knit.ui = Knit.require(script, "ui")
 
 return Knit

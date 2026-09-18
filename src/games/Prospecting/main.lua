@@ -1,14 +1,9 @@
-getgenv().SecureMode = true
+local Knit = shared.Knit
+local services = Knit.services
 
-local services = loadstring(game:HttpGet(
-    "https://website-iota-ivory-12.vercel.app/code/loader/u/vars.lua"
-))()
+local Rayfield = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"))()
 
-local Rayfield = loadstring(game:HttpGet(
-    "https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"
-))()
-
-local lp = services["player"]
+local lp = services.Players.LocalPlayer
 
 local window = Rayfield:CreateWindow({
     Name = "Prospecting",

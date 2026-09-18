@@ -1,19 +1,16 @@
 loadstring(game:HttpGet("https://www.voltex.website/src/Modules/Platform.lua"))()
 local device = getgenv()["device"]
 
-getgenv().PlayerHelper = true
+local Knit = shared.Knit
+local services = Knit.services
 
-local Services = loadstring(game:HttpGet(
-    "https://roblox-alpha-murex.vercel.app/src/Modules/Variables.lua"
-))()
-
-local Players = Services.Players
-local Player = Services.Player
-local RunService = Services.RunService
-local UserInputService = Services.UserInputService
-local VirtualInputManager = Services.VirtualInputManager
-local CoreGui = Services.CoreGui
-local CurrentCamera = Services.Workspace.CurrentCamera
+local Players = services.Players
+local Player = Players.LocalPlayer
+local RunService = services.RunService
+local UserInputService = services.UserInputService
+local VirtualInputManager = services.VirtualInputManager
+local CoreGui = services.CoreGui
+local CurrentCamera = services.Workspace.CurrentCamera
 
 if not Player.Character then
     Player.CharacterAdded:Wait()

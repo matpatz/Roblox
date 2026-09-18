@@ -19,10 +19,7 @@ end); if not Success then
     warn(Error)
 end
 
-local cloneref = wrappers.cloneref
-
-local HttpService = cloneref(game:GetService("HttpService"))
-
+local HttpService = rappers.cloneref(game:GetService("HttpService"))
 local Identifier = wrappers.gethwid()
 
 local success, err = pcall(function()

@@ -1,21 +1,16 @@
--- Block Blast AutoPlay v3 - Lookahead + All v2 Improvements
--- v2: Combo priority, adaptive penalties, column balance, well strategy, full search, aggression
--- v3: Recursive lookahead, cache system, large-piece awareness, inaccessible space detection, board analysis
+-- ai SLOPPPP
 
-local Services = loadstring(game:HttpGet(
-    "https://website-iota-ivory-12.vercel.app/code/loader/u/vars.lua"
-))()
+local Knit = shared.Knit
+local services = Knit.services
 
-local GameName = Services["marketplace"]:GetProductInfo(game.PlaceId).Name
+local name = shared.game_name
 
-local Rayfield = loadstring(game:HttpGet(
-    "https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"
-))()
+local Rayfield = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"))()
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = services.Players
+local RunService = services.RunService
+local TweenService = services.TweenService
+local ReplicatedStorage = services.ReplicatedStorage
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -32,7 +27,7 @@ local Piece = require(Modules:WaitForChild("Piece"))
 local Values = require(Modules:WaitForChild("Values"))
 
 local Window = Rayfield:CreateWindow({
-    Name = GameName,
+    Name = name,
     LoadingTitle = "AutoPlay",
     LoadingSubtitle = "Initializing v3...",
 })
@@ -810,12 +805,10 @@ Tabs.Settings:CreateToggle({
     end,
 })
 
------------------------------------------------------------------------------
--- Initialization
------------------------------------------------------------------------------
+--// init
 
 Rayfield:Notify({
-    Title = GameName,
+    Title = name,
     Content = "AutoPlay v3 loaded! (Lookahead Engine)",
     Duration = 5,
     Image = 4483362458,

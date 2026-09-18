@@ -1,19 +1,16 @@
-getgenv().PlayerHelper = true
+local Knit = shared.Knit
+local services = Knit.services
 
-local Services = loadstring(game:HttpGet(
-    "https://roblox-alpha-murex.vercel.app/src/Modules/Variables.lua"
-))()
-
-local Game = Services.MarketplaceService:GetProductInfo(game.PlaceId).Name
+local Game = shared.game_name
 
 local Rayfield = loadstring(game:HttpGet(
     "https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"
 ))()
 
-local Player = Services.Player
-local Players = Services.Players
-local RunService = Services.RunService
-local UserInputService = Services.UserInputService
+local Player = services.Player
+local Players = services.Players
+local RunService = services.RunService
+local UserInputService = services.UserInputService
 local Workspace = workspace
 
 local Window = Rayfield:CreateWindow({

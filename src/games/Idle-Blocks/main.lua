@@ -1,5 +1,7 @@
-local services = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/vars.lua"))()
-local _game = services["marketplace"]:GetProductInfo(game.PlaceId).Name
+local Knit = shared.Knit
+local services = Knit.services
+
+local _game = shared.game_name
 
 local Rayfield = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"))()
 local window = Rayfield:CreateWindow({
@@ -22,7 +24,7 @@ local states = {
     values = {
         enabled = false,
 
-        events = services["rep"]:WaitForChild("Events"),
+        events = services["ReplicatedStorage"]:WaitForChild("Events"),
 
         touch = nil
     }
@@ -102,12 +104,12 @@ local function StartHit()
 
     states.values.enabled = true
 
-    addConnection(connections.AutoHit, "Loop", services["rs"].Heartbeat:Connect(function()
+    addConnection(connections.AutoHit, "Loop", services["RunService"].Heartbeat:Connect(function()
         if not states.values.enabled then
             return
         end
 
-        local cubes = services["collection"]:GetTagged("DestructibleCube")
+        local cubes = services["CollectionService"]:GetTagged("DestructibleCube")
 
         if #cubes <= 0 then
             return

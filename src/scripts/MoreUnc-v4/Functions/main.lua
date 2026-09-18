@@ -36,6 +36,147 @@ local function mask(func, name: string)
     return wrapped
 end
 
+-- luau locks a good chunk of the executor stdlib (debug especially) with
+-- table.isfrozen, and rawset into one of those errors outright
+local function isreadonly(t: any): boolean
+    local ok, frozen = pcall(table.isfrozen, t)
+
+    if ok then
+        return frozen == true
+    end
+
+    if type(env.isreadonly) == "function" then
+        local read, res = pcall(env.isreadonly, t)
+
+        if read then
+            return res == true
+        end
+    end
+
+    return false
+end
+
+-- executor tables are usually proxies: the real functions hang off __index, so
+-- pairs() enumerates nothing and rawget() answers nil. a "copy then swap" reads
+-- those as empty and that is exactly how debug.info disappears, so every
+-- existence check goes through normal indexing, never rawget
+local function has(t: any, key: any): boolean
+    local ok, value = pcall(function()
+        return t[key]
+    end)
+
+    return ok and value ~= nil
+end
+
+-- not every executor ships an unfreeze primitive, and the ones that do sometimes
+-- hand back a proxy instead of thawing in place
+local function unfreeze(t: any): any
+    for _, name in ipairs({ "makewriteable", "make_writeable", "setreadonly" }) do
+        local thaw = env[name]
+
+        if type(thaw) == "function" then
+            local ok, result = pcall(thaw, t, false)
+
+            if ok and type(result) == "table" then
+                return result
+            end
+        end
+    end
+
+    return nil -- everything refused, caller falls back to a wrapper
+end
+
+local function write(t, entries): boolean
+    return pcall(function()
+        for key, value in pairs(entries) do
+            rawset(t, key, value)
+        end
+    end)
+end
+
+-- exported categories ride ON the executor table when one already exists, so
+-- debug.info, drawing.new, ... stay put. nothing is written unless the key is
+-- actually missing, and the executor table is never dropped
+local function merge(existing, ours)
+    local missing = {}
+
+    for key, value in pairs(ours) do
+        if not has(existing, key) then
+            missing[key] = value
+        end
+    end
+
+    if next(missing) == nil then
+        return existing -- executor already ships all of it, leave it alone
+    end
+
+    if not isreadonly(existing) and write(existing, missing) then
+        return existing -- writable: add in place, identity and metatables intact
+    end
+
+    local thawed = unfreeze(existing)
+
+    if thawed == existing and write(existing, missing) then
+        return existing -- thawed in place, still no swap
+    end
+
+    if type(thawed) == "table" and write(thawed, missing) then
+        return thawed -- executor handed back a guard proxy, use it
+    end
+
+    -- last resort: a wrapper. enumerable keys are copied over and __index keeps
+    -- the original reachable, so a table we couldnt fully enumerate still
+    -- answers every lookup the executor used to answer
+    local wrapper = {}
+
+    for key, value in pairs(existing) do
+        wrapper[key] = value
+    end
+
+    for key, value in pairs(missing) do
+        wrapper[key] = value
+    end
+
+    return setmetatable(wrapper, { __index = existing })
+end
+
+local function container(category: string)
+    local ours = functions[category]
+
+    if not exported[category] then
+        return ours or {}
+    end
+
+    local existing = env[category]
+
+    if existing == nil then -- nothing to protect, mirror the namespace
+        local fresh = ours or {}
+        pcall(function()
+            env[category] = fresh
+        end)
+
+        return fresh
+    end
+
+    if type(existing) ~= "table" then -- some other kind of object, leave it be
+        return ours or {}
+    end
+
+    local target = merge(existing, ours or {})
+
+    if target ~= existing then
+        local assigned = pcall(function()
+            env[category] = target
+        end)
+
+        if not assigned then
+            return ours or {} -- env itself is locked, dont lose the executor table
+        end
+    end
+
+    return target
+end
+
 local function register(path: string, value: any)
     pending[path] = nil
 
@@ -52,18 +193,21 @@ local function register(path: string, value: any)
         return value
     end
 
-    functions[category] = functions[category] or {}
-    functions[category][name] = value
+    local key = name or path
+    local tbl = container(category)
+    functions[category] = tbl
 
-    if exported[category] then -- same table, so later functions show up too
-        env[category] = functions[category]
+    if tbl[key] ~= nil then -- executor already has it, theirs wins
+        value = tbl[key]
+    else
+        tbl[key] = value
     end
 
     if isfunction then -- flat lookup by bare name
-        functions[name] = value
+        functions[key] = value
 
-        if env[name] == nil then -- never clobber an executor native
-            env[name] = value
+        if env[key] == nil then -- never clobber an executor native
+            env[key] = value
         end
     end
 

@@ -1,6 +1,11 @@
+local Knit = shared.Knit
+local init = Knit.require(`{shared.script}/Functions`, "main")
+
+local getinfo = init.getfunction("getinfo", "debug")
+
 return function(level: number): boolean
-    if level >= 0 then
-        return true
-    end
-    return false 
+    local a, b = pcall(function()
+        local _ = getinfo(level, "n")
+    end)
+    return a
 end

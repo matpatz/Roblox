@@ -3,6 +3,8 @@ local Knit = {
     cache = {},
     wrappers = {}
 }
+shared.Knit = Knit
+
 local script: string = "Modules/Knit/v1"
 
 if not isfolder("voltex") then
@@ -100,8 +102,6 @@ task.delay(0.2, function()
 end)
 
 Knit.git = Knit.require(script, "git")
-
-shared.Knit = Knit
 
 Knit.wrappers = Knit.require(script, "function_wrappers")
 

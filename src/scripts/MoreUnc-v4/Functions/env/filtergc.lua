@@ -3,8 +3,9 @@ type func = typeof(function() end)
 local Knit = shared.Knit
 local init = Knit.require(`{shared.script}/Functions`, "main")
 
-local getgc = init.getfunction("getgc", "scripts")
-local getfunctionhash = init.getfunction("getfunctionhash", "scripts")
+local getgc = init.getfunction("getgc", "env")
+local getfunctionhash = init.getfunction("getfunctionhash", "closures")
+local getrawmetatable = init.getfunction("getrawmetatable", "metatable")
 local iscclosure = init.getfunction("iscclosure", "closures")
 local isexecutorclosure = init.getfunction("isexecutorclosure", "closures")
 

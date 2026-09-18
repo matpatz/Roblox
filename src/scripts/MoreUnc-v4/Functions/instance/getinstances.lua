@@ -1,5 +1,5 @@
 local Knit = shared.Knit
-local globals = Knit.require("globals")
+local globals = Knit.require(`{shared.script}/Modules`, "globals")
 
 local instances = game:GetDescendants()
 

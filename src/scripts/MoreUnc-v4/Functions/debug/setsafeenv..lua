@@ -4,14 +4,14 @@ local Knit = shared.Knit
 local getfunction = Knit.require(`{shared.script}/Functions`, "main").getfunction
 local globals = Knit.require(`{shared.script}/Modules`, "globals") 
 
-local setrawmetatable = getfunction("setrawmetatable")
+local setrawmetatable = getfunction("setrawmetatable", "metatable")
 
 local function lock(object)
     setrawmetatable(object, { -- TODO: Verify functionality. Metatables are scary, also not sure if their is a protected metatable or not, its probably executor dependent
         --__metatable = "Protected",
-        __newindex = function(_, __,)
+        __newindex = function(_, __, ___)
             globals.set("safeenv", false)
-            return rawset(_, __,)
+            return rawset(_, __, ___)
         end
     })
 end
@@ -30,7 +30,7 @@ return function(func: func | table | thread | boolean, safe: boolean?)
         return -- amazing work team
     end
 
-    if safe then lock() else unlock()
+    if safe then lock() else unlock() end
 end
 
 -- any overwritten object(getfenv) will break safeenv. Not sure why setsafeenv even exists but ya

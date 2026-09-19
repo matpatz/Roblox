@@ -53,6 +53,46 @@ local function loadscript(script, module, configurable)
     return chunk()
 end
 
+-- executors disagree on newlines when they round-trip a file, compare without \r
+local function normalize(content: string): string
+    return (content:gsub("\r", ""))
+end
+
+-- keeps voltex/{script}/{module}.lua in sync with the website and hands back the fresh
+-- chunk. "if the file exists, never look again" meant an edit to an already cached
+-- module was invisible forever (a file that loads fine and then errors still gets
+-- cached), so the body is always fetched and the cached copy is only reused when it
+-- actually matches what the website is serving
+local function sync(script, module)
+    local path = `voltex/{script}/{module}.lua`
+    local ok, script_content = pcall(game.HttpGet, game, `https://voltex.website/src/{script}/{module}.lua`)
+
+    if not ok or type(script_content) ~= "string" then
+        return nil -- network died, caller falls back to the cache
+    end
+
+    -- a 404 still returns a body, dont cache something that wont compile
+    local chunk = loadstring(script_content)
+    if not chunk then
+        return nil
+    end
+
+    local cached = if isfile(path) then readfile(path) else nil
+
+    if cached and normalize(cached) == normalize(script_content) then
+        return chunk, true -- already current, leave the file alone
+    end
+
+    -- writefile refuses to overwrite on some executors, so clear the old one first
+    if cached and delfile then
+        delfile(path)
+    end
+
+    writescript(script, module, script_content)
+
+    return chunk, isfile(path)
+end
+
 local modules = {
     "main",
     "core",
@@ -69,26 +109,25 @@ Knit.require = function(script: string, module: string, configurable: table?)
         return loaded[name].value
     end
 
-    -- local copy first, only hit the website for what we dont already have
-    if not isscript(script, module) then
-        local script_content = game:HttpGet(`https://voltex.website/src/{script}/{module}.lua`)
+    local chunk, ondisk = sync(script, module)
 
-        -- a 404 still returns a body, dont cache something that wont compile
-        local chunk = loadstring(script_content)
-        if not chunk then
-            return nil
-        end
+    if chunk and ondisk then
+        -- fresh body landed on disk, load it the normal way
+        local value = loadscript(script, module, configurable)
+        loaded[name] = { value = value }
 
-        -- writescript() only tells us writefile exists, not that the file landed
-        -- (missing folder, unwritable dir, ...) so dont trust it, check the disk
-        if not writescript(script, module, script_content) or not isscript(script, module) then
-            local value = chunk()
-            loaded[name] = { value = value }
-
-            return value
-        end
+        return value
     end
 
+    if chunk then
+        -- couldnt write to disk (missing folder, read-only, ...) so run it straight
+        local value = chunk()
+        loaded[name] = { value = value }
+
+        return value
+    end
+
+    -- nothing fresh (offline, 404): a stale cache still beats loading nothing
     local value = loadscript(script, module, configurable)
     loaded[name] = { value = value }
 

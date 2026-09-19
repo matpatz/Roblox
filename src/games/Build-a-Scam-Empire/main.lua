@@ -29,6 +29,6 @@ while task.wait(2) do
 		end
 	end
 	if getgenv().SellAll and SellFunciton then
-		SellAll:InvokeServer()
+		SellFunciton:InvokeServer()
 	end
 end

@@ -1,22 +1,27 @@
 local conmanager = {
     connections = {}
 }
-conmanager.__index = conmanager
 
-type func = typeof(function) -- or something
+type func = typeof(function() end)
 
-conmanager.connect = function(self, Key: string, Signal: RBXScriptConnection, Callback: func)
-	self.Disconnect(Key)
-	self.connections[Key] = Signal:Connect(Callback)
+conmanager.connect = function(Key: string, Signal: RBXScriptSignal, Callback: func)
+	conmanager.disconnect(Key)
+	conmanager.connections[Key] = Signal:Connect(Callback)
 end
 
-conmanager.disconnect = function(self, Key: string)
-	if self.connections[Key] then
+conmanager.disconnect = function(Key: string)
+	if not conmanager.connections[Key] then
         return
 	end
 
-    self.connections[Key]:Disconnect()
-    self.connections[Key] = nil
+    conmanager.connections[Key]:Disconnect()
+    conmanager.connections[Key] = nil
 end
 
-return conmanager.lua
+return conmanager
+
+--[[
+conmanager.connect("this", workspace.ChildAdded, function(a)
+	print(a)
+end)
+]]

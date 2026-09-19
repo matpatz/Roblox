@@ -7,7 +7,7 @@ local Rayfield = loadstring(game:HttpGet(
     "https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"
 ))()
 
-local Player = services.Player
+local Player = services.Players.LocalPlayer
 local Players = services.Players
 local RunService = services.RunService
 local UserInputService = services.UserInputService

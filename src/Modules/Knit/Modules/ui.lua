@@ -1,11 +1,11 @@
 local ui = {}
 
 local Knit = shared.Knit
-local instances = Knit.require(`{shared.script}/Modules`, "instances")
+local instances = Knit.require("Modules/Knit/Modules", "instances")
 
 -- @param1: Obsidian/Rayfield
-ui.new = funciton(Library: string)
-    local lib = loadstring(game:HttpGet(`https://www.voltex.website/Libraries/{Library}/main.lua`))
+ui.new = function(Library: string)
+    local lib = loadstring(game:HttpGet(`https://www.voltex.website/libraries/{Library}/main.lua`))
     return lib -- client calls the function of which loadstring returns
 end
 

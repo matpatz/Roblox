@@ -114,7 +114,7 @@ tabs.main:CreateButton({
 })
 
 local CanBuyUpgrade = ReplicatedStorage.RemoteFunctions.CanBuyUpgrade
-local PlateUpgrade = ReplicatedStorage..RemoteEvents.PlateUpgrade
+local PlateUpgrade = ReplicatedStorage.RemoteEvents.PlateUpgrade
 
 local function UpgradeSpeed()
     if not CanBuyUpgrade:InvokeServer() then

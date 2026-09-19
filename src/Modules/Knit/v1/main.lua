@@ -5,11 +5,12 @@ local Knit = {
     git = {},
     player = {},
     ui = {},
-    instances = {}
+    instances = {},
+    bundle = {}
 }
 shared.Knit = Knit
 
-local script: string = "Modules/Knit/v1"
+local script: string = "Modules/Knit/Modules"
 
 if not isfolder("voltex") then
     makefolder("voltex")
@@ -101,17 +102,27 @@ end
 Knit.cache = Knit.require(script, "cache")
 
 Knit.services = Knit.require(script, "services")
+-- playermanager blocks on CharacterAdded:Wait(), so it cant hold up this load. fill
+-- the table weve already published instead of swapping it, or anything that grabbed
+-- Knit.player before this fires (games/*/core.lua) keeps the empty stub forever
 task.delay(0.2, function()
-    Knit.player = Knit.require(script, "player")
+    local manager = Knit.require(script, "playermanager")
+
+    for key, value in pairs(manager) do
+        Knit.player[key] = value
+    end
 end)
 
 Knit.git = Knit.require(script, "git")
 
 Knit.wrappers = Knit.require(script, "function_wrappers")
 
-Knit.player = Knit.require(script, "player") 
-
 Knit.instances = Knit.require(script, "instances")
 Knit.ui = Knit.require(script, "ui")
+Knit.conmanager = Knit.require(script, "conmanager")
+Knit.scriptmanager = Knit.require(script, "scriptmanager")
+
+Knit.bundle = Knit.require(script, "bundle")
 
 return Knit
+

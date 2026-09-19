@@ -7,7 +7,7 @@ local ReplicatedStorage = services.ReplicatedStorage
 local Stats = services.Stats
 
 local LocalPlayer = services.Players.LocalPlayer
-local PlaerGui = LocalPlayer.PlayerGui
+local PlayerGui = LocalPlayer.PlayerGui
 
 local Minigame = PlayerGui.Main.Minigame
 
@@ -22,7 +22,7 @@ while task.wait() do
 	end
 
 	if firesignal then
-		for i, v in next Minigame:GetChildren() do
+		for i, v in ipairs(Minigame:GetChildren()) do
 			if v.Name ~= "Red" and v.Name ~= "Circle" then
 				firesignal(v.MouseButton1Click)
 			end

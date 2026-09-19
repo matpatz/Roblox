@@ -12,7 +12,7 @@ local function update(Character)
     player.HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
 end
 
-player["local"] = LocalPlayer
+player.LocalPlayer = LocalPlayer
 player.Character = Character
 player.Humanoid = Character:FindFirstChildOfClass("Humanoid")
 player.HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")

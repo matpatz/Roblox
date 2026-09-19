@@ -4,23 +4,22 @@ local Script = shared.script
 
 local API_URL = "https://roblox-alpha-murex.vercel.app/api/v1/executions"
 
+-- scriptmanager captures shared.name while Knit is being required, so it has to
+-- exist before the loadstring below
+local ok, name = pcall(function()
+    return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+end)
+
+shared.name = if ok and name then name else "Unknown"
+
 local Knit = loadstring(game:HttpGet("https://voltex.website/src/Modules/Knit/init.lua"))()
 repeat task.wait() until Knit and Knit.wrappers and Knit.services and Knit.git -- and whatever
 
 local wrappers = Knit.wrappers
 
--- the game scripts read shared.game_name for their window title
-local GameOk, GameName = pcall(function()
-    return Knit.services.MarketplaceService:GetProductInfo(game.PlaceId).Name
-end)
-
-shared.game_name = if GameOk and GameName then GameName else "Unknown"
-
 local Success, Error = pcall(function()
     task.spawn(function()
-        --shared.Knit = Knit.cache.set("Knit", Knit) -- Knit will exist for one second, then is deleted.
-
-        loadstring(game:HttpGet(string.format("https://roblox-alpha-murex.vercel.app/src/%s/main.lua", Script)))()
+        Knit.bundle()
     end)
 end); if not Success then
     warn(Error)

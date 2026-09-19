@@ -33,30 +33,99 @@ core = scriptmanager.set("core", core)
 
 --// Silent aim
 
-if isfunctionhooked(FireEvent.FireServer) then
-    restorefunction(FireEvent.FireServer)
+-- The client resolves every shot itself and reports the result to the server
+-- through networkEvents.rE (source/shoot_remote_example.lua):
+--
+--     (weapon key, player key, hit part, hit position, hit normal, hit material, ...)
+--
+-- The server takes that report as the shot, so writing the aim part into those
+-- four fields is the whole trick: the camera keeps pointing wherever the player
+-- is looking and the shot still lands on the target.
+
+-- TEMP tracing: the client cannot be read from here, so what actually goes out
+-- on a shot is written to sc_rE.log in the executor workspace. Remove later.
+local Traces = 0
+local function Trace(Message: string)
+    if appendfile and Traces < 80 then
+        Traces += 1
+        appendfile("sc_rE.log", Message .. "\n")
+    end
 end
 
-local Old; Old = hookfunction(FireEvent.FireServer, function(Self, ...)
-    if Self ~= FireEvent or not config.SilentAim.Value then
-        return Old(Self, ...)
+type PackedArgs = { [number]: any, n: number }
+
+local function Describe(Args: PackedArgs): string
+    local Fields = {}
+
+    for Index = 1, math.min(Args.n or 0, 9) do
+        local Value = Args[Index]
+        local Text = if typeof(Value) == "string"
+            then Value
+            elseif typeof(Value) == "Instance"
+            then Value:GetFullName()
+            elseif typeof(Value) == "Vector3"
+            then tostring(Value)
+            else typeof(Value)
+
+        table.insert(Fields, `[${Index}] ${typeof(Value)} ${Text}`)
     end
 
-    local AimPart = utils["Aimbot"].GetClosest()
+    return table.concat(Fields, " | ")
+end
+
+-- The four fields the server reads the hit from, or the arguments untouched
+-- when there is nothing to aim at.
+local function Redirect(Source: string, Args: PackedArgs): (PackedArgs, number)
+    local AimPart = if config.SilentAim.Value then utils["Aimbot"].GetClosest() else nil
     local HumanoidRootPart = playermanager.HumanoidRootPart
 
-    if not AimPart or not HumanoidRootPart then
-        return Old(Self, ...)
-    end
+    Trace(`{Source} enabled=${config.SilentAim.Value} aim=${if AimPart then AimPart:GetFullName() else "nil"} root=${if HumanoidRootPart then "yes" else "nil"} ${Describe(Args)}`)
 
-    local Args = table.pack(...)
+    if not AimPart or not HumanoidRootPart then
+        return Args, Args.n or 0
+    end
 
     Args[3] = AimPart
     Args[4] = AimPart.Position
     Args[5] = (AimPart.Position - HumanoidRootPart.Position).Unit
     Args[6] = AimPart.Material
 
-    return Old(Self, table.unpack(Args, 1, Args.n))
+    Trace(`  rewritten ${Describe(Args)}`)
+
+    return Args, Args.n or 0
+end
+
+if writefile then
+    writefile("sc_rE.log", `installed ${FireEvent:GetFullName()}\n`)
+end
+
+-- an instance method called with `:` goes through __namecall, which is why a
+-- hook on FireServer itself never sees the shot
+local OldNamecall
+OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+    if Self ~= FireEvent or getnamecallmethod() ~= "FireServer" then
+        return OldNamecall(Self, ...)
+    end
+
+    local Args, Count = Redirect("namecall", table.pack(...))
+
+    return OldNamecall(Self, table.unpack(Args, 1, Count))
+end)
+
+-- kept for executors that hand the call to the method itself instead
+if isfunctionhooked(FireEvent.FireServer) then
+    restorefunction(FireEvent.FireServer)
+end
+
+local OldFireServer
+OldFireServer = hookfunction(FireEvent.FireServer, function(Self, ...)
+    if Self ~= FireEvent then
+        return OldFireServer(Self, ...)
+    end
+
+    local Args, Count = Redirect("fireserver", table.pack(...))
+
+    return OldFireServer(Self, table.unpack(Args, 1, Count))
 end)
 
 return core

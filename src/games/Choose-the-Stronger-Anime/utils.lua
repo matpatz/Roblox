@@ -146,8 +146,12 @@ utils.Budget = function(state)
     local share = math.max(1, math.floor(cash / utils.LotsLeft(state)))
     local power = utils.Power(state.object, state.theme) or AVERAGE_POWER
     local boost = math.clamp(power / AVERAGE_POWER, 0.5, utils.Setting("PowerBoost") or 1)
+    -- an even share loses every lot the opponent is willing to pay market rate
+    -- for, and cash still in the wallet when the draft ends scores nothing, so
+    -- the share gets multiplied by this before the dollar that wins the lot
+    local aggression = utils.Setting("Aggression") or 1
 
-    return share * boost + 1
+    return share * boost * aggression + 1
 end
 
 -- the most we may ever pay for a lot

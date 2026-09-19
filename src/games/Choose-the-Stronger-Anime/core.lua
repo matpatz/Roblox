@@ -20,6 +20,11 @@ local config = scriptmanager.config.set(
         PowerBoost = {
             Value = 2.5,
         },
+        -- multiplies that even share. above 1 because an even split loses every
+        -- lot the opponent pays market rate for, and unspent cash scores nothing
+        Aggression = {
+            Value = 2,
+        },
         -- never pay more than the opponent can match
         NeverOverpay = {
             Value = true,

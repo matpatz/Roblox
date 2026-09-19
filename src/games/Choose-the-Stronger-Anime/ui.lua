@@ -60,6 +60,18 @@ tabs.Draft:CreateSlider({
     end,
 })
 
+tabs.Draft:CreateSlider({
+    Name = "Aggression",
+    Range = { 1, 4 },
+    Increment = 0.5,
+    Suffix = "x",
+    CurrentValue = config.Aggression.Value,
+    Flag = "Aggression",
+    Callback = function(value)
+        config.Aggression.Value = value
+    end,
+})
+
 tabs.Draft:CreateToggle({
     Name = "Never Overpay (cap at their wallet)",
     CurrentValue = config.NeverOverpay.Value,

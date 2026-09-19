@@ -36,6 +36,10 @@ end
 
 scriptmanager.set("core", core)
 
--- bundle waits on this return, without it Knit.require hands back nil and the
--- repeat task.wait() loop in Modules/bundle.lua spins forever
+core.Once:Connect(function()
+    if config.Reset.Value then
+        core.Reset()
+    end
+end)
+
 return core

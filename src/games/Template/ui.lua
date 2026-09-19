@@ -25,17 +25,13 @@ local tabs = {
 	Settings = Window:CreateTab("Settings"),
 }
 
-core.Once:Connect(function()
-    if config.Reset.Value then
-        core.Reset()
-    end
-end)
-
 tabs.Combat:CreateToggle({
 	Name = "Auto Reset",
 	CurrentValue = config.AutoReset.Value,
 	Flag = "AutoReset",
 	Callback = function(value)
+		core.Once:Fire()
+		
         config.AutoReset.Value = value
 	end,
 })

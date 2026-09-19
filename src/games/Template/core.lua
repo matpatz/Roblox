@@ -34,9 +34,9 @@ core.Reset = function()
     end
 end
 
-scriptmanager.set("core", core)
+core = scriptmanager.set("core", core)
 
-core.Once:Connect(function()
+core.Once.Event:Connect(function()
     if config.Reset.Value then
         core.Reset()
     end

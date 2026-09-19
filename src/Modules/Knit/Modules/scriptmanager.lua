@@ -20,6 +20,8 @@ scriptmanager.set = function(key, value)
         value.Once = instances.new("BindableEvent", true)
     end
     scriptmanager[key] = value
+
+    return value
 end
 
 scriptmanager.get = function(key)

@@ -143,7 +143,9 @@ end
 -- takes to actually outbid rather than tie with the opponent
 utils.Budget = function(state)
     local cash = utils.Cash(utils.Me(state)) - (utils.Setting("Reserve") or 0)
-    local share = math.max(1, math.floor(cash / utils.LotsLeft(state)))
+    -- not floored: $20 across 12 lots is $1.66 a lot, and rounding that down to $1
+    -- hands the opponent every early lot for pocket change
+    local share = cash / utils.LotsLeft(state)
     local power = utils.Power(state.object, state.theme) or AVERAGE_POWER
     local boost = math.clamp(power / AVERAGE_POWER, 0.5, utils.Setting("PowerBoost") or 1)
     -- an even share loses every lot the opponent is willing to pay market rate
@@ -151,7 +153,7 @@ utils.Budget = function(state)
     -- the share gets multiplied by this before the dollar that wins the lot
     local aggression = utils.Setting("Aggression") or 1
 
-    return share * boost * aggression + 1
+    return math.max(1, share * boost * aggression + 1)
 end
 
 -- the most we may ever pay for a lot

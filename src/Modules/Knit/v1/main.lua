@@ -71,6 +71,13 @@ local function sync(script, module)
         return nil -- network died, caller falls back to the cache
     end
 
+    -- a missing path answers with an empty body on some executors instead of
+    -- raising. that still compiles, so without this the wipe below would drop a
+    -- working cached copy and the caller would load nothing at all
+    if #script_content == 0 then
+        return nil
+    end
+
     -- a 404 still returns a body, dont cache something that wont compile
     local chunk = loadstring(script_content)
     if not chunk then

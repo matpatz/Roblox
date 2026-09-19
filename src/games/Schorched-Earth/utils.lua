@@ -1,15 +1,15 @@
-local utils = {}
+local utils = {
+	["Aimbot"] = {},
+}
 
 local Knit = shared.Knit
 local services = Knit.services
-local playermanager = services.player
+local playermanager = Knit.player
 local scriptmanager = Knit.scriptmanager
 
 --// services
 local Players = services.Players
-local LocalPlayer = playermanager.LocalPlayer
-
-local HumanoidRootPart = playermanager.HumanoidRootPart
+local LocalPlayer = Players.LocalPlayer
 
 -- // config
 local config = {
@@ -30,7 +30,14 @@ utils["Aimbot"].GetTargets = function(): { Instance }
 	local Enemies: { Instance } = {}
 
 	local function IsTeammate(Model: Model): boolean
-        return true
+		local Player = Players:GetPlayerFromCharacter(Model)
+
+		-- a bot owns no player, and a game without teams has nothing to compare
+		if not Player or not Player.Team or not LocalPlayer.Team then
+			return false
+		end
+
+		return Player.Team == LocalPlayer.Team
 	end
 
 	local function AddCharacter(Model: Model?)
@@ -71,6 +78,13 @@ local aimconfig = {
 }
 
 utils["Aimbot"].GetClosest = function(): BasePart?
+    -- playermanager is filled in a moment after the modules load, so the root
+    -- is read per shot instead of once at load
+    local HumanoidRootPart = playermanager.HumanoidRootPart
+    if not HumanoidRootPart then
+        return nil
+    end
+
     aimconfig["Origin"] = HumanoidRootPart.Position
     aimconfig["EntityLists"] = {
         utils["Aimbot"].GetTargets()

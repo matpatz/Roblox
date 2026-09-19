@@ -27,20 +27,11 @@ local tabs = {
 
 tabs.Combat:CreateToggle({
 	Name = "Silent Aim",
-	CurrentValue = config.AutoReset.Value,
-	Flag = "AutoReset",
+	CurrentValue = config.SilentAim.Value,
+	Flag = "SilentAim",
 	Callback = function(value)
 		core.Once:Fire()
 		
-        config.AutoReset.Value = value
-	end,
-})
-
-tabs.Combat:CreateButton({
-	Name = "Reset Character",
-	Callback = function()
-		task.spawn(function()
-			core.Reset()
-		end)
+        config.SilentAim.Value = value
 	end,
 })

@@ -9,3 +9,5 @@ potassium workspace: C:\Users\$env:USERPROFILE\AppData\Local\Potassium\workspace
 when modying GetTargets dont forget GetClosest (of the Aimbot Module) filters hp and such already
 
 the chance Aimbot.GetClosest is the issue is almost zero, I have likely checked if a target is actually found
+
+the MCP may shutdown any time so it would be preferable to write any useful files locally (in the Scripts folder of whatever game)

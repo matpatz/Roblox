@@ -31,6 +31,10 @@ local SendShootReq = filtergc("function", {
     true
 )
 
+if isfunctionhooked(SendShootReq) then
+    restorefunction(SendShootReq)
+end
+
 local OldShootReq
 OldShootReq = hookfunction(SendShootReq, function(Self, Origin, Directions, Results, ShootParams, ...)
     local AimPart, Target = utils["Aimbot"].GetClosest(Origin.Position)
@@ -60,14 +64,17 @@ OldShootReq = hookfunction(SendShootReq, function(Self, Origin, Directions, Resu
             end
 
             if config.SilentAim.Wallbang then
+                -- the game's own casts use the "Bullet" group; with the default
+                -- group the viewmodel parented to the camera blocks every shot
                 local RaycastParams = RaycastParams.new()
+                RaycastParams.CollisionGroup = "Bullet"
                 RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
                 RaycastParams.FilterDescendantsInstances = { Target, playermanager.Character }
 
                 local Blocked = workspace:Raycast(Origin.Position, Offset, RaycastParams)
 
-                -- the server casts from this origin too: a blocked shot is started
-                -- right in front of the target instead of behind the wall
+                -- the server casts from this origin too: a shot that is really
+                -- behind cover is started right in front of the target
                 if Blocked and not Blocked.Instance:IsDescendantOf(Target) then
                     Origin = CFrame.lookAt(AimPart.Position - Direction, AimPart.Position + Direction)
                 end

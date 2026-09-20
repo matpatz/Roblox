@@ -2,7 +2,6 @@
 local Knit = shared.Knit
 
 local scriptmanager = Knit.scriptmanager
-local playermanager = Knit.player
 
 local utils = scriptmanager.get("utils")
 
@@ -43,15 +42,18 @@ OldShootReq = hookfunction(SendShootReq, function(Self, Origin, Directions, Resu
         local Offset = AimPart.Position - Origin.Position
         local Direction = Offset.Unit
 
-        -- silent aim: every pellet is sent at the aim part, not the crosshair
+        -- silent aim: every pellet is sent at the aim part, not the crosshair.
+        -- the origin stays the game's own camera CFrame - a moved origin is the
+        -- one thing a server check can throw the whole request away for
         local Range = Directions[1].Magnitude
         for Index = 1, #Directions do
             Directions[Index] = Direction * Range
         end
 
         -- rockets fly their own projectile, the results are for hitscan only
-        if not (ShootParams and ShootParams.isRocket) then
-            -- wallbang: claim the target even when geometry stopped the ray
+        if config.SilentAim.Wallbang and not (ShootParams and ShootParams.isRocket) then
+            -- wallbang: the hit is reported as the target, so it lands even when
+            -- a wall stopped the ray the client cast at the crosshair
             table.clear(Results)
             for Index = 1, math.max(#Directions, 1) do
                 Results[Index] = {
@@ -61,23 +63,6 @@ OldShootReq = hookfunction(SendShootReq, function(Self, Origin, Directions, Resu
                     taggedEntityId = Target:GetAttribute("EntityId"),
                     isTeammate = false,
                 }
-            end
-
-            if config.SilentAim.Wallbang then
-                -- the game's own casts use the "Bullet" group; with the default
-                -- group the viewmodel parented to the camera blocks every shot
-                local RaycastParams = RaycastParams.new()
-                RaycastParams.CollisionGroup = "Bullet"
-                RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
-                RaycastParams.FilterDescendantsInstances = { Target, playermanager.Character }
-
-                local Blocked = workspace:Raycast(Origin.Position, Offset, RaycastParams)
-
-                -- the server casts from this origin too: a shot that is really
-                -- behind cover is started right in front of the target
-                if Blocked and not Blocked.Instance:IsDescendantOf(Target) then
-                    Origin = CFrame.lookAt(AimPart.Position - Direction, AimPart.Position + Direction)
-                end
             end
         end
     end

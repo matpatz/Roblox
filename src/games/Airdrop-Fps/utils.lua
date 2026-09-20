@@ -12,8 +12,6 @@ local LocalPlayer = services.Players.LocalPlayer
 
 local Aimbot = Knit.require("Modules/Aimbot/v1", "main")
 
-local PlayerHelper = filtergc("table", { Keys = { "IsFoeFaction" } }, true)
-
 -- // Utils
 
 -- 1 player, 2 monster, 0 = air drops) -- whats a monster? not sure.
@@ -37,10 +35,6 @@ utils["Aimbot"].GetTargets = function(): { Instance }
             continue
         end
 
-        if PlayerHelper and not PlayerHelper.IsFoeFaction(Model) then
-            continue
-        end
-
         table.insert(Enemies, Model)
     end
 
@@ -54,10 +48,11 @@ utils["Aimbot"].GetClosest = function(OriginPosition: Vector3): (BasePart?, Inst
 
     aimconfig["Origin"] = OriginPosition
     aimconfig["Range"] = Config.Range
-    aimconfig["Visible"] = Config.WallCheck
-    aimconfig["EntityLists"] = {
-        utils["Aimbot"].GetTargets()
-    }
+    -- the module does the line of sight check itself; the camera is ignored so
+    -- the first-person viewmodel is not what that ray hits
+    aimconfig["Visible"] = true
+    aimconfig["Ignore"] = workspace.Camera
+    aimconfig["EntityLists"] = { utils["Aimbot"].GetTargets() }
 
     local AimParts = { Config.AimPart, "UpperTorso", "Torso", "HumanoidRootPart" }
 

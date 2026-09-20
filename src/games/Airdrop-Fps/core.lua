@@ -14,7 +14,6 @@ local config = scriptmanager.config.set(
             Value = true,
             Range = 1000,
             AimPart = "Head",
-            WallCheck = true,
         },
     }
 )

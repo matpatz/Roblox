@@ -12,8 +12,7 @@ local LocalPlayer = services.Players.LocalPlayer
 
 local Aimbot = Knit.require("Modules/Aimbot/v1", "main")
 
--- aim assist function for mobile players
-local IsFoeFaction = filtergc("function", { Name = "IsFoeFaction" }, true)
+local PlayerHelper = filtergc("table", { Keys = { "IsFoeFaction" } }, true)
 
 -- // Utils
 
@@ -38,7 +37,7 @@ utils["Aimbot"].GetTargets = function(): { Instance }
             continue
         end
 
-        if not IsFoeFaction(Model) then
+        if PlayerHelper and not PlayerHelper.IsFoeFaction(Model) then
             continue
         end
 

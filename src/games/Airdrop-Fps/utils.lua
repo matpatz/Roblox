@@ -5,7 +5,6 @@ local utils = {
 local Knit = shared.Knit
 local services = Knit.services
 local scriptmanager = Knit.scriptmanager
-local playermanager = Knit.player
 
 --// services
 local LocalPlayer = services.Players.LocalPlayer
@@ -19,19 +18,14 @@ local ENTITY_TYPES = { 1, 2 }
 
 utils["Aimbot"].GetTargets = function(): { Instance }
     local Enemies: { Instance } = {}
-    local Character = playermanager.Character
 
     for _, Model in workspace:QueryDescendants("Model") do
         local EntityId = Model:GetAttribute("EntityId")
-        if EntityId == nil or EntityId == LocalPlayer.UserId or Model == Character then
+        if EntityId == nil or EntityId == LocalPlayer.UserId then
             continue
         end
 
         if not table.find(ENTITY_TYPES, Model:GetAttribute("EntityType")) then
-            continue
-        end
-
-        if (Model:GetAttribute("CurHp") or 0) <= 0 then
             continue
         end
 

@@ -13,6 +13,9 @@ local LocalPlayer = Players.LocalPlayer
 
 local Aimbot = Knit.require("Modules/Aimbot/v1", "main")
 
+-- the game's own faction test, the same gate its auto aim uses to pick targets
+local IsFoeFaction = filtergc("function", { Name = "IsFoeFaction" }, true)
+
 -- // config
 -- core owns the config and loads after utils, so it is read per call
 local function Setting(Key: string)
@@ -64,6 +67,16 @@ utils["Aimbot"].IsTeammate = function(Model: Model): boolean
     return LocalTeamId ~= nil and LocalTeamId == TargetTeamId
 end
 
+-- Only the game's own check knows who is a foe. The Team/TeamId compare above
+-- is the fallback for when the function is not around.
+utils["Aimbot"].IsEnemy = function(Model: Model): boolean
+    if IsFoeFaction then
+        return IsFoeFaction(Model) == true
+    end
+
+    return not utils["Aimbot"].IsTeammate(Model)
+end
+
 utils["Aimbot"].GetTargets = function(): { Instance }
     local Enemies: { Instance } = {}
     local Character = playermanager.Character
@@ -85,7 +98,7 @@ utils["Aimbot"].GetTargets = function(): { Instance }
             continue
         end
 
-        if utils["Aimbot"].IsTeammate(Model) then
+        if not utils["Aimbot"].IsEnemy(Model) then
             continue
         end
 

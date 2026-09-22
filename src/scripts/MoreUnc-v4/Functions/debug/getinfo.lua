@@ -17,7 +17,7 @@ local function short_source(source: string): string
 end
 
 return function(target: func | number)
-    local islevel = typeof(target) == "number"
+    local islevel = type(target) == "number"
 
     local source = debug.info(target, "s")
     if not source then

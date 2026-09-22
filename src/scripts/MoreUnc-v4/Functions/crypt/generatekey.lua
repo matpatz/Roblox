@@ -1,14 +1,24 @@
 local Knit = shared.Knit
-local init = Knit.require(`{shared.script}/Functions`, "main")
-    
-local base64encode = init.getfunction("base64encode", "crypt")
+local csprng = Knit.require(`{shared.script}/Modules/crypt`, "csprng")
 
-local RNG = Random.new(workspace:GetServerTimeNow())
+local EncodingService = Knit.services.EncodingService
 
-return function(length): string
-    local Generated = table.create(length)
-    for i = 1, length do
-        Generated[i] = string.char(RNG:NextInteger(0, 255))
+local ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+local ALPHABET_SIZE = #ALPHABET
+local KEY_LENGTH = 32
+
+local function random_character(): string
+    local position = csprng.RandomInt(1, ALPHABET_SIZE)
+
+    return ALPHABET:sub(position, position)
+end
+
+return function(keylength: number?): string
+    local characters = table.create(KEY_LENGTH)
+
+    for index = 1, KEY_LENGTH do
+        characters[index] = random_character()
     end
-    return base64encode(table.concat(Generated))
+
+    return buffer.tostring(EncodingService:Base64Encode(buffer.fromstring(table.concat(characters))))
 end

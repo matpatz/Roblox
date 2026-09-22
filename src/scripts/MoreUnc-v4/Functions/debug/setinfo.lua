@@ -1,6 +1,6 @@
 type func = typeof(function() end)
 
-return function(func: func, info: table)
+return function(func: func, info)
     -- hook getinfo, and info on func to return what we want
 end
 

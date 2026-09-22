@@ -14,4 +14,14 @@ wrappers.gethwid = function()
     return if gethwid then gethwid() else RbxAnalyticsService:GetClientId()
 end
 
+wrappers.getinfo = function(func)
+    return if getinfo then getinfo(func) else nil
+end
+
+wrappers.setinfo = function(func, info)
+    if setinfo then
+        setinfo(func, info)
+    end
+end
+
 return wrappers

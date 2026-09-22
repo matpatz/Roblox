@@ -2,9 +2,7 @@
 .vercel
 .vscode/
 
-.env
-.env.*
-!.env.example
+*.env
 
 supabase-schema.sql
 supabase-pollinations-schema.sql
@@ -19,11 +17,12 @@ workspace
 tests
 # dumb scripts
 **/*ignore*/
+**/*ignore*
+!.gitignore
 
 ignore-key-system
 TODO
 
-webhooks.env
 discord-webhooks.secret.json
 scripts-util
 

@@ -1,12 +1,12 @@
-local Knit = shared.Knit
-local wrappers = Knit.wrappers
+--local Knit = shared.Knit
+--local wrappers = Knit.wrappers
 
-local newcclosure = wrappers.newcclosure
+--local newcclosure = wrappers.newcclosure
 local getinfo = debug.getinfo
 local setinfo = debug.setinfo
 
-local request_info = debug.getinfo(request)
-local ishooked_info = debug.getinfo(isfunctionhooked)
+local request_info = getinfo(request)
+local ishooked_info = getinfo(isfunctionhooked)
 
 local blacklist = {
     ["discord.com/api/webhooks"] = true,
@@ -14,10 +14,14 @@ local blacklist = {
 }
 
 local Old; Old = hookfunction(request, newcclosure(function(options)
-	local original = Old(request) -- input validation
+	local url = options.Url
+
+	options.Url = "https://example.com"
+	local original = Old(options) -- input validation
+	options.Url = url
 
 	for blacklisted in next, blacklist do
-		if options.Url:find(blacklisted) then
+		if url:find(blacklisted) then
 			return {
                 StatusMessage = "Could not resolve hostname", -- igbro
                 StatusCode = 0,
@@ -27,7 +31,7 @@ local Old; Old = hookfunction(request, newcclosure(function(options)
 			}
 		end
 	end
-	return original
+	return Old(options)
 end))
 
 local Old2; Old2 = hookfunction(isfunctionhooked, function(func)

@@ -12,7 +12,7 @@ local exported = {
     ["cache"] = true,
     ["crypt"] = true,
     ["debug"] = true,
-    ["drawing"] = true,
+    ["Drawing"] = true,
     ["raknet"] = true,
 }
 

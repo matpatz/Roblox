@@ -24,7 +24,7 @@ const POLL_URL = 'https://gen.pollinations.ai/text';
 const DEFAULT_MODEL = 'openai';
 const TITLE_MODEL = 'openai';
 const CONTEXT = 20;
-const MAX_MSG = 400000;
+const MAX_MSG = 40000000; // added two zeros (undo)
 
 // Message `content` is compressed at rest with Node's built-in zlib (gzip → base64),
 // stored in the TEXT column under a `~z:` marker. Every non-empty value is compressed

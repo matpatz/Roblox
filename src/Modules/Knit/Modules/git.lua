@@ -8,31 +8,7 @@ local ROOT = "src"
 local MIRROR = "voltex" -- same folder Knit.require writes to
 
 local function httpget(url: string): string?
-    if request then
-        local ok, res = pcall(request, {
-            Url = url,
-            Method = "GET",
-            Headers = {
-                ["User-Agent"] = `${OWNER}-{REPO}`,
-                ["Accept"] = "application/vnd.github+json"
-            }
-        })
-
-        if not ok or type(res) ~= "table" then
-            return nil
-        end
-
-        local body = res.Body or res.body
-        local status = res.StatusCode or res.status_code or 200
-        if res.Success == false or status >= 400 or type(body) ~= "string" then
-            return nil
-        end
-
-        return body
-    end
-
-    local ok, body = pcall(game.HttpGet, game, url)
-    return if ok then body else nil
+    return game:HttpGet(url) -- depends on the executor but can be more performant than request
 end
 
 local function ensurefolder(dir: string)
@@ -65,7 +41,7 @@ function git.clone(script: string, module: string?)
     end
 
     local ok, decoded = pcall(HttpService.JSONDecode, HttpService, body)
-    if not ok or type(decoded) ~= "table" or type(decoded.tree) ~= "table" then
+    if not ok then
         return nil
     end
 

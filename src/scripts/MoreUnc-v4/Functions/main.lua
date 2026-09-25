@@ -36,24 +36,8 @@ local function mask(func, name: string)
     return wrapped
 end
 
--- luau locks a good chunk of the executor stdlib (debug especially) with
--- table.isfrozen, and rawset into one of those errors outright
-local function isreadonly(t: any): boolean
-    local ok, frozen = pcall(table.isfrozen, t)
-
-    if ok then
-        return frozen == true
-    end
-
-    if type(env.isreadonly) == "function" then
-        local read, res = pcall(env.isreadonly, t)
-
-        if read then
-            return res == true
-        end
-    end
-
-    return false
+local function isreadonly(input): boolean
+    return table.isfrozen(input)
 end
 
 -- executor tables are usually proxies: the real functions hang off __index, so
@@ -194,6 +178,12 @@ local function register(path: string, value: any)
     end
 
     local key = name or path
+
+    -- executor already ships it, theirs wins, skip the entry
+    if env[key] ~= nil then
+        return env[key]
+    end
+
     local tbl = container(category)
     functions[category] = tbl
 

@@ -84,6 +84,7 @@ local function ObtainMoney(Money)
     )
 end
 
+--[[
 tabs.main:CreateToggle({
     Name = "Autofarm Money",
     CurrentValue = false,
@@ -105,11 +106,12 @@ tabs.main:CreateToggle({
         end
     end,
 })
+]]
 
 tabs.main:CreateButton({
     Name = "Get a bazillion dollars",
     Callback = function()
-        ObtainMoney(1e32)
+        ObtainMoney(1e62)
     end,
 })
 

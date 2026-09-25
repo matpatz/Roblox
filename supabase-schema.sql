@@ -118,3 +118,9 @@ DROP POLICY IF EXISTS "Insert" ON games;
 DROP POLICY IF EXISTS "Insert" ON misc;
 
 -- Inserts are handled server-side via service role key (bypasses RLS)
+--
+-- SELECT-only policies are deliberate: every write goes through the service
+-- role. Consequence worth remembering: a DELETE issued with the anon /
+-- authenticated key affects ZERO rows and raises NO error, so it looks like it
+-- worked. Purge `identifiers` with the SQL editor / service role instead --
+-- see supabase-identifiers-cleanup.sql.

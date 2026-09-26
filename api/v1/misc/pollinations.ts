@@ -25,6 +25,8 @@ const DEFAULT_MODEL = 'openai';
 const TITLE_MODEL = 'openai';
 const CONTEXT = 20;
 const MAX_MSG = 40000000; // added two zeros (undo)
+const MAX_ATTACH_BYTES = 5 * 1024 * 1024; // per-file attachment cap (raw bytes)
+const MAX_ATTACH_COUNT = 20;
 
 // Message `content` is compressed at rest with Node's built-in zlib (gzip → base64),
 // stored in the TEXT column under a `~z:` marker. Every non-empty value is compressed
@@ -68,6 +70,18 @@ function parseBody(req) {
   } catch {
     throw new ApiError(400, 'Invalid JSON');
   }
+}
+
+// Insert a chat message, falling back to omitting `attachments` if that column
+// hasn't been migrated yet (so existing deployments keep working).
+async function insertMessage(row) {
+  const run = (r) => db().from('chat_messages').insert(r);
+  let { error } = await run(row);
+  if (error && row.attachments && /attachments/i.test(error.message || '')) {
+    const { attachments, ...rest } = row;
+    ({ error } = await run(rest));
+  }
+  return error;
 }
 
 // KV-backed rate limiting; lazy import + swallowed failures so missing KV never breaks the chat.
@@ -132,12 +146,16 @@ async function findConversation(userId, convId) {
 }
 
 async function messagesFor(convId) {
-  const { data, error } = await db()
-    .from('chat_messages')
-    .select('id, role, content, created_at')
-    .eq('conversation_id', convId)
-    .order('created_at', { ascending: true })
-    .limit(200);
+  const base = () =>
+    db()
+      .from('chat_messages')
+      .eq('conversation_id', convId)
+      .order('created_at', { ascending: true })
+      .limit(200);
+  let { data, error } = await base().select('id, role, content, created_at, attachments');
+  if (error && /attachments/i.test(error.message || '')) {
+    ({ data, error } = await base().select('id, role, content, created_at'));
+  }
   if (error) throw new ApiError(500, 'Failed to load messages');
   return Promise.all((data || []).map(async (m) => ({ ...m, content: await unpack(m.content) })));
 }
@@ -209,6 +227,21 @@ async function chat(req, res, userId) {
   const rawT = Number(body.temperature);
   const temperature = Number.isFinite(rawT) ? Math.min(2, Math.max(0, rawT)) : 0.7;
 
+  // Optional file attachments — the client sends files > 10KB as attachments.
+  let attachments = null;
+  if (Array.isArray(body.attachments)) {
+    const clean = body.attachments
+      .filter((a) => a && typeof a === 'object' && typeof a.name === 'string' && typeof a.data === 'string')
+      .slice(0, MAX_ATTACH_COUNT)
+      .map((a) => ({
+        name: String(a.name).slice(0, 255),
+        type: typeof a.type === 'string' ? String(a.type).slice(0, 128) : '',
+        size: Number.isFinite(Number(a.size)) ? Math.max(0, Math.min(Number(a.size), MAX_ATTACH_BYTES)) : 0,
+        data: String(a.data).slice(0, MAX_ATTACH_BYTES * 1.5)
+      }));
+    if (clean.length) attachments = clean;
+  }
+
   await limit(`u:${userId}`, { limit: 20, window: 60 });
   await limit(`u:${userId}`, { limit: 400, window: 86400 });
 
@@ -230,9 +263,9 @@ async function chat(req, res, userId) {
     { role: 'user', content: message }
   ];
 
-  const { error: saveErr } = await db()
-    .from('chat_messages')
-    .insert({ user_id: userId, conversation_id: convId, role: 'user', content: await pack(message), model });
+  const userRow = { user_id: userId, conversation_id: convId, role: 'user', content: await pack(message), model };
+  if (attachments) userRow.attachments = attachments;
+  const saveErr = await insertMessage(userRow);
   if (saveErr) throw new ApiError(500, 'Failed to save message');
   await db().from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', convId);
 
@@ -263,6 +296,21 @@ async function chat(req, res, userId) {
 
   const emit = (o) => res.write(`data: ${JSON.stringify(o)}\n\n`);
   let out = '';
+
+  // Persist the assistant reply BEFORE ending the response so the serverless
+  // runtime can't freeze the function right after `res.end()` and drop the save.
+  const saveReply = async () => {
+    if (!out.trim()) return;
+    const { error } = await insertMessage({
+      user_id: userId,
+      conversation_id: convId,
+      role: 'assistant',
+      content: await pack(out.trim()),
+      model
+    });
+    if (error) console.error('Failed to save reply:', error.message);
+    await db().from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', convId);
+  };
 
   try {
     emit({ conv: { id: convId, title: conv.title } });
@@ -324,21 +372,16 @@ async function chat(req, res, userId) {
         }
       }
     }
+    await saveReply();
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (err) {
     console.error('Stream failed:', err?.message || err);
+    await saveReply().catch(() => {}); // keep whatever partial text made it through
     try {
       emit({ error: 'Stream failed' });
       res.end();
     } catch {}
-  }
-
-  if (out.trim()) {
-    const { error } = await db()
-      .from('chat_messages')
-      .insert({ user_id: userId, conversation_id: convId, role: 'assistant', content: await pack(out.trim()), model });
-    if (error) console.error('Failed to save reply:', error.message);
   }
 }
 

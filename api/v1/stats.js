@@ -46,6 +46,41 @@ async function fetchWindowAddedAt(supabase, sinceIso) {
   return rows;
 }
 
+// Same cap applies to the 30-day "active users" window, but there we need the
+// DISTINCT identifier count, not the raw rows. Paging the whole window serially
+// would be ~50 round-trips once the table grows past a few days, so fetch pages
+// concurrently. Ordering by (added_at, id) keeps page boundaries stable across
+// concurrent queries; without a deterministic order a row could land in two
+// pages or none and the count would drift.
+async function fetchActiveUsers(supabase, sinceIso) {
+  const seen = new Set();
+  const PAGE = 1000;
+  const CONCURRENCY = 10;
+  let from = 0;
+  for (;;) {
+    const offsets = [];
+    for (let i = 0; i < CONCURRENCY; i++) offsets.push(from + i * PAGE);
+    const results = await Promise.all(offsets.map((o) =>
+      supabase
+        .from('identifiers')
+        .select('identifier')
+        .gte('added_at', sinceIso)
+        .order('added_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(o, o + PAGE - 1)
+    ));
+    let done = false;
+    for (const { data, error } of results) {
+      if (error || !data) { done = true; break; }
+      for (const row of data) seen.add(row.identifier);
+      if (data.length < PAGE) { done = true; break; }
+    }
+    if (done) break;
+    from += CONCURRENCY * PAGE;
+  }
+  return seen.size;
+}
+
 async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
   if (req.method !== 'GET') throw new ApiError(405, 'Method not allowed');
@@ -55,7 +90,11 @@ async function handler_fn(req, res) {
   if (cached) return successResponse(res, req, cached);
 
   const supabase = getSupabase();
-  const guildId = '1355796182143598804';
+  // Invite code from the home page (discord.gg/bSPRYhBGtf). The public invite
+  // endpoint returns approximate_member_count / approximate_presence_count with
+  // no auth, unlike /guilds/{id} which needs a bot token and silently 401s
+  // whenever BOT_TOKEN is unset/invalid (the stat showed 0 for this reason).
+  const discordInvite = 'bSPRYhBGtf';
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -68,12 +107,11 @@ async function handler_fn(req, res) {
   const sevenDaysAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6));
 
   const [discordResult, totalsResult, activeResult, hourlyResult, historyResult] = await Promise.allSettled([
-    fetch(`https://discord.com/api/v10/guilds/${guildId}?with_counts=true`, {
-      headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` }
+    fetch(`https://discord.com/api/v10/invites/${discordInvite}?with_counts=true`, {
+      headers: { 'User-Agent': 'VoltexStats/1.0 (voltex.website)' }
     }).then(r => r.ok ? r.json() : null),
     supabase.from('totals').select('total_executions').eq('id', 1).single(),
-    supabase.from('identifiers').select('identifier', { count: 'exact' })
-      .gte('added_at', thirtyDaysAgo.toISOString()),
+    fetchActiveUsers(supabase, thirtyDaysAgo.toISOString()),
     supabase.from('identifiers').select('*', { count: 'exact', head: true })
       .gte('added_at', oneHourAgo.toISOString()),
     fetchWindowAddedAt(supabase, sevenDaysAgo.toISOString())
@@ -85,8 +123,8 @@ async function handler_fn(req, res) {
 
   const totalExecutions = totalsResult.status === 'fulfilled' ? totalsResult.value?.data?.total_executions || 0 : 0;
 
-  const activeUsers = activeResult.status === 'fulfilled' && activeResult.value?.data
-    ? new Set(activeResult.value.data.map(u => u.identifier)).size
+  const activeUsers = activeResult.status === 'fulfilled' && typeof activeResult.value === 'number'
+    ? activeResult.value
     : 0;
 
   const executionsLastHour = hourlyResult.status === 'fulfilled' ? hourlyResult.value?.count || 0 : 0;

@@ -45,5 +45,5 @@ if not success then
 end
 
 if not (shared.Webhook and shared.Webhook.Disabled) and shared.webhook_disabled ~= true then
-    loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/webhook.lua"))()
+    -- loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/webhook.lua"))() calm down on requets to vercel (me no want pay money)
 end

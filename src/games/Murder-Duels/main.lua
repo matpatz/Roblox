@@ -54,7 +54,7 @@ local config = {
 	},
 }
 
-const Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
+const Aimbot = shared.Knit.require("Modules/Aimbot", "main")
 
 -- // Utils
 Utils.GetTargets = function(): { Instance }
@@ -275,7 +275,7 @@ if LocalPlayer.Backpack then
 end
 
 -- // Interface
-const Rayfield = assert(loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua")))()
+const Rayfield = assert(shared.Knit.require("Rayfield", "main", "libraries"))
 
 const Window = Rayfield:CreateWindow({
 	Name = "Murder Duels",

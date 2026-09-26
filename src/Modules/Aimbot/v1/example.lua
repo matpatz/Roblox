@@ -1,4 +1,4 @@
-local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/v1/main.lua"))()
+local Aimbot = loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/src/Modules/Aimbot/v1/main.lua"))()
 local Players = game:GetService("Players")
 
 local hrp = Players.LocalPlayer.Character.HumanoidRootPart

@@ -8,7 +8,7 @@ local tweens = get(game:GetService("TweenService"))
 
 local Handler = require(rep.Modules.HandlerLoader.GameHandler)
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = shared.Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
 	Name = marketplace:GetProductInfo(game.PlaceId).Name,
 	LoadingTitle = "something or another",

@@ -7,7 +7,7 @@ local ReplicatedStorage = services.ReplicatedStorage
 --// Interface
 local Game = shared.game_name
 
-local Rayfield = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"))()
+local Rayfield = shared.Knit.ui.new("Rayfield")()
 
 local Window = Rayfield:CreateWindow({
     Name = Game,

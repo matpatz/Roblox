@@ -140,7 +140,7 @@ end
 
 -- // Esp
 
-const Esp = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Libraries/Esp/main.lua"))()
+const Esp = shared.Knit.require("Libraries/Esp", "main")
 
 -- Both containers live in one table, so a toggle only swaps its own Location:
 -- emptying a Location hides that container without dropping the other one.
@@ -151,7 +151,7 @@ local EspContainers = {
 
 -- // Interface
 
-const Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+const Rayfield = shared.Knit.ui.new("Rayfield")()
 const Window = Rayfield:CreateWindow({
 	Name = "Titan Warfare",
 	LoadingTitle = "Titan Warfare",

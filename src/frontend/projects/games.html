@@ -113,7 +113,7 @@ function renderGames(games) {
     `).join('');
 
     const updatedHtml = game.updated ? `<span class="update-time">Updated ${game.updated}</span>` : '';
-    const loadstringCode = game.loadstring || `loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/games/${game.id}/main.lua"))()`;
+    const loadstringCode = game.loadstring || '';
     const escapedCode = escapeHtml(loadstringCode);
 
     const playBtnHtml = game.playUrl 

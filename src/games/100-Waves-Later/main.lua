@@ -176,7 +176,7 @@ end
 
 -- // Interface
 
-local Rayfield = loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua"))()
+local Rayfield = shared.Knit.require("Rayfield", "main", "libraries")
 Flags = Rayfield.Flags
 
 local Window = Rayfield:CreateWindow({

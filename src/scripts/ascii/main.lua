@@ -16,7 +16,7 @@
 local HttpService = game:GetService("HttpService")
 local AssetService = game:GetService("AssetService")
 
-local API_URL = "https://www.voltex.website/api/v1/ascii"
+local API_URL = "https://roblox-alpha-murex.vercel.app/api/v1/ascii"
 local COLUMNS = 80
 local MAX_WIDTH = COLUMNS * 2 -- 2x output width is plenty of detail
 

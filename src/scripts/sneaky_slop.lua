@@ -1,7 +1,7 @@
--- loadstring(game:HttpGet("https://www.voltex.website/src/scripts/sneaky_slop.lua"))()
+-- shared.Knit.require("scripts", "sneaky_slop")
 -- Im aware this could be detected, but I doubt you would do something like that.
 
-local OurBase = `https://roblox-alpha-murex.vercel.app/src/Modules/sneaky_slop`
+local OurBase = `https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/src/Modules/sneaky_slop`
 local SilentAim = `{OurBase}/SilentAim.lua`
 
 local OurSource = game:HttpGet(SilentAim);

@@ -1,7 +1,7 @@
 --[[
 	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
 ]]
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = shared.Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
 	Name = "Lebron James",
 	LoadingTitle = "fuh you",

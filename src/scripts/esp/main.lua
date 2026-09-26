@@ -1,4 +1,4 @@
-local Rayfield = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/libraries/Rayfield/main.lua"))()
+local Rayfield = shared.Knit.require("Rayfield", "main", "libraries")
 
 local Window = Rayfield:CreateWindow({
     Name = "Voltex ;)",
@@ -16,7 +16,7 @@ local Window = Rayfield:CreateWindow({
 local visuals = Window:CreateTab("Visuals", 4483362458)
 local visualsSection = visuals:CreateSection("Player")
 
-local esp = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Libraries/Esp/main.lua"))()
+local esp = shared.Knit.require("Libraries/Esp", "main")
 
 local eSettings = visuals:CreateDropdown({
     Name = "Esp Settings",

@@ -3,7 +3,7 @@
 ]]
 local gname = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))(); --local flags = Rayfield.Flags
+local Rayfield = shared.Knit.ui.new("Rayfield")(); --local flags = Rayfield.Flags
 local Window = Rayfield:CreateWindow({
 	Name = gname,
 	LoadingTitle = "fuh you",

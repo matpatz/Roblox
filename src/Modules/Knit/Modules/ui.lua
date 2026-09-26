@@ -5,7 +5,7 @@ local instances = Knit.require("Modules/Knit/Modules", "instances")
 
 -- @param1: Obsidian/Rayfield
 ui.new = function(Library: string)
-    local lib = loadstring(game:HttpGet(`https://www.voltex.website/libraries/{Library}/main.lua`))
+    local lib = loadstring(game:HttpGet(`https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/libraries/{Library}/main.lua`))
     return lib -- client calls the function of which loadstring returns
 end
 

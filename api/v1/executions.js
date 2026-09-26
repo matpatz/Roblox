@@ -17,11 +17,21 @@ async function handler_fn(req, res) {
 
   const raw = validateString(body.identifier, 'identifier', { min: 1, max: 150 });
   const identifier = createHash('sha256').update(raw).digest('hex');
+
+  // Game attribution is best-effort: older clients don't send it, and we don't
+  // want to reject an execution over a missing/odd game name. Trim and cap it so
+  // it can't bloat a row; store NULL when absent so the stats code can skip it.
+  let game = null;
+  if (typeof body.game === 'string') {
+    const trimmed = body.game.trim();
+    if (trimmed) game = trimmed.slice(0, 100);
+  }
+
   const supabase = getSupabase();
 
   const { data, error } = await supabase
     .from('identifiers')
-    .insert({ identifier })
+    .insert({ identifier, game })
     .select('id')
     .single();
 

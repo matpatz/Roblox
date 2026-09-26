@@ -5,7 +5,7 @@ local services = Knit.services
 
 local name = shared.game_name
 
-local Rayfield = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"))()
+local Rayfield = shared.Knit.ui.new("Rayfield")()
 
 local Players = services.Players
 local RunService = services.RunService

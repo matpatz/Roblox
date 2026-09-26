@@ -1,4 +1,4 @@
-loadstring(game:HttpGet("https://www.voltex.website/src/Modules/Platform.lua"))()
+shared.Knit.require("Modules", "Platform")
 local device = getgenv()["device"]
 
 local Knit = shared.Knit
@@ -25,7 +25,7 @@ Player.CharacterAdded:Connect(function(NewCharacter)
     Humanoid = NewCharacter:WaitForChild("Humanoid")
 end)
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = shared.Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
     Name = "Teen-Titan Battleground",
     LoadingTitle = "Title",
@@ -166,7 +166,7 @@ end)
 
 main:CreateSection("Combat + Visuals")
 
-local esp = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Libraries/Esp/main.lua"))()
+local esp = shared.Knit.require("Libraries/Esp", "main")
 
 main:CreateDropdown({
     Name = "Esp Settings",

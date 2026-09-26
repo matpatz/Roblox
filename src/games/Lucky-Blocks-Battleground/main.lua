@@ -1,4 +1,4 @@
-local rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local rayfield = shared.Knit.ui.new("Rayfield")()
 local Window = rayfield:CreateWindow({
     Name = "Lucky Block",
     LoadingTitle = "LuckyBlock",

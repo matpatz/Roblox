@@ -1,8 +1,7 @@
 local aimbot = {}
 
-local Helpers = loadstring(game:HttpGet(
-	"https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/v1/Helpers.lua"
-))()
+local Knit = shared.Knit
+local Helpers = Knit.require("Modules/Aimbot/v1", "Helpers")
 assert(Helpers, "Aimbot: failed to load Helpers.lua")
 
 const Players = game:GetService("Players")

@@ -17,7 +17,7 @@ const AreaEggSlotIdentity = require(ReplicatedStorage.Shared.Util.AreaEggSlotIde
 const EggToolDisplay = require(ReplicatedStorage.Shared.Eggs.EggToolDisplay)
 const Trails = require(ReplicatedStorage.Data.Trails)
 
-const Anticheat = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/Steal-an-Egg/bypass.lua"))()
+const Anticheat = shared.Knit.require("games/Steal-an-Egg", "bypass")
 
 -- // Workspace
 const SpawmPoint = workspace:FindFirstChildWhichIsA("SpawnLocation")
@@ -543,7 +543,7 @@ end
 
 -- // Interface
 
-local Rayfield = loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua"))()
+local Rayfield = shared.Knit.require("Rayfield", "main", "libraries")
 Flags = Rayfield.Flags
 
 local Window = Rayfield:CreateWindow({

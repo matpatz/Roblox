@@ -58,27 +58,47 @@ local function normalize(content: string): string
     return (content:gsub("\r", ""))
 end
 
+-- Mirrors to try in order. raw.githubusercontent has no SLA and will 429 under
+-- load, so jsDelivr (which mirrors the repo) is the automatic fallback when raw
+-- is rate-limited. jsDelivr caches for ~12h, so the fallback can serve a slightly
+-- stale module -- better than loading nothing, and the disk cache below is
+-- fresher whenever it exists.
+local HOSTS = {
+    "https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main",
+    "https://cdn.jsdelivr.net/gh/matpatz/Roblox@main"
+}
+
+-- Fetches the first mirror whose body actually compiles as Lua. A 429/HTML body
+-- is rejected (not accepted), so a rate-limited raw correctly falls through to
+-- jsDelivr instead of poisoning the cache.
+local function fetch(script, module, root)
+    for _, host in HOSTS do
+        local url = `{host}/{root}/{script}/{module}.lua`
+        local ok, content = pcall(game.HttpGet, game, url)
+
+        if ok and type(content) == "string" and #content > 0 and loadstring(content) then
+            return content
+        end
+    end
+
+    return nil
+end
+
 -- keeps voltex/{script}/{module}.lua in sync with the website and hands back the fresh
 -- chunk. "if the file exists, never look again" meant an edit to an already cached
 -- module was invisible forever (a file that loads fine and then errors still gets
 -- cached), so the body is always fetched and the cached copy is only reused when it
 -- actually matches what the website is serving
-local function sync(script, module)
+local function sync(script, module, root)
+    root = root or "src"
+
     local path = `voltex/{script}/{module}.lua`
-    local ok, script_content = pcall(game.HttpGet, game, `https://voltex.website/src/{script}/{module}.lua`)
+    local script_content = fetch(script, module, root)
 
-    if not ok or type(script_content) ~= "string" then
-        return nil -- network died, caller falls back to the cache
+    if not script_content then
+        return nil -- every host died, caller falls back to the cache
     end
 
-    -- a missing path answers with an empty body on some executors instead of
-    -- raising. that still compiles, so without this the wipe below would drop a
-    -- working cached copy and the caller would load nothing at all
-    if #script_content == 0 then
-        return nil
-    end
-
-    -- a 404 still returns a body, dont cache something that wont compile
     local chunk = loadstring(script_content)
     if not chunk then
         return nil
@@ -108,19 +128,19 @@ local modules = {
 
 local loaded: { [string]: { value: any } } = {}
 
-Knit.require = function(script: string, module: string, configurable: table?)
+Knit.require = function(script: string, module: string, root: string?)
     -- one instance per module, otherwise every require re-runs it (Modules/globals.lua
     -- rebuilds _G.globals on load, so a second require would wipe it)
-    local name = `{script}/{module}`
+    local name = `{root or "src"}/{script}/{module}`
     if loaded[name] then
         return loaded[name].value
     end
 
-    local chunk, ondisk = sync(script, module)
+    local chunk, ondisk = sync(script, module, root)
 
     if chunk and ondisk then
         -- fresh body landed on disk, load it the normal way
-        local value = loadscript(script, module, configurable)
+        local value = loadscript(script, module)
         loaded[name] = { value = value }
 
         return value
@@ -135,7 +155,7 @@ Knit.require = function(script: string, module: string, configurable: table?)
     end
 
     -- nothing fresh (offline, 404): a stale cache still beats loading nothing
-    local value = loadscript(script, module, configurable)
+    local value = loadscript(script, module)
     loaded[name] = { value = value }
 
     return value

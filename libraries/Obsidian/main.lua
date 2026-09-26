@@ -2898,7 +2898,7 @@ end
 
 local OnlineFetchIcons, OnlineIcons = pcall(function()
     return (loadstring(
-        game:HttpGet("https://roblox-alpha-murex.vercel.app/libraries/Obsidian/lucide.lua")
+        game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/libraries/Obsidian/lucide.lua")
     ) :: () -> IconModule)()
 end)
 if OnlineFetchIcons and OnlineIcons then

@@ -1,7 +1,7 @@
 --[[
 	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
 ]]
-loadstring(game:HttpGet("https://www.voltex.website/src/Modules/Platform.lua"))()
+shared.Knit.require("Modules", "Platform")
 local device = getgenv()["device"]
 
 local get = (type(cloneref) == "function") and cloneref or function(x) return x end
@@ -21,7 +21,7 @@ local log = get(game:GetService("LogService"))
 
 local cam = workspace.CurrentCamera
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = shared.Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
     Name = "Voltex - " .. tostring(game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name),
     LoadingTitle = "Title",
@@ -159,7 +159,7 @@ end)
 
 main:CreateSection("Combat + Visuals")
 
-local cesp = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/esp.lua"))();local esp = cesp()
+local esp = shared.Knit.require("Libraries/Esp", "main")
 main:CreateDropdown({
     Name = "Esp Settings",
     Options = {"Box", "Name", "Held Item", "Tracer", "Health", "Distance", "Chams", "Health Bar", "Team Color", "Performance Mode"},
@@ -167,28 +167,28 @@ main:CreateDropdown({
     MultipleOptions = true,
     Flag = "es",
     Callback = function(selectedOptions)
-        esp:box(false)
-        esp:name(false)
-        esp:held(false)
-        esp:tracer(false)
-        esp:health(false)
-        esp:distance(false)
-        esp:chams(false)
-        esp:healthbar(false)
-        esp:team(false)
-        esp:performance(false)
+        esp.ShowBox = false
+        esp.ShowName = false
+        esp.ShowHeld = false
+        esp.ShowTracer = false
+        esp.ShowHealth = false
+        esp.ShowDistance = false
+        esp.ShowChams = false
+        esp.ShowHealthBar = false
+        esp.TeamColor = false
+        esp.PerformanceMode = false
 
         for _, option in pairs(selectedOptions) do
-            if option == "Box" then esp:box(true)
-            elseif option == "Name" then esp:name(true)
-            elseif option == "Held Item" then esp:held(true)
-            elseif option == "Tracer" then esp:tracer(true)
-            elseif option == "Health" then esp:health(true)
-            elseif option == "Distance" then esp:distance(true)
-            elseif option == "Chams" then esp:chams(true)
-            elseif option == "Health Bar" then esp:healthbar(true)
-            elseif option == "Team Color" then esp:team(true)
-            elseif option == "Performance Mode" then esp:performance(true)
+            if option == "Box" then esp.ShowBox = true
+            elseif option == "Name" then esp.ShowName = true
+            elseif option == "Held Item" then esp.ShowHeld = true
+            elseif option == "Tracer" then esp.ShowTracer = true
+            elseif option == "Health" then esp.ShowHealth = true
+            elseif option == "Distance" then esp.ShowDistance = true
+            elseif option == "Chams" then esp.ShowChams = true
+            elseif option == "Health Bar" then esp.ShowHealthBar = true
+            elseif option == "Team Color" then esp.TeamColor = true
+            elseif option == "Performance Mode" then esp.PerformanceMode = true
             end
         end
     end,
@@ -199,7 +199,7 @@ main:CreateToggle({
     CurrentValue = false,
     Flag = "esp",
     Callback = function(v)
-        if v then esp:enable() else esp:disable() end
+        if v then esp:Enable() else esp:Disable() end
     end,
 })
 

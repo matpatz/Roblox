@@ -20,6 +20,12 @@
     { "source": "/pollinations", "destination": "/pollinations/", "permanent": true },
     { "source": "/calculator", "destination": "/calculator/", "permanent": true }
   ],
+  "crons": [
+    {
+      "path": "/api/v1/cron/cleanup",
+      "schedule": "0 7 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

@@ -45,7 +45,7 @@ return Services
 -- Usage:
 
 -- local Services = loadstring(
---     game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Variables.lua")
+--     game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/src/Modules/Variables.lua")
 -- )()
 
 -- print(Services.Workspace)

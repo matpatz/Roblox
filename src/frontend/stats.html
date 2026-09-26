@@ -41,6 +41,13 @@
       </div>
       <div class="graph-container" id="execGraph"></div>
     </div>
+
+    <div class="top-games-section" id="topGamesSection">
+      <div class="graph-header">
+        <h2>Top Scripts (Last 7 Days)</h2>
+      </div>
+      <div class="top-games" id="topGames"></div>
+    </div>
   </div>
 </main>
 
@@ -127,11 +134,45 @@ function renderGraph(history) {
   execGraph.appendChild(bars);
 }
 
+function renderTopGames(games) {
+  const el = document.getElementById('topGames');
+  if (!el) return;
+  el.innerHTML = '';
+  if (!games || games.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'top-games-empty';
+    empty.textContent = 'No executions logged yet.';
+    el.appendChild(empty);
+    return;
+  }
+  const medals = ['#d4af37', '#a8a8a8', '#b08d57'];
+  games.forEach(function(g, i) {
+    const row = document.createElement('div');
+    row.className = 'top-game-row';
+    const rank = document.createElement('div');
+    rank.className = 'top-game-rank';
+    rank.textContent = String(i + 1);
+    rank.style.color = medals[i] || 'var(--muted)';
+    row.appendChild(rank);
+    const name = document.createElement('div');
+    name.className = 'top-game-name';
+    name.textContent = g.game || 'Unknown';
+    name.title = g.game || 'Unknown';
+    row.appendChild(name);
+    const count = document.createElement('div');
+    count.className = 'top-game-count';
+    count.textContent = String(g.count);
+    row.appendChild(count);
+    el.appendChild(row);
+  });
+}
+
 let cached = null;
 try { cached = JSON.parse(localStorage.getItem('stats_cache')); } catch(e) {}
 if (cached) {
   renderStats(cached);
   if (cached.execution_history) renderGraph(cached.execution_history);
+  if (cached.top_games) renderTopGames(cached.top_games);
 }
 
 const controller = new AbortController();
@@ -147,6 +188,7 @@ fetch('/api/v1/stats', { signal: controller.signal })
     const data = json.data || json;
     renderStats(data);
     if (data.execution_history) renderGraph(data.execution_history);
+    if (data.top_games) renderTopGames(data.top_games);
     try { localStorage.setItem('stats_cache', JSON.stringify(data)); } catch(e) {}
   })
   .catch(function(err) { console.warn('Stats API:', err.message); });

@@ -78,20 +78,34 @@ async function countActiveUsers(supabase, since) {
   return seen.size;
 }
 
-async function buildExecutionHistory(supabase, startUtcMidnight) {
+function normalizeGame(game) {
+  if (typeof game !== 'string') return null;
+  const trimmed = game.trim();
+  return trimmed ? trimmed : null;
+}
+
+async function buildExecutionStats(supabase, startUtcMidnight) {
   const counts = {};
   for (let i = HISTORY_DAYS - 1; i >= 0; i--) {
     const day = new Date(startUtcMidnight);
     day.setUTCDate(day.getUTCDate() + i);
     counts[day.toISOString().slice(0, 10)] = 0;
   }
-  await walkIdentifiers(supabase, startUtcMidnight.toISOString(), 'added_at', (rows) => {
+  const games = {};
+  await walkIdentifiers(supabase, startUtcMidnight.toISOString(), 'added_at, game', (rows) => {
     for (const row of rows) {
       const day = toUtcDay(row.added_at);
       if (day in counts) counts[day]++;
+      const game = normalizeGame(row.game);
+      if (game) games[game] = (games[game] || 0) + 1;
     }
   });
-  return Object.entries(counts).map(([date, count]) => ({ date, count }));
+  const history = Object.entries(counts).map(([date, count]) => ({ date, count }));
+  const topGames = Object.entries(games)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([game, count]) => ({ game, count }));
+  return { history, topGames };
 }
 
 async function handler_fn(req, res) {
@@ -123,7 +137,7 @@ async function handler_fn(req, res) {
     countActiveUsers(supabase, thirtyDaysAgo.toISOString()),
     supabase.from('identifiers').select('*', { count: 'exact', head: true })
       .gte('added_at', oneHourAgo.toISOString()),
-    buildExecutionHistory(supabase, sevenDaysAgo)
+    buildExecutionStats(supabase, sevenDaysAgo)
   ]);
 
   const discord = discordResult.status === 'fulfilled' ? discordResult.value : null;
@@ -137,7 +151,8 @@ async function handler_fn(req, res) {
       presence_count: discord?.approximate_presence_count ?? 0,
       member_count: discord?.approximate_member_count ?? 0
     },
-    execution_history: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value) ? historyResult.value : []
+    execution_history: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value?.history) ? historyResult.value.history : [],
+    top_games: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value?.topGames) ? historyResult.value.topGames : []
   };
 
   await kv.set(CACHE_KEY, payload, { ex: CACHE_TTL });

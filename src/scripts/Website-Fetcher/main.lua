@@ -1,6 +1,6 @@
 
 local Rayfield = loadstring(game:HttpGet(
-	"https://roblox-alpha-murex.vercel.app/libraries/Rayfield/main.lua"
+	"https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/libraries/Rayfield/main.lua"
 ))()
 
 local Window = Rayfield:CreateWindow({

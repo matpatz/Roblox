@@ -58,7 +58,7 @@ local config = {
 	},
 }
 
-const Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
+const Aimbot = shared.Knit.require("Modules/Aimbot", "main")
 
 -- // Utils
 Utils.GetTargets = function(): { Instance }

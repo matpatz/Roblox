@@ -28,7 +28,7 @@ rep["Modules"]["Velocity"]["Settings"]["BanServiceSettings"]["BanDefaultReason"]
 
 local gname = marketplace:GetProductInfo(game.PlaceId).Name
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))(); --local flags = Rayfield.Flags
+local Rayfield = shared.Knit.ui.new("Rayfield")(); --local flags = Rayfield.Flags
 local Window = Rayfield:CreateWindow({
 	Name = gname,
 	LoadingTitle = "fuh you",
@@ -39,7 +39,7 @@ local combat = Window:CreateTab("Combat")
 
 combat:CreateLabel("Shoot")
 
-local aimbot = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/aimbot.lua"))()
+--local aimbot = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/aimbot.lua"))()
 
 local function gclosest()
     local nearest, nearestDist = nil, math.huge

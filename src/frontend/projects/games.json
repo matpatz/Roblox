@@ -121,17 +121,6 @@
     "playButtonText": "Play on Roblox"
   },
   {
-    "id": "Prospecting",
-    "title": "Prospecting",
-    "description": "Autofarm",
-    "updated": "2 hours ago",
-    "tags": ["Functional", "Undetected", "Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Prospecting/main.lua\"))()",
-    "buttonText": "Get Script",
-    "playUrl": "https://www.roblox.com/games/129827112113663/Prospecting",
-    "playButtonText": "Play on Roblox"
-  },
-  {
     "id": "teentitan",
     "title": "T-Titans Battlegrounds",
     "description": "Autofarm, Esp, Aimbot, Triggerbot",
@@ -191,14 +180,6 @@
     "description": "Auto Level & Money",
     "tags": ["Functional"],
     "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Clone-Line-Challenge/main.lua\"))()",
-    "buttonText": "Get Script"
-  },
-  {
-    "id": "desertstorm",
-    "title": "Desert Storm",
-    "description": "Anticheat Bypass",
-    "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Desert-Storm/main.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -282,14 +263,6 @@
     "buttonText": "Get Script"
   },
   {
-    "id": "rostalpha",
-    "title": "Rost Alpha",
-    "description": "Silent Aim",
-    "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Rost-Alpha/main.lua\"))()",
-    "buttonText": "Get Script"
-  },
-  {
     "id": "speedvsgiant",
     "title": "Speed vs Giant",
     "description": "Autofarm & Teleports",
@@ -336,5 +309,294 @@
     "tags": ["Functional"],
     "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Vagrant/main.lua\"))()",
     "buttonText": "Get Script"
+  },
+  {
+    "id": "100waveslater",
+    "title": "100 Waves Later",
+    "description": "Auto Revive, Infinite Money & Kill All",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/100-Waves-Later/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/92371631484540/100-Waves-Later",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "airdropfps",
+    "title": "Airdrop Fps",
+    "description": "Silent Aim & Wallbang",
+    "updated": "5 days ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Airdrop-Fps\"; loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/init/v1/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/93091759101123/Airdrop-Fps",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "choosethestrongeranime",
+    "title": "Choose the Stronger Anime",
+    "description": "Auto Draft & Bidding",
+    "updated": "6 days ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Choose-the-Stronger-Anime\"; loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/init/v1/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "collectleaves",
+    "title": "Collect Leaves",
+    "description": "Auto Collect & Sell",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Collect-Leaves/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/92637789841354/Collect-Leaves",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "dmgfps",
+    "title": "Dmg Fps",
+    "description": "Kill Aura",
+    "updated": "6 hours ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Dmg-Fps\"; loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/init/v1/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/100753254401525/Dmg-Fps",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "drawaperfectcircle",
+    "title": "Draw a Perfect Circle",
+    "description": "Auto Draw Perfect Circle",
+    "updated": "6 hours ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Draw-a-perfect-circle/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "flickfootball",
+    "title": "Flick Football",
+    "description": "Auto Score Goals",
+    "updated": "12 days ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Flick-Football/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/79530930758685/Flick-Football",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "fpsflick",
+    "title": "Fps Flick",
+    "description": "Silent Aim",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Fps-Flick/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/136801880565837/Fps-Flick",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "heatfps",
+    "title": "Heat Fps",
+    "description": "Silent Aim",
+    "updated": "3 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Heat-Fps/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/83055872352243/Heat-Fps",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "hoodwars",
+    "title": "Hood Wars",
+    "description": "Silent Aim",
+    "updated": "3 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Hood-Wars/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/116965629608311/Hood-Wars",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "illegalsoccer",
+    "title": "Illegal Soccer",
+    "description": "Infinite Stamina",
+    "updated": "6 days ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Illegal-Soccer/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/126987974021910/Illegal-Soccer",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "murderduels",
+    "title": "Murder Duels",
+    "description": "Silent Aim & Wallbang",
+    "updated": "6 days ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Murder-Duels/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/120851538706364/Murder-Duels",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "navalwarfare",
+    "title": "Naval Warfare",
+    "description": "Kill Aura & Auto Fire",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Naval-Warfare/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/2210085102/Naval-Warfare",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "nomansland",
+    "title": "No Man's Land",
+    "description": "Silent Aim",
+    "updated": "2 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/No-mans-Land/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/113859684940866/No-Mans-Land",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "operationssiege",
+    "title": "Operations Siege",
+    "description": "Silent Aim",
+    "updated": "2 weeks ago",
+    "tags": ["Functional", "Detected"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Operations-Siege/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/13997018456/Operations-Siege",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "pordieratwar",
+    "title": "Pordier at War",
+    "description": "Silent Aim",
+    "updated": "3 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Pordier-at-War/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/8791578652/Pordier-at-War",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "revenge",
+    "title": "Revenge",
+    "description": "Silent Aim, Infinite Ammo & No Recoil",
+    "updated": "3 minutes ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Revenge/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/131101029195036/Revenge",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "rocketrumble",
+    "title": "Rocket Rumble",
+    "description": "Silent Aim",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Rocket-Rumble/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/89704645856683/Rocket-Rumble",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "strafefps",
+    "title": "Strafe Fps",
+    "description": "Silent Aim",
+    "updated": "13 days ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Strafe-Fps/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/109020905733214/Strafe-Fps",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "strikewarfare",
+    "title": "Strike Warfare",
+    "description": "Silent Aim",
+    "updated": "3 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Strike-Warfare/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/130404059693601/Strike-Warfare",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "surviveandkillthekillers",
+    "title": "Survive and Kill the Killers",
+    "description": "Silent Aim & Wallbang",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Survive-and-Kill-the-Killers/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/155382109/Survive-and-Kill-the-Killers",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "trident",
+    "title": "Trident",
+    "description": "Silent Aim, Aimbot, ESP & More",
+    "updated": "4 weeks ago",
+    "tags": ["Functional", "Open Source"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Trident/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "unamedshooter",
+    "title": "Unamed Shooter",
+    "description": "Silent Aim",
+    "updated": "2 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Unamed-Shooter/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "warrivals",
+    "title": "War Rivals",
+    "description": "Silent Aim",
+    "updated": "13 days ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/War-Rivals/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/121918565917280/War-Rivals",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "warfare",
+    "title": "Warfare",
+    "description": "Silent Aim",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Warfare/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/81748781442029/Warfare",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "zombierushsurvival",
+    "title": "Zombie Rush Survival",
+    "description": "Silent Aim",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Zombie-Rush-Survival/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/82457571485380/Zombie-Rush-Survival",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "zombieuprising",
+    "title": "Zombie Uprising",
+    "description": "Silent Aim",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Zombie-Uprising/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/4972091010/Zombie-Uprising",
+    "playButtonText": "Play on Roblox"
   }
 ]

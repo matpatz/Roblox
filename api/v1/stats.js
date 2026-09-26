@@ -9,6 +9,12 @@ export const config = { runtime: 'nodejs' };
 
 const CACHE_KEY = 'stats:cache';
 const CACHE_TTL = 60;
+// discord.gg code linked on the home page (src/frontend/index.html) — keep in sync.
+const DISCORD_INVITE = 'bSPRYhBGtf';
+const PAGE_SIZE = 1000;
+const FETCH_CONCURRENCY = 10;
+const ACTIVE_USERS_DAYS = 30;
+const HISTORY_DAYS = 7;
 
 // PostgREST returns timestamptz values as ISO strings, but not necessarily in
 // UTC (the offset can be +10:00, -05:00, +00, etc.). Slicing the raw string
@@ -25,60 +31,67 @@ function toUtcDay(ts) {
   return isNaN(d.getTime()) ? String(ts).slice(0, 10) : d.toISOString().slice(0, 10);
 }
 
-// PostgREST caps a plain select at 1000 rows (db-max-rows), even when a larger
-// limit is requested. The 7-day window can exceed that, which silently drops the
-// newest executions. Fetch in pages so the whole window is returned.
-async function fetchWindowAddedAt(supabase, sinceIso) {
-  const rows = [];
-  const PAGE = 1000;
-  let from = 0;
-  for (;;) {
-    const { data, error } = await supabase
-      .from('identifiers')
-      .select('added_at')
-      .gte('added_at', sinceIso)
-      .range(from, from + PAGE - 1);
-    if (error || !data) break;
-    rows.push(...data);
-    if (data.length < PAGE) break;
-    from += PAGE;
-  }
-  return rows;
+function daysAgo(days) {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - days);
+  return d;
 }
 
-// Same cap applies to the 30-day "active users" window, but there we need the
-// DISTINCT identifier count, not the raw rows. Paging the whole window serially
-// would be ~50 round-trips once the table grows past a few days, so fetch pages
-// concurrently. Ordering by (added_at, id) keeps page boundaries stable across
-// concurrent queries; without a deterministic order a row could land in two
-// pages or none and the count would drift.
-async function fetchActiveUsers(supabase, sinceIso) {
-  const seen = new Set();
-  const PAGE = 1000;
-  const CONCURRENCY = 10;
+function hoursAgo(hours) {
+  return new Date(Date.now() - hours * 60 * 60 * 1000);
+}
+
+// PostgREST hard-caps a plain select at 1000 rows (db-max-rows), so any window
+// that can exceed that must be paged. This walks every row with `added_at >=
+// since`, calling `consume(rows)` once per page. Pages are fetched in parallel
+// batches; ordering by (added_at, id) keeps page boundaries stable so no row is
+// skipped or double-counted across concurrent queries.
+async function walkIdentifiers(supabase, since, columns, consume) {
   let from = 0;
   for (;;) {
     const offsets = [];
-    for (let i = 0; i < CONCURRENCY; i++) offsets.push(from + i * PAGE);
-    const results = await Promise.all(offsets.map((o) =>
+    for (let i = 0; i < FETCH_CONCURRENCY; i++) offsets.push(from + i * PAGE_SIZE);
+    const pages = await Promise.all(offsets.map((offset) =>
       supabase
         .from('identifiers')
-        .select('identifier')
-        .gte('added_at', sinceIso)
+        .select(columns)
+        .gte('added_at', since)
         .order('added_at', { ascending: true })
         .order('id', { ascending: true })
-        .range(o, o + PAGE - 1)
+        .range(offset, offset + PAGE_SIZE - 1)
     ));
-    let done = false;
-    for (const { data, error } of results) {
-      if (error || !data) { done = true; break; }
-      for (const row of data) seen.add(row.identifier);
-      if (data.length < PAGE) { done = true; break; }
+
+    for (const { data, error } of pages) {
+      if (error || !data) return;
+      consume(data);
+      if (data.length < PAGE_SIZE) return;
     }
-    if (done) break;
-    from += CONCURRENCY * PAGE;
+    from += FETCH_CONCURRENCY * PAGE_SIZE;
   }
+}
+
+async function countActiveUsers(supabase, since) {
+  const seen = new Set();
+  await walkIdentifiers(supabase, since, 'identifier', (rows) => {
+    for (const row of rows) seen.add(row.identifier);
+  });
   return seen.size;
+}
+
+async function buildExecutionHistory(supabase, startUtcMidnight) {
+  const counts = {};
+  for (let i = HISTORY_DAYS - 1; i >= 0; i--) {
+    const day = new Date(startUtcMidnight);
+    day.setUTCDate(day.getUTCDate() + i);
+    counts[day.toISOString().slice(0, 10)] = 0;
+  }
+  await walkIdentifiers(supabase, startUtcMidnight.toISOString(), 'added_at', (rows) => {
+    for (const row of rows) {
+      const day = toUtcDay(row.added_at);
+      if (day in counts) counts[day]++;
+    }
+  });
+  return Object.entries(counts).map(([date, count]) => ({ date, count }));
 }
 
 async function handler_fn(req, res) {
@@ -90,66 +103,41 @@ async function handler_fn(req, res) {
   if (cached) return successResponse(res, req, cached);
 
   const supabase = getSupabase();
-  // Invite code from the home page (discord.gg/bSPRYhBGtf). The public invite
-  // endpoint returns approximate_member_count / approximate_presence_count with
-  // no auth, unlike /guilds/{id} which needs a bot token and silently 401s
-  // whenever BOT_TOKEN is unset/invalid (the stat showed 0 for this reason).
-  const discordInvite = 'bSPRYhBGtf';
 
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const oneHourAgo = new Date();
-  oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+  const thirtyDaysAgo = daysAgo(ACTIVE_USERS_DAYS);
+  const oneHourAgo = hoursAgo(1);
 
   // 7-day window aligned to UTC midnight so the query range exactly covers the
-  // same UTC dates used by the history buckets below, regardless of server TZ.
+  // same UTC dates used by the history buckets, regardless of server TZ.
   const now = new Date();
-  const sevenDaysAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6));
+  const sevenDaysAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (HISTORY_DAYS - 1)));
 
   const [discordResult, totalsResult, activeResult, hourlyResult, historyResult] = await Promise.allSettled([
-    fetch(`https://discord.com/api/v10/invites/${discordInvite}?with_counts=true`, {
+    // The public invite endpoint returns approximate member/presence counts with
+    // no auth. The old /guilds/{id} call needed a bot token and showed 0 whenever
+    // BOT_TOKEN was unset/invalid.
+    fetch(`https://discord.com/api/v10/invites/${DISCORD_INVITE}?with_counts=true`, {
       headers: { 'User-Agent': 'VoltexStats/1.0 (voltex.website)' }
-    }).then(r => r.ok ? r.json() : null),
+    }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
     supabase.from('totals').select('total_executions').eq('id', 1).single(),
-    fetchActiveUsers(supabase, thirtyDaysAgo.toISOString()),
+    countActiveUsers(supabase, thirtyDaysAgo.toISOString()),
     supabase.from('identifiers').select('*', { count: 'exact', head: true })
       .gte('added_at', oneHourAgo.toISOString()),
-    fetchWindowAddedAt(supabase, sevenDaysAgo.toISOString())
+    buildExecutionHistory(supabase, sevenDaysAgo)
   ]);
 
-  const discordCommunity = discordResult.status === 'fulfilled' && discordResult.value
-    ? { presence_count: discordResult.value.approximate_presence_count || 0, member_count: discordResult.value.approximate_member_count || 0 }
-    : { presence_count: 0, member_count: 0 };
-
-  const totalExecutions = totalsResult.status === 'fulfilled' ? totalsResult.value?.data?.total_executions || 0 : 0;
-
-  const activeUsers = activeResult.status === 'fulfilled' && typeof activeResult.value === 'number'
-    ? activeResult.value
-    : 0;
-
-  const executionsLastHour = hourlyResult.status === 'fulfilled' ? hourlyResult.value?.count || 0 : 0;
-
-  let executionHistory = [];
-  if (historyResult.status === 'fulfilled' && historyResult.value?.length) {
-    const counts = {};
-    for (let i = 6; i >= 0; i--) {
-      const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
-      counts[day.toISOString().slice(0, 10)] = 0;
-    }
-    for (const row of historyResult.value) {
-      const day = toUtcDay(row.added_at);
-      if (day in counts) counts[day]++;
-    }
-    executionHistory = Object.entries(counts).map(([date, count]) => ({ date, count }));
-  }
+  const discord = discordResult.status === 'fulfilled' ? discordResult.value : null;
 
   const payload = {
-    total_executions: totalExecutions,
-    active_users: activeUsers,
-    executions_last_hour: executionsLastHour,
+    total_executions: totalsResult.status === 'fulfilled' ? totalsResult.value?.data?.total_executions ?? 0 : 0,
+    active_users: activeResult.status === 'fulfilled' && typeof activeResult.value === 'number' ? activeResult.value : 0,
+    executions_last_hour: hourlyResult.status === 'fulfilled' ? hourlyResult.value?.count ?? 0 : 0,
     api_status: 'Operational',
-    discord_community: discordCommunity,
-    execution_history: executionHistory
+    discord_community: {
+      presence_count: discord?.approximate_presence_count ?? 0,
+      member_count: discord?.approximate_member_count ?? 0
+    },
+    execution_history: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value) ? historyResult.value : []
   };
 
   await kv.set(CACHE_KEY, payload, { ex: CACHE_TTL });

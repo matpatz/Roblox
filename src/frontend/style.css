@@ -201,6 +201,86 @@ h1 {
   flex-wrap: wrap;
 }
 
+.about {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 24px 96px;
+}
+
+.about-inner {
+  width: 100%;
+  max-width: 720px;
+}
+
+.about-card {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 36px;
+  text-align: left;
+  transition: border-color 0.25s ease;
+}
+
+.about-card:hover {
+  border-color: var(--accent-color);
+}
+
+.about-card h2 {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: 0.02em;
+  margin: 0 0 18px;
+}
+
+.about-card h3 {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 26px 0 12px;
+}
+
+.about-list {
+  margin: 0;
+  padding-left: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.about-list li::marker {
+  color: var(--accent-color);
+}
+
+.about-card p {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+.about-card .about-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.about-btn {
+  margin-top: 10px;
+  padding: 12px 22px;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .about-card { padding: 24px; }
+}
+
 .discord-btn {
   display: inline-flex;
   align-items: center;

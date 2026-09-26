@@ -1,11 +1,13 @@
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
+const Workspace = game:GetService("Workspace")
 
 -- // Modules
 const Modules = ReplicatedStorage.Shared.modules
 
 local BlasterController = require(Modules.Weapon.Controllers.BlasterController)
+local TeamUtil = require(Modules.TeamUtil)
 -- const GameRemotes = require(Modules.GameRemotes)
 
 -- // Events
@@ -40,9 +42,12 @@ local Utils = cheat.Utils
 local Core = cheat.Core
 
 -- // config
+-- TeamCheck has to stay false: this game has no Team service sides, sides live in a
+-- team attribute read by TeamUtil (Player.Team is nil for everyone, so the module
+-- would drop every player). Enemies are filtered in GetClosest instead.
 local aimconfig = {
     Range = 400,
-    TeamCheck = true,
+    TeamCheck = false,
     AimPart = "Head",
     Visible = true,
     EntityLists = {
@@ -53,8 +58,7 @@ local config = {
     ["Combat"] = {
         ["InfiniteAmmo"] = true,
         ["SilentAim"] = true,
-        ["NoRecoil"] = true,
-        ["NoSpread"] = true
+        ["NoRecoil"] = true
     }
 }
 
@@ -65,7 +69,7 @@ Utils["Aimbot"].GetClosest = function(): (BasePart?)
 
     local Filtered = {}
     for _, Target in workspace:QueryDescendants("Model:has(Humanoid)") do
-        if Target ~= Character then
+        if Target ~= Character and TeamUtil.areEnemies(LocalPlayer, Target) then
             table.insert(Filtered, Target)
         end
     end
@@ -76,44 +80,49 @@ Utils["Aimbot"].GetClosest = function(): (BasePart?)
     return AimPart
 end
 
-local shoot; shoot = hookfunction(BlasterController.shoot, function(Controller)
-    if config["Combat"]["InfiniteAmmo"] then
-        Controller.ammo = 30
-    end
-
-    return shoot(Controller)
-end)
-
-local get_ray_directions = debug.getupvalue(shoot, 5)
-local function new_ray_directions(CameraCFrame, raysPerShot, spread, ServerTimeNow)
-    if config["Combat"]["NoSpread"] then
-        spread = 0
-    end
-
-    local AimPart = nil
-    if config["Combat"]["SilentAim"] then
-        AimPart = Utils["Aimbot"].GetClosest()
-    end
-
-    if not AimPart then
-        return get_ray_directions(CameraCFrame, raysPerShot, spread, ServerTimeNow)
-    end
-
-    local AimDirection = AimPart.Position - CameraCFrame.Position
-
-    if AimDirection.Magnitude < 1 then
-        return get_ray_directions(CameraCFrame, raysPerShot, spread, ServerTimeNow)
-    end
-
-    local aim_cframe = CFrame.lookAt(CameraCFrame.Position, AimPart.Position, CameraCFrame.UpVector)
-
-    return get_ray_directions(aim_cframe, raysPerShot, spread, ServerTimeNow)
+if isfunctionhooked(BlasterController.shoot) then
+    restorefunction(BlasterController.shoot)
 end
 
-debug.setupvalue(shoot, 5, new_ray_directions)
+local shoot; shoot = hookfunction(BlasterController.shoot, function(Controller)
+    if config["Combat"]["InfiniteAmmo"] then
+        Controller.ammo = Controller.stats.magazineSize
+    end
 
-local recoil; recoil = hookfunction(BlasterController.recoil, function(p17)
+    if not config["Combat"]["SilentAim"] then
+        return shoot(Controller)
+    end
+
+    local AimPart = Utils["Aimbot"].GetClosest()
+
+    if not AimPart then
+        return shoot(Controller)
+    end
+
+    -- shoot() builds its rays from Workspace.CurrentCamera.CFrame AND sends that same
+    -- CFrame to BlasterShoot:FireServer, so the camera itself has to look at the target
+    -- for the local rays and the server's copy of them to agree.
+    const Camera = Workspace.CurrentCamera
+    const CameraCFrame = Camera.CFrame
+    const AimDirection = AimPart.Position - CameraCFrame.Position
+
+    if AimDirection.Magnitude < 1 then
+        return shoot(Controller)
+    end
+
+    Camera.CFrame = CFrame.lookAt(CameraCFrame.Position, AimPart.Position, CameraCFrame.UpVector)
+    local Result = shoot(Controller)
+    Camera.CFrame = CameraCFrame
+
+    return Result
+end)
+
+if isfunctionhooked(BlasterController.recoil) then
+    restorefunction(BlasterController.recoil)
+end
+
+local recoil; recoil = hookfunction(BlasterController.recoil, function(Controller)
     if not config["Combat"]["NoRecoil"] then
-        recoil(p17)
+        recoil(Controller)
     end
 end)

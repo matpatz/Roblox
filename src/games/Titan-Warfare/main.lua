@@ -1,267 +1,312 @@
-loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/scripts/antikick/main.lua"))()
+-- // Knit
+const Knit = shared.Knit
+const conmanager = Knit.conmanager
 
-local rep = game:GetService("ReplicatedStorage")
-local block = {
-    ["RemoteFunction"] = rep:WaitForChild("Remotes"):WaitForChild("Titans"):WaitForChild("DepleteStamina"),
-    ["Remote"] = rep:WaitForChild("Remotes"):WaitForChild("General"):WaitForChild("Log"),
-	["Remote"] = rep:WaitForChild("Remotes"):WaitForChild("Titans"):WaitForChild("Grab")
+-- // Services
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const Players = game:GetService("Players")
+const RunService = game:GetService("RunService")
+const CollectionService = game:GetService("CollectionService")
+
+-- // Remotes
+const Remotes = ReplicatedStorage:WaitForChild("Remotes")
+const BladesHit = Remotes.Blades.Hit
+const TitansPunch = Remotes.Titans.Punch
+const GunsFire = Remotes.Guns.Fire
+const GunsBazookaFire = Remotes.Guns.BazookaFire
+const RedeemCode = Remotes.General.RedeemCode
+
+--// Workspace
+local Titans = workspace.Objects.Titans
+
+-- // LocalPlayer
+const LocalPlayer = Players.LocalPlayer
+
+if not LocalPlayer.Character then
+	LocalPlayer.CharacterAdded:Wait()
+end
+local Character = LocalPlayer.Character
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Humanoid = Character:WaitForChild("Humanoid")
+
+LocalPlayer.CharacterAdded:Connect(function(NewCharacter)
+	Character = NewCharacter
+	HumanoidRootPart = NewCharacter:WaitForChild("HumanoidRootPart")
+	Humanoid = NewCharacter:WaitForChild("Humanoid")
+end)
+
+-- // config
+local config = {
+	Combat = {
+		KillAura = false,
+		AutoPunch = false,
+		SoldierAura = false
+	},
+	Visuals = {
+		TitanEsp = false,
+		PlayerEsp = false
+	}
 }
 
-local success, mt = pcall(function() return getrawmetatable(game) end)
+-- // cheat
+local cheat = {
+	Utils = {
+        ["Soldier"] = {},
+        ["Titan"] = {}
+    }
+}
+local Utils = cheat.Utils
 
-if success and mt then
-    setreadonly(mt, false)
-    local oldNamecall = mt.__namecall
+-- // team
 
-    mt.__namecall = newcclosure(function(self, ...)
-        local method = getnamecallmethod()
-        
-        for typeName, remote in pairs(block) do
-            if self == remote then
-                if method == "FireServer" or method == "InvokeServer" then
-                    warn(": "..self.Name)
-                    return nil
-                end
-            end
-        end
-        
-        return oldNamecall(self, ...)
-    end)
+-- Sides are the Eldian / Marleyan teams. Players.Team stays nil until a round hands
+-- you one, so fall back to the replicated currentTeam value.
+function Utils.GetTeam(Player)
+	const Team = Player.Team
 
-    setreadonly(mt, true)
+	if Team then
+		return Team.Name
+	end
+
+	const Data = Player:FindFirstChild("ReplicatedData")
+	const CurrentTeam = Data and Data:FindFirstChild("currentTeam")
+
+	return CurrentTeam and CurrentTeam.Value
 end
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local Window = Rayfield:CreateWindow({
-    Name = "Titan Warfare",
-    LoadingTitle = "Subtitle",
-    KeySystem = false
-})
+function Utils.IsEnemy(Player)
+	if Player == LocalPlayer then
+		return false
+	end
 
-local runs = game:GetService("RunService")
-local lp = game:GetService("Players").LocalPlayer
+	const Team = Utils.GetTeam(Player)
+	const LocalTeam = Utils.GetTeam(LocalPlayer)
 
-local Hit = rep.Remotes.Blades.Hit
-local GrabRemote = rep.Remotes.Titans.Grab
-
-local svt = Window:CreateTab("Main", 4483362458)
-local titan = svt:CreateLabel("Titan", "wind")
-
-local kal = nil
-local ka = svt:CreateToggle({
-    Name = "Kill Aura (Eldian / Pve)",
-    CurrentValue = false,
-    Flag = "ka",
-    Callback = function(v)
-        if v then
-            kal = runs.Heartbeat:Connect(function()
-                for _, titan in pairs(workspace.Objects.Titans:GetChildren()) do
-                    local nape = titan:FindFirstChild("Nape")
-                    if nape then
-                        game:GetService("ReplicatedStorage").Remotes.Blades.Hit:FireServer(nape, 401)
-                    end
-                end
-            end)
-        else
-            if kal then
-                kal:Disconnect()
-                kal = nil
-            end
-        end
-    end,
-})
-
---[[
-local ad = nil
-local tpToggle = svt:CreateToggle({
-    Name = "Tp Bellow Map",
-    CurrentValue = false,
-    Flag = "ad",
-    Callback = function(v)
-        if v then
-            ad = runs.Heartbeat:Connect(function()
-                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then lp.Character.HumanoidRootPart.CFrame = CFrame.new(158, 75, -4) end
-            end)
-        else
-            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then lp.Character.HumanoidRootPart.CFrame = CFrame.new(695, 25, -285) end
-
-            if ad then
-                ad:Disconnect()
-                ad = nil
-            end
-        end
-    end,
-}) --]]
-
-local apt = nil
-local sniperToggle = svt:CreateToggle({
-    Name = "Auto punch has Titan",
-    CurrentValue = false,
-    Flag = "apt",
-    Callback = function(v)
-        killAll = v
-        if v then
-            apt = runs.Heartbeat:Connect(function()
-
-			local Punch = rep.Remotes.Titans.Punch
-			Punch:FireServer(false)
-              
-            end)
-        else
-            if apt then
-                apt:Disconnect()
-                apt = nil
-            end
-        end
-    end,
-})
-
-local GunsRemote = rep.Remotes.Guns
-local GunFire = GunsRemote.Fire
-
-local svtl = svt:CreateLabel("Pvp", "wind")
-
-local killAll = false
-local function getnearest()
-    local target = nil
-    local dist = math.huge
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= lp and lp.Character then
-            if player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 and player.Character:FindFirstChild("PlayerHitbox") and player.Team ~= lp.Team then
-                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    local magnitude = (player.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).magnitude
-                    if magnitude < dist then
-                        target = player
-                        dist = magnitude
-                    end
-                end
-            end
-        end
-    end
-    return target
+	return Team ~= nil and LocalTeam ~= nil and Team ~= LocalTeam
 end
 
-local sniperLoop = nil
-local sniperToggle = svt:CreateToggle({
-    Name = "Soldier Arua",
-    CurrentValue = false,
-    Flag = "sniper",
-    Callback = function(v)
-        killAll = v
-        if v then
-            sniperLoop = runs.Heartbeat:Connect(function()
-                pcall(function()
-                    if killAll and lp.Character then
-                        local target = getnearest()
-                        if target and target.Character then
-                            -- Sniper shot
-                            local args = {
-                                [1] = "Sniper",
-                                [2] = target.Character.Head.CFrame,
-                                [3] = target.Character.Head
-                            }
-                            game:GetService("ReplicatedStorage").Remotes.Guns.Fire:FireServer(unpack(args))
-                            
-                            -- Bazooka shot
-                            local args2 = {
-                                [1] = target.Character.HumanoidRootPart.CFrame
-                            }
-                            game:GetService("ReplicatedStorage").Remotes.Guns.BazookaFire:FireServer(unpack(args2))
-                        end
-                    end
-                end)
-            end)
-        else
-            if sniperLoop then
-                sniperLoop:Disconnect()
-                sniperLoop = nil
-            end
+function Utils.Soldier.GetClosest()
+	local Nearest = nil
+	local NearestDistance = math.huge
+
+	for _, Player in Players:GetPlayers() do
+		const TargetCharacter = Player.Character
+        if not TargetCharacter then
+            continue
         end
-    end,
-})
 
-local misc = Window:CreateTab("Misc", 4483362458)
-local codes = misc:CreateLabel("Codes", "wind")
-
-local RedeemCode = rep.Remotes.General.RedeemCode
-
-misc:CreateButton({
-    Name = "Redeem all Codes",
-    Callback = function()
-        local codes = {"STOP_EREN", "STOP_THE_RUMBLING", "THIS_IS_FREEDOM", "GIANT_SPINE", "FREEDOM_IS_HERE", "BREAK_FREEEEEE", "TRUE_FREEDOM", "IF_I_LOSE_IT_ALL", "MIKASA_SUKASA", "ILOVETITANWARFARE", "HANG3", "45KLIKESYAY"}
-        for _, code in pairs(codes) do
-            RedeemCode:InvokeServer(code)
+		const TargetHumanoid = TargetCharacter:FindFirstChildOfClass("Humanoid")
+        if not TargetHumanoid then
+            continue
         end
-    end
-})
-
-local cs = misc:CreateLabel("Crosshair", "wind")
-
-local crosshairColor = Color3.fromRGB(255, 0, 0)
-local crosshairLines = {}
-
-local CrosshairColorPicker = misc:CreateColorPicker({
-    Name = "Crosshair Color",
-    Color = crosshairColor,
-    Flag = "CrosshairColor",
-    Callback = function(value)
-        crosshairColor = value
-    end
-})
-
-local ct = misc:CreateToggle({
-    Name = "Crosshair",
-    CurrentValue = false,
-    Flag = "ct",
-    Callback = function(value)
-        if not value then
-            for _, line in pairs(crosshairLines) do
-                if line then
-                    line.Visible = false
-                    line:Remove()
-                end
-            end
-            crosshairLines = {}
+		const Hitbox = TargetCharacter:FindFirstChild("PlayerHitbox")
+        if not Hitbox then
+            continue
         end
-    end,
-})
 
-local function updtcross()
-    if not ct.CurrentValue then 
-        return 
-    end
+		if TargetHumanoid.Health > 0 and Utils.IsEnemy(Player) then
+			const Distance = (Hitbox.Position - HumanoidRootPart.Position).Magnitude
 
-    if #crosshairLines == 0 then
-        for i = 1, 2 do
-            local line = Drawing.new("Line")
-            line.Color = crosshairColor
-            line.Thickness = 2
-            line.Visible = true
-            table.insert(crosshairLines, line)
-        end
-    end
+			if Distance < NearestDistance then
+				Nearest = Player
+				NearestDistance = Distance
+			end
+		end
+	end
 
-    local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-    local posX, posY = mousePos.X, mousePos.Y
-
-    local size = 10
-    crosshairLines[1].From = Vector2.new(posX - size, posY)
-    crosshairLines[1].To = Vector2.new(posX + size, posY)
-    crosshairLines[2].From = Vector2.new(posX, posY - size)
-    crosshairLines[2].To = Vector2.new(posX, posY + size)
-
-    for _, line in pairs(crosshairLines) do
-        if line then
-            line.Color = crosshairColor
-        end
-    end
+	return Nearest
 end
 
-runs.RenderStepped:Connect(updtcross)
+function Utils.Titan.GetClosest()
+	local Nearest = nil
+	local NearestDistance = math.huge
+
+	for _, Titan in Titans:GetChildren() do
+		const TitanHumanoid = Titan:FindFirstChildOfClass("Humanoid")
+		const Hitbox = Titan:FindFirstChild("Nape")
+
+		if TitanHumanoid and TitanHumanoid.Health > 0 and Hitbox then
+			const Distance = (Hitbox.Position - HumanoidRootPart.Position).Magnitude
+
+			if Distance < NearestDistance then
+				Nearest = Titan
+				NearestDistance = Distance
+			end
+		end
+	end
+
+	return Nearest
+end
+
+-- // Esp
+
+const Esp = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Libraries/Esp/main.lua"))()
+
+-- Both containers live in one table, so a toggle only swaps its own Location:
+-- emptying a Location hides that container without dropping the other one.
+local EspContainers = {
+	Titans = { Location = Titans, Color = Color3.fromRGB(255, 60, 60) },
+	Players = { Location = Players }
+}
+
+-- // Interface
+
+const Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+const Window = Rayfield:CreateWindow({
+	Name = "Titan Warfare",
+	LoadingTitle = "Titan Warfare",
+	KeySystem = false
+})
+
+const Combat = Window:CreateTab("Main", 4483362458)
+Combat:CreateLabel("Titan", "wind")
+
+Combat:CreateToggle({
+	Name = "Kill Aura (Eldian / Pve)",
+	CurrentValue = config.Combat.KillAura,
+	Flag = "ka",
+	Callback = function(Value)
+		config.Combat.KillAura = Value
+
+		if not Value then
+			conmanager.disconnect("KillAura")
+
+			return
+		end
+
+		-- the game's own blade damage scales with swing speed, 401 drops titans fast.
+		-- Same gate the game uses for its titan helpers: a Nape part on a live titan.
+		conmanager.connect("KillAura", RunService.Heartbeat, function()
+            local Titan = Utils["Titan"].GetClosest()
+            if not Titan then
+                return
+            end
+            local Nape = Titan:FindFirstChild("Nape")
+            --local TitanHumanoid = Titan:FindFirstChildOfClass("Humanoid")
+
+            BladesHit:FireServer(Nape, 401)
+		end)
+	end
+})
+
+Combat:CreateToggle({
+	Name = "Auto punch as Titan",
+	CurrentValue = config.Combat.AutoPunch,
+	Flag = "apt",
+	Callback = function(Value)
+		config.Combat.AutoPunch = Value
+
+		if not Value then
+			conmanager.disconnect("AutoPunch")
+
+			return
+		end
+
+		-- Punch takes the same boolean the game passes from attack(false) / attack(true)
+		conmanager.connect("AutoPunch", RunService.Heartbeat, function()
+			-- the game tags every titan humanoid, so this only punches while actually a titan
+			if not CollectionService:HasTag(Humanoid, "TitanShifted") then
+				return
+			end
+
+			TitansPunch:FireServer(false)
+		end)
+	end
+})
+
+Combat:CreateLabel("Pvp", "wind")
+
+Combat:CreateToggle({
+	Name = "Soldier Aura",
+	CurrentValue = config.Combat.SoldierAura,
+	Flag = "sniper",
+	Callback = function(Value)
+		config.Combat.SoldierAura = Value
+
+		if not Value then
+			conmanager.disconnect("SoldierAura")
+
+			return
+		end
+
+		conmanager.connect("SoldierAura", RunService.Heartbeat, function()
+			const Target = Utils["Soldier"].GetClosest()
+
+			if not Target then
+				return
+			end
+
+			const TargetCharacter = Target.Character
+			const Head = TargetCharacter.Head
+			const RootPart = TargetCharacter.HumanoidRootPart
+
+			-- the game fires these as ("Sniper", impactCFrame, hitInstance, hitNormal)
+			-- and (impactCFrame, hitInstance)
+			GunsFire:FireServer("Sniper", CFrame.new(Head.Position), Head)
+			GunsBazookaFire:FireServer(CFrame.new(RootPart.Position), RootPart)
+		end)
+	end
+})
+
+const Visuals = Window:CreateTab("Visuals")
+Visuals:CreateLabel("Titans")
+
+Visuals:CreateToggle({
+	Name = "Titan Esp",
+	CurrentValue = config.Visuals.TitanEsp,
+	Flag = "tesp",
+	Callback = function(Value)
+		config.Visuals.TitanEsp = Value
+
+		EspContainers.Titans.Location = Value and Titans or {}
+		Esp:SetContainer(EspContainers)
+
+		if config.Visuals.TitanEsp or config.Visuals.PlayerEsp then
+			Esp:Enable()
+		else
+			Esp:Disable()
+		end
+	end
+})
+
+Visuals:CreateLabel("Players")
+
+Visuals:CreateToggle({
+	Name = "Player Esp",
+	CurrentValue = config.Visuals.PlayerEsp,
+	Flag = "pesp",
+	Callback = function(Value)
+		config.Visuals.PlayerEsp = Value
+
+		EspContainers.Players.Location = Value and Players or {}
+		Esp:SetContainer(EspContainers)
+
+		if config.Visuals.TitanEsp or config.Visuals.PlayerEsp then
+			Esp:Enable()
+		else
+			Esp:Disable()
+		end
+	end
+})
+
+const Shop = Window:CreateTab("Shop", 4483362458)
+Shop:CreateLabel("Codes", "wind")
+
+const codes = { "STOP_EREN", "STOP_THE_RUMBLING", "THIS_IS_FREEDOM", "GIANT_SPINE", "FREEDOM_IS_HERE", "BREAK_FREEEEEE", "TRUE_FREEDOM", "IF_I_LOSE_IT_ALL", "MIKASA_SUKASA", "ILOVETITANWARFARE", "HANG3", "45KLIKESYAY" }
+
+Shop:CreateButton({
+	Name = "Redeem all Codes",
+	Callback = function()
+
+		for _, code in codes do
+			RedeemCode:InvokeServer(code)
+		end
+	end
+})
 
 Rayfield:Notify({
-    Title = "Titan Warfare",
-    Content = "successfully loaded!",
-    Duration = 5,
-    Image = 4483362458,
+	Title = "Titan Warfare",
+	Content = "successfully loaded!",
+	Duration = 5,
+	Image = 4483362458
 })

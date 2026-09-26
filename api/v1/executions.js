@@ -30,7 +30,12 @@ async function handler_fn(req, res) {
     throw new ApiError(500, 'Failed to save');
   }
 
-  await supabase.rpc('increment_executions');
+  // No counter call here on purpose. `totals.total_executions` is bumped by the
+  // identifiers_bump_totals trigger, so the counter is an invariant of the table
+  // itself. The old `supabase.rpc('increment_executions')` was fire-and-forget --
+  // when the RPC stopped resolving in production the number froze at 1512 while
+  // ~3k executions/day kept being logged, and nothing ever reported it.
+  // See supabase-executions-counter.sql.
 
   return successResponse(res, req, { id: data.id }, 201);
 }

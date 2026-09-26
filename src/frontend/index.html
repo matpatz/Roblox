@@ -20,6 +20,7 @@
       <a href="/" class="active">Home</a>
       <a href="/projects">Projects</a>
       <a href="/stats">Stats</a>
+      <a href="#about">About</a>
     </div>
   </nav>
 </header>
@@ -44,6 +45,24 @@
     </div>
   </div>
 </main>
+<section class="about" id="about">
+  <div class="about-inner">
+    <div class="about-card">
+      <h2>About Me</h2>
+      <p>I'm <span class="about-name">matpatz</span>, or matpat. Yes, the real matpat. The executor I use for script development is Potassium, and I don't make games.</p>
+      <p>You can hire me for something over $20, but anything I think is worth less than that I'll probably do for free. Send a script suggestion in the Discord server — you can also report bugs in scripts there.</p>
+      <h3>My languages</h3>
+      <ul class="about-list">
+        <li>Luau</li>
+        <li>Basic HTML and CSS</li>
+      </ul>
+      <a class="discord-btn about-btn" href="https://discord.gg/bSPRYhBGtf" target="_blank" rel="noopener noreferrer">
+        <img src="/assets/discord.png" alt="" width="20" height="20">
+        Join the Discord server
+      </a>
+    </div>
+  </div>
+</section>
 <script>
 fetch('/api/v1/stats')
   .then(function(r) { return r.json(); })

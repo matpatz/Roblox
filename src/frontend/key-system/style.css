@@ -1,37 +1,70 @@
-body {
+.key-container {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100vh - 84px);
   display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background:
-    radial-gradient(900px 480px at 50% -8%, rgba(90, 107, 138, 0.18), transparent 65%),
-    var(--bg);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
 }
 
-.container {
-  background: linear-gradient(180deg, #13161f 0%, var(--bg-soft) 100%);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 2.5rem 2rem 2rem;
+.key-inner {
+  max-width: 460px;
   width: 100%;
-  max-width: 440px;
-  margin: auto;
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.eyebrow {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-color);
+  margin: 0 0 12px;
+}
+
+.key-container h1 {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 4.2vw, 42px);
+  line-height: 1.15;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+
+.key-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: var(--muted);
+  margin: 0 0 36px;
+}
+
+.key-card {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 28px 24px;
+  text-align: center;
+  transition: border-color 0.25s ease;
+}
+
+.key-card:hover {
+  border-color: var(--accent-color);
 }
 
 #key {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 1.25rem 1.25rem;
+  padding: 1.1rem 1.1rem;
   margin-bottom: 1.4rem;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   word-break: break-all;
-  min-height: 62px;
+  min-height: 56px;
   color: var(--accent-hover);
   display: flex;
   align-items: center;
@@ -71,61 +104,47 @@ body {
   text-shadow: none;
 }
 
-button {
-  width: 100%;
-  padding: 0.85rem;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  border: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, filter 0.15s ease;
-  display: flex;
+.key-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  padding: 12px 26px;
+  background: var(--bg-soft);
+  border: 1px solid var(--accent-subtle);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
 }
 
-.btn-row {
-  display: flex;
-  gap: 10px;
+.key-btn:hover:not(:disabled) {
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
 }
 
-.btn-row button {
-  flex: 1;
-  width: 50%;
-  min-width: 0;
-}
-
-#generateBtn {
-  background: linear-gradient(135deg, #6d87b4 0%, var(--accent-color) 55%, #445a80 100%);
+.key-btn.primary {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
   color: #fff;
-  box-shadow: 0 8px 24px rgba(90, 107, 138, 0.35);
 }
 
-#generateBtn:hover:not(:disabled) {
-  filter: brightness(1.12);
-  transform: translateY(-1px);
-  box-shadow: 0 10px 28px rgba(90, 107, 138, 0.45);
+.key-btn.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
-#generateBtn:disabled {
-  background: var(--bg);
-  color: var(--muted);
-  box-shadow: none;
+.key-btn.secondary {
+  background: transparent;
+}
+
+.key-btn:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none;
-}
-
-#copyBtn {
-  background: rgba(74, 222, 128, 0.08);
-  border: 1px solid rgba(74, 222, 128, 0.3);
-  color: #4ade80;
-}
-
-#copyBtn:hover {
-  background: rgba(74, 222, 128, 0.14);
 }
 
 #debug {

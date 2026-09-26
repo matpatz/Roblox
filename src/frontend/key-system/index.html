@@ -26,22 +26,23 @@
   </nav>
 </header>
 
-<main class="container">
+<main class="key-container">
+  <div class="key-inner">
+    <p class="eyebrow">Key System</p>
+    <h1>Generate your key</h1>
+    <p class="key-sub">Complete the Linkvertise ad, then claim your key below.</p>
 
-  <div class="key-row">
-    <div id="key" class="empty">Key will appear here</div>
+    <div class="key-card">
+      <div id="key" class="empty">Key will appear here</div>
+
+      <div class="btn-row">
+        <button id="generateBtn" class="key-btn primary" disabled>Generate Key</button>
+        <button id="copyBtn" class="key-btn secondary">Copy Key</button>
+      </div>
+
+      <div id="debug"></div>
+    </div>
   </div>
-
-  <div class="btn-row">
-    <button id="generateBtn" disabled>
-      Generate Key
-    </button>
-    <button id="copyBtn">
-      Copy Key
-    </button>
-  </div>
-
-  <div id="debug"></div>
 </main>
 
 <script src="/src/frontend/notify.js"></script>

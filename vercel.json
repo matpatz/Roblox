@@ -11,7 +11,6 @@
     { "source": "/stats", "destination": "/src/frontend/stats.html" },
     { "source": "/setup", "destination": "/src/frontend/setup.html" },
     { "source": "/key-system", "destination": "/src/frontend/key-system/index.html" },
-    { "source": "/notepad", "destination": "/src/frontend/notepad/index.html" },
     { "source": "/calculator/", "destination": "/src/frontend/calculator/index.html" },
     { "source": "/calculator/:path*", "destination": "/src/frontend/calculator/:path*" },
     { "source": "/pollinations/", "destination": "/src/frontend/pollinations/index.html" },

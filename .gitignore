@@ -3,27 +3,21 @@
 .vscode/
 
 *.env
+discord-webhooks.secret.json
 
-supabase-schema.sql
-supabase-pollinations-schema.sql
+schema/
+supabase/.temp/
 
-# development stuff
-**/Scripts/
-!src/scripts/
-**/source/
+# dev
 workspace
-
-# tests (performance stuff)
 tests
-# dumb scripts
-**/*ignore*/
-**/*ignore*
-!.gitignore
-
-ignore-key-system
+scripts-util
 TODO
 
-discord-webhooks.secret.json
-scripts-util
+# decompiled scripts
+**/Scripts/
+# scripts generated using decompiled scripts and will used to plan new features
+**/source/
 
-supabase/.temp/
+# wip/broken/private
+*-ignore*

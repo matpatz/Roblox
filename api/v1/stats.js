@@ -92,12 +92,15 @@ async function buildExecutionStats(supabase, startUtcMidnight) {
     counts[day.toISOString().slice(0, 10)] = 0;
   }
   const games = {};
-  await walkIdentifiers(supabase, startUtcMidnight.toISOString(), 'added_at, game', (rows) => {
+  const executors = {};
+  await walkIdentifiers(supabase, startUtcMidnight.toISOString(), 'added_at, game, executor', (rows) => {
     for (const row of rows) {
       const day = toUtcDay(row.added_at);
       if (day in counts) counts[day]++;
       const game = normalizeGame(row.game);
       if (game) games[game] = (games[game] || 0) + 1;
+      const executor = normalizeGame(row.executor);
+      if (executor) executors[executor] = (executors[executor] || 0) + 1;
     }
   });
   const history = Object.entries(counts).map(([date, count]) => ({ date, count }));
@@ -105,7 +108,11 @@ async function buildExecutionStats(supabase, startUtcMidnight) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([game, count]) => ({ game, count }));
-  return { history, topGames };
+  const topExecutors = Object.entries(executors)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([executor, count]) => ({ executor, count }));
+  return { history, topGames, topExecutors };
 }
 
 async function handler_fn(req, res) {
@@ -152,7 +159,8 @@ async function handler_fn(req, res) {
       member_count: discord?.approximate_member_count ?? 0
     },
     execution_history: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value?.history) ? historyResult.value.history : [],
-    top_games: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value?.topGames) ? historyResult.value.topGames : []
+    top_games: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value?.topGames) ? historyResult.value.topGames : [],
+    top_executors: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value?.topExecutors) ? historyResult.value.topExecutors : []
   };
 
   await kv.set(CACHE_KEY, payload, { ex: CACHE_TTL });

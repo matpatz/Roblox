@@ -27,11 +27,19 @@ async function handler_fn(req, res) {
     if (trimmed) game = trimmed.slice(0, 100);
   }
 
+  // Same best-effort handling as `game` above -- executors that don't expose
+  // identifyexecutor() omit the field entirely.
+  let executor = null;
+  if (typeof body.executor === 'string') {
+    const trimmed = body.executor.trim();
+    if (trimmed) executor = trimmed.slice(0, 100);
+  }
+
   const supabase = getSupabase();
 
   const { data, error } = await supabase
     .from('identifiers')
-    .insert({ identifier, game })
+    .insert({ identifier, game, executor })
     .select('id')
     .single();
 

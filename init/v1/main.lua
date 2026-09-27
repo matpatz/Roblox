@@ -28,6 +28,8 @@ end
 local HttpService = wrappers.cloneref(game:GetService("HttpService"))
 local Identifier = wrappers.gethwid()
 
+local Executor = identifyexecutor and identifyexecutor() or nil
+
 local success, err = pcall(function()
     local response = request({
         Url = API_URL,
@@ -35,7 +37,8 @@ local success, err = pcall(function()
         Headers = { ["Content-Type"] = "application/json" },
         Body = HttpService:JSONEncode({
             identifier = Identifier,
-            game = Script
+            game = Script,
+            executor = Executor
         })
     })
 end)

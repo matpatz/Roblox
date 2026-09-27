@@ -20,7 +20,7 @@
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--accent-color);
+  color: var(--accent-hover);
   margin: 0 0 12px;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .key-card {
-  background: var(--bg-soft);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 28px 24px;
@@ -139,6 +139,10 @@
 
 .key-btn.secondary {
   background: transparent;
+}
+
+.key-btn.secondary:hover:not(:disabled) {
+  background: var(--bg-raised);
 }
 
 .key-btn:disabled {

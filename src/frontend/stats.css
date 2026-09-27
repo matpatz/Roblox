@@ -30,7 +30,7 @@
 }
 
 .stat-card {
-  background: var(--bg-soft);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 24px;
@@ -86,7 +86,7 @@
 }
 
 .graph-container {
-  background: var(--bg-soft);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 28px 28px 20px;
@@ -150,7 +150,7 @@
 }
 
 .top-games {
-  background: var(--bg-soft);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 8px 24px;

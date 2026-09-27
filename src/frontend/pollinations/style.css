@@ -1,20 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  --bg:        #151515;
-  --sidebar:   #111111;
-  --panel:     #20201f;
-  --input-bg:  #20201f;
-  --line:      #2a2a29;
-  --line-soft: #1e1e1d;
-  --text:      #e8e8e6;
-  --muted:     #6b6b68;
-  --muted2:    #4a4a48;
+  --bg:        #0a000a;
+  --sidebar:   rgba(60, 60, 67, 0.92);
+  --panel:     rgba(60, 60, 67, 0.92);
+  --input-bg:  #4a4a52;
+  --bg-raised: #55555e;
+  --line:      #575760;
+  --line-soft: #4f4f58;
+  --text:      #f0f0f4;
+  --muted:     #d8d8e0;
+  --muted2:    #b4b4bf;
   --accent:    #5c6bc0;
   --accent-h:  #7986cb;
-  --user-bg:   #2a2a3a;
-  --bot-bg:    #20201f;
-  --new-btn:   #1e1e1d;
+  --user-bg:   #45455c;
+  --bot-bg:    rgba(60, 60, 67, 0.92);
+  --new-btn:   #4a4a52;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -84,7 +85,7 @@ html, body {
 }
 
 .new-chat-btn:hover {
-  background: #282826;
+  background: #55555e;
   border-color: var(--muted2);
 }
 
@@ -125,7 +126,7 @@ html, body {
 }
 
 .history-item:hover { background: var(--new-btn); color: var(--text); }
-.history-item.active { background: #252523; color: var(--text); }
+.history-item.active { background: #55555e; color: var(--text); }
 
 /* Account block — bottom of sidebar */
 .account-block {
@@ -220,7 +221,7 @@ html, body {
   display: flex;
   gap: 4px;
   margin-bottom: 18px;
-  background: var(--bg);
+  background: var(--input-bg);
   border-radius: 7px;
   padding: 3px;
 }
@@ -239,7 +240,7 @@ html, body {
 }
 
 .tab.active {
-  background: var(--panel);
+  background: var(--bg-raised);
   color: var(--text);
   box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
@@ -256,7 +257,7 @@ html, body {
   font: inherit;
   font-size: 13px;
   color: var(--text);
-  background: var(--bg);
+  background: var(--input-bg);
   border: 1px solid var(--line);
   border-radius: 7px;
   padding: 9px 11px;
@@ -364,7 +365,7 @@ html, body {
 
 .msg-group.user .bubble {
   background: var(--user-bg);
-  border: 1px solid #363650;
+  border: 1px solid #5c5c78;
   border-bottom-right-radius: 4px;
 }
 
@@ -417,7 +418,7 @@ html, body {
 }
 
 .composer-box:focus-within {
-  border-color: #3a3a38;
+  border-color: #6b6b75;
   box-shadow: 0 4px 32px rgba(0,0,0,0.55);
 }
 
@@ -493,7 +494,7 @@ html, body {
   min-height: 20px;
 }
 
-.chat-status.error { color: #e07a7a; }
+.chat-status.error { color: #f0a3a3; }
 
 /* Markdown content inside bubbles */
 .bubble p { margin: 0 0 0.6em; }
@@ -508,12 +509,12 @@ html, body {
 .bubble a:hover { text-decoration: underline; }
 .bubble blockquote { margin: 0.6em 0; padding: 0.2em 0 0.2em 0.9em; border-left: 3px solid var(--line); color: var(--muted); }
 .bubble code { font-family: ui-monospace, SFMono-Regular, 'Cascadia Mono', Consolas, monospace; font-size: 0.9em; }
-.bubble :not(pre) > code { background: #2a2a29; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; color: #e8e8e6; }
-.bubble pre { margin: 0.6em 0; padding: 12px 14px; background: #111111; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
+.bubble :not(pre) > code { background: #2e2e35; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; color: #f0f0f4; }
+.bubble pre { margin: 0.6em 0; padding: 12px 14px; background: #2e2e35; border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
 .bubble pre code { background: transparent; border: none; padding: 0; }
 .bubble table { border-collapse: collapse; margin: 0.6em 0; width: 100%; }
 .bubble th, .bubble td { border: 1px solid var(--line); padding: 6px 9px; font-size: 13px; text-align: left; }
-.bubble th { background: #1a1a19; }
+.bubble th { background: #585861; }
 .bubble hr { border: none; border-top: 1px solid var(--line); margin: 0.8em 0; }
 .bubble img { max-width: 100%; border-radius: 8px; }
 
@@ -543,7 +544,7 @@ html, body {
   font: inherit;
   font-size: 11px;
   color: var(--muted);
-  background: var(--bg);
+  background: var(--input-bg);
   border: 1px solid var(--line);
   border-radius: 5px;
   padding: 3px 7px;

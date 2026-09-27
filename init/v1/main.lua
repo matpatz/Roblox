@@ -35,7 +35,7 @@ local success, err = pcall(function()
         Headers = { ["Content-Type"] = "application/json" },
         Body = HttpService:JSONEncode({
             identifier = Identifier,
-            game = shared.name or "Unknown"
+            game = Script
         })
     })
 end)

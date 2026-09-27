@@ -1,9 +1,8 @@
-shared.Knit.require("Modules", "Platform")
-local device = getgenv()["device"]
-
+--// Knit
 local Knit = shared.Knit
 local services = Knit.services
 
+--// Services
 local Players = services.Players
 local Player = Players.LocalPlayer
 local RunService = services.RunService
@@ -12,6 +11,7 @@ local VirtualInputManager = services.VirtualInputManager
 local CoreGui = services.CoreGui
 local CurrentCamera = services.Workspace.CurrentCamera
 
+--// LocalPlayer
 if not Player.Character then
     Player.CharacterAdded:Wait()
 end
@@ -24,6 +24,9 @@ Player.CharacterAdded:Connect(function(NewCharacter)
     HumanoidRootPart = NewCharacter:WaitForChild("HumanoidRootPart")
     Humanoid = NewCharacter:WaitForChild("Humanoid")
 end)
+
+--// vars
+local device = Knit.require("Modules/Telementry/v1", "platform")
 
 local Rayfield = shared.Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({

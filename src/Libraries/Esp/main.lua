@@ -1,6 +1,20 @@
-local Services = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/src/Modules/Variables.lua"
-))()
+--// Knit
+local Knit = shared.Knit
+if not Knit then
+    shared.Knit = loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/src/Modules/Knit/v1/main.lua"))() 
+    Knit = shared.Knit
+end
+
+local services = Knit.services
+
+-- // Services
+local Players = services.Players
+local RunService = service.RunService
+local CoreGui = services.CoreGui
+local Workspace = services.Workspace
+
+local Camera = Workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
 
 -- A container source can be a raw Instance, or a table that overrides the ESP
 -- label: { Model = Instance, Name = string? } (Name may also be a function).
@@ -70,15 +84,6 @@ local ESP = {}
 ESP.__index = ESP
 
 local self = setmetatable({}, ESP)
-
-    -- Services
-    local Players = Services["Players"]
-    local RunService = Services["RunService"]
-    local CoreGui = Services["CoreGui"]
-    local Workspace = Services["Workspace"]
-    local Camera = Workspace.CurrentCamera
-    local LocalPlayer = Players.LocalPlayer
-
     local Parent = Instance.new("Folder")
     Parent.Parent = CoreGui
     Parent.Name = tostring(math.random(1e9, 2e9))

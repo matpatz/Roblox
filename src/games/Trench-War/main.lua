@@ -1,8 +1,6 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
-shared.Knit.require("Modules", "Platform")
-local device = getgenv()["device"]
+local Knit = shared.Knit
+
+local device = Knit.require("Modules/Telementry/v1", "platform")
 
 local get = (type(cloneref) == "function") and cloneref or function(x) return x end
 local players = get(game:GetService("Players")); local lp = players["LocalPlayer"]
@@ -21,7 +19,7 @@ local log = get(game:GetService("LogService"))
 
 local cam = workspace.CurrentCamera
 
-local Rayfield = shared.Knit.ui.new("Rayfield")()
+local Rayfield = Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
     Name = "Voltex - " .. tostring(game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name),
     LoadingTitle = "Title",
@@ -128,12 +126,12 @@ rs.RenderStepped:Connect(function()
     local hrp = target.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    local camPos = cam.CFrame.Position
-    local direction = (hrp.Position - camPos).Unit
+    local camera_position = cam.CFrame.Position
+    local direction = (hrp.Position - camera_position).Unit
 
     if aimbot and holding then
         cam.CFrame = cam.CFrame:Lerp(
-            CFrame.new(camPos, camPos + direction),
+            CFrame.new(camera_position, camera_position + direction),
             0.6
         )
     end

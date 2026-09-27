@@ -28,7 +28,7 @@ end)
 --// vars
 local device = Knit.require("Modules/Telementry/v1", "platform")
 
-local Rayfield = shared.Knit.ui.new("Rayfield")()
+local Rayfield = Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
     Name = "Teen-Titan Battleground",
     LoadingTitle = "Title",

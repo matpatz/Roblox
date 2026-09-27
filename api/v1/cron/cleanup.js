@@ -12,6 +12,14 @@ export const config = { runtime: 'nodejs' };
 // trigger and is deliberately NOT touched, so the headline number never drops.
 // This endpoint is only reachable from the Vercel cron in vercel.json, which
 // sends the CRON_SECRET bearer token.
+//
+// Vercel triggers cron jobs with an HTTP **GET** request (see
+// https://vercel.com/docs/cron-jobs -> "How cron jobs work"), NOT a POST. This
+// handler used to reject anything that was not POST, so every scheduled run
+// died on `405 Method not allowed` before the delete ever ran -- which is why
+// rows older than the retention window stayed in `identifiers`. Never gate this
+// route on POST-only again. POST is still accepted so the job can be triggered
+// by hand.
 const RETENTION_DAYS = 7;
 
 function verifyCron(req) {
@@ -24,7 +32,9 @@ function verifyCron(req) {
 
 async function handler_fn(req, res) {
   if (req.method === 'OPTIONS') return handleOptions(req, res);
-  if (req.method !== 'POST') throw new ApiError(405, 'Method not allowed');
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    throw new ApiError(405, 'Method not allowed');
+  }
 
   verifyCron(req);
 

@@ -46,10 +46,12 @@ utils["Aimbot"].GetClosest = function(OriginPosition: Vector3): (BasePart?, Inst
 
     aimconfig["Origin"] = OriginPosition
     aimconfig["Range"] = Config.Range
-    -- the module does the line of sight check itself; the camera is ignored so
-    -- the first-person viewmodel is not what that ray hits
+    -- the module does the line of sight check itself. The camera has no such
+    -- property as workspace.Camera, and the first-person viewmodel hangs off
+    -- workspace.CurrentCamera (which is why Fire filters it), so the ignore list
+    -- has to exclude the real camera or every ray stops on the viewmodel
     aimconfig["Visible"] = true
-    aimconfig["Ignore"] = workspace.Camera
+    aimconfig["Ignore"] = workspace.CurrentCamera
     aimconfig["EntityLists"] = { utils["Aimbot"].GetTargets() }
 
     local AimParts = { Config.AimPart, "UpperTorso", "Torso", "HumanoidRootPart" }

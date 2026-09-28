@@ -48,6 +48,8 @@ if not success then
     warn("Execution log failed:", err)
 end
 
+loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/scriptblox.lua"))()
+
 if not (shared.Webhook and shared.Webhook.Disabled) and shared.webhook_disabled ~= true then
     loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/webhook.lua"))()
 end

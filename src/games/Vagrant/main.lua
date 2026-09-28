@@ -6,7 +6,7 @@ until
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local aimbot = shared.Knit.require("Modules", "Aimbot")
+local aimbot = Knit.require("Modules", "Aimbot")
 
 repeat
 	task.wait()

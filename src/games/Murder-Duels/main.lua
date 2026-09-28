@@ -1,6 +1,10 @@
 -- hi im the worst code ever written
 -- AI SLOPOP SLOPPPPP
 
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -54,7 +58,7 @@ local config = {
 	},
 }
 
-const Aimbot = shared.Knit.require("Modules/Aimbot", "main")
+const Aimbot = Knit.require("Modules/Aimbot", "main")
 
 -- // Utils
 Utils.GetTargets = function(): { Instance }
@@ -275,7 +279,7 @@ if LocalPlayer.Backpack then
 end
 
 -- // Interface
-const Rayfield = assert(shared.Knit.require("Rayfield", "main", "libraries"))
+const Rayfield = Knit.ui.new("Rayfield")()
 
 const Window = Rayfield:CreateWindow({
 	Name = "Murder Duels",

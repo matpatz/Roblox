@@ -1,3 +1,5 @@
+local Knit = shared.Knit
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -176,7 +178,7 @@ end
 
 -- // Interface
 
-local Rayfield = shared.Knit.require("Rayfield", "main", "libraries")
+local Rayfield = Knit.ui.new("Rayfield")()
 Flags = Rayfield.Flags
 
 local Window = Rayfield:CreateWindow({

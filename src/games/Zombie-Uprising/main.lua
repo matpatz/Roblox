@@ -1,3 +1,7 @@
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -56,7 +60,7 @@ local config = {
     },
 }
 
-const Aimbot = shared.Knit.require("Modules/Aimbot", "main")
+const Aimbot = Knit.require("Modules/Aimbot", "main")
 
 Utils["Aimbot"].GetClosest = function(): (BasePart?)
     config["Origin"] = HumanoidRootPart.Position

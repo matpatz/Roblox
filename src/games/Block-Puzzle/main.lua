@@ -5,7 +5,7 @@ local services = Knit.services
 
 local name = shared.game_name
 
-local Rayfield = shared.Knit.ui.new("Rayfield")()
+local Rayfield = Knit.ui.new("Rayfield")()
 
 local Players = services.Players
 local RunService = services.RunService

@@ -3,7 +3,7 @@ local services = Knit.services
 
 local _game = shared.game_name
 
-local Rayfield = shared.Knit.ui.new("Rayfield")()
+local Rayfield = Knit.ui.new("Rayfield")()
 local window = Rayfield:CreateWindow({
     Name = _game,
     LoadingTitle = "fah you",

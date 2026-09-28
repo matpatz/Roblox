@@ -1,5 +1,9 @@
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Modules
-const core = assert(shared.Knit.require("games/Flick-Football", "core"))
+const core = assert(Knit.require("games/Flick-Football", "core")) -- TODO: Validate this script works
 
 -- // config
 local config = {
@@ -23,7 +27,7 @@ end
 
 -- // Interface
 
-const Rayfield = assert(shared.Knit.require("Rayfield", "main", "libraries"))
+const Rayfield = Knit.ui.new("Rayfield")()
 
 const Window = Rayfield:CreateWindow({
 	Name = "this game",

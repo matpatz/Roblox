@@ -1,3 +1,7 @@
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -47,7 +51,7 @@ local config = {
 	},
 }
 
-local Aimbot = shared.Knit.require("Modules/Aimbot/v1", "main")
+local Aimbot = Knit.require("Modules/Aimbot/v1", "main")
 
 -- // Utils
 

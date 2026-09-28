@@ -1,5 +1,5 @@
 local wrappers = {}
-local services = shared.Knit.services
+local services = loadstring(game:HttpGet("https://voltex.website/src/Modules/Knit/Modules/services.lua"))()
 
 wrappers.cloneref = function(x: string | Instance): Instance
     if type(x) == "string" then

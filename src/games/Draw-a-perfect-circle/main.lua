@@ -1,4 +1,8 @@
-local Rayfield = shared.Knit.ui.new("Rayfield")()
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
+local Rayfield = Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
 	Name = "Draw",
 	LoadingTitle = "drawin",

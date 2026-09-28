@@ -1,6 +1,6 @@
 -- // Knit
-const Knit = shared.Knit
-const conmanager = Knit.conmanager
+local Knit = shared.Knit
+local conmanager = Knit.conmanager
 
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -140,10 +140,8 @@ end
 
 -- // Esp
 
-const Esp = shared.Knit.require("Libraries/Esp", "main")
+const Esp = Knit.require("Libraries/Esp", "main")
 
--- Both containers live in one table, so a toggle only swaps its own Location:
--- emptying a Location hides that container without dropping the other one.
 local EspContainers = {
 	Titans = { Location = Titans, Color = Color3.fromRGB(255, 60, 60) },
 	Players = { Location = Players }
@@ -151,7 +149,7 @@ local EspContainers = {
 
 -- // Interface
 
-const Rayfield = shared.Knit.ui.new("Rayfield")()
+const Rayfield = Knit.ui.new("Rayfield")()
 const Window = Rayfield:CreateWindow({
 	Name = "Titan Warfare",
 	LoadingTitle = "Titan Warfare",

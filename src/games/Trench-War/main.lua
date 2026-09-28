@@ -1,4 +1,6 @@
+--// Knit
 local Knit = shared.Knit
+local services = Knit.services
 
 local device = Knit.require("Modules/Telementry/v1", "platform")
 
@@ -157,7 +159,7 @@ end)
 
 main:CreateSection("Combat + Visuals")
 
-local esp = shared.Knit.require("Libraries/Esp", "main")
+local esp = Knit.require("Libraries/Esp", "main")
 main:CreateDropdown({
     Name = "Esp Settings",
     Options = {"Box", "Name", "Held Item", "Tracer", "Health", "Distance", "Chams", "Health Bar", "Team Color", "Performance Mode"},

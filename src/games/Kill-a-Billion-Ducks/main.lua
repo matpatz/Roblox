@@ -1,3 +1,7 @@
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Servics
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -8,8 +12,8 @@ local Classes = require(ReplicatedStorage:FindFirstChild("UmePointer").Value);
 -- // Network
 local Network = Classes.Network
 
-local RealNetwork = debug.getupvalue(Network.GetEvent, 3) -- u5
-local Remotes: Instance = debug.getupvalue(RealNetwork._getRemote, 3) -- u1
+--local RealNetwork = debug.getupvalue(Network.GetEvent, 3) -- u5
+--local Remotes: Instance = debug.getupvalue(RealNetwork._getRemote, 3) -- u1
 
 -- // WeaponController
 local WeaponController = Classes.WeaponController
@@ -137,7 +141,7 @@ end)
 
 -- // Interface
 
-local Rayfield = shared.Knit.require("Rayfield", "main", "libraries")
+local Rayfield = Knit.ui.new("Rayfield")()
 
 local Window = Rayfield:CreateWindow({
     Name = "Catch a billion Ducks",

@@ -7,7 +7,7 @@ local ReplicatedStorage = services.ReplicatedStorage
 --// Interface
 local Game = shared.game_name
 
-local Rayfield = shared.Knit.ui.new("Rayfield")()
+local Rayfield = Knit.ui.new("Rayfield")()
 
 local Window = Rayfield:CreateWindow({
     Name = Game,

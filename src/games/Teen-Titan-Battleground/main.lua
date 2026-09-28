@@ -169,7 +169,7 @@ end)
 
 main:CreateSection("Combat + Visuals")
 
-local esp = shared.Knit.require("Libraries/Esp", "main")
+local esp = Knit.require("Libraries/Esp", "main")
 
 main:CreateDropdown({
     Name = "Esp Settings",

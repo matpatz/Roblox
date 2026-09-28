@@ -1,4 +1,8 @@
-local Rayfield = shared.Knit.require("Rayfield", "main", "libraries")
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
+local Rayfield = Knit.ui.new("Rayfield")()
 
 local Window = Rayfield:CreateWindow({
     Name = "Voltex ;)",
@@ -16,7 +20,7 @@ local Window = Rayfield:CreateWindow({
 local visuals = Window:CreateTab("Visuals", 4483362458)
 local visualsSection = visuals:CreateSection("Player")
 
-local esp = shared.Knit.require("Libraries/Esp", "main")
+local esp = Knit.require("Libraries/Esp", "main")
 
 local eSettings = visuals:CreateDropdown({
     Name = "Esp Settings",

@@ -17,6 +17,10 @@
 	creates per-instance methods inside `new`, we wrap `new` and proxy the instances.
 ]]
 
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Services
 const Players = game:GetService("Players")
 const UserInputService = game:GetService("UserInputService")
@@ -280,7 +284,7 @@ end
 Core.ScanAndHook()
 
 -- // Interface
-local Rayfield = shared.Knit.require("Rayfield", "main", "libraries")
+local Rayfield = Knit.ui.new("Rayfield")()
 
 local Window = Rayfield:CreateWindow({
 	Name = "Zombie Rush Survival",

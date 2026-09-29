@@ -4,12 +4,13 @@ if not Knit then
     shared.Knit = loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/src/Modules/Knit/v1/main.lua"))() 
     Knit = shared.Knit
 end
+repeat task.wait() until Knit and Knit.services
 
 local services = Knit.services
 
 -- // Services
 local Players = services.Players
-local RunService = service.RunService
+local RunService = services.RunService
 local CoreGui = services.CoreGui
 local Workspace = services.Workspace
 

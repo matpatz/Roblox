@@ -16,7 +16,7 @@ local blacklist = {
 local Old; Old = hookfunction(request, newcclosure(function(options)
 	local url = options.Url
 
-	options.Url = "https://example.com"
+	options.Url = "https://example.com" -- incase it is a webhook dont let it fire
 	local original = Old(options) -- input validation
 	options.Url = url
 

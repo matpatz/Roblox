@@ -9,6 +9,95 @@ const hljs      = window.hljs || null;
 const FILE_INLINE_BYTES = 10 * 1024;         // files ≤ this are inlined into the prompt
 const MAX_FILE_BYTES    = 5 * 1024 * 1024;   // per-file upload cap
 
+// Capabilities per model id (text is always assumed). Gates non-text uploads
+// and drives the model tooltip in the composer.
+const CAP_LABELS = { text: 'Text', vision: 'Images', audio: 'Audio', video: 'Video', search: 'Search', tools: 'Tools' };
+const MODEL_CAPS = {
+  openai: ['vision'],
+  'openai-fast': [],
+  deepseek: [],
+  'nova-fast': [],
+  'qwen-coder': [],
+  glm: ['vision'],
+  'glm-5.3': ['vision'],
+  minimax: [],
+  'gpt-5.6-luna': ['vision'],
+  grok: ['vision'],
+  'openai-large': ['vision'],
+  'perplexity-fast': ['search'],
+  'grok-large': ['vision'],
+  kimi: ['vision'],
+  'z-ai/glm-5.3-flash': ['vision'],
+  nova: [],
+  'qwen-safety': [],
+  midijourney: [],
+  'kimi-k3': ['vision'],
+  'deepseek-pro': [],
+  'gemini-fast': ['vision', 'audio'],
+  'gpt-oss': [],
+  'gpt-5.6-sol': ['vision'],
+  'midijourney-large': [],
+  'perplexity-reasoning': ['search'],
+  'nemotron-3.5-lightning': [],
+  'gpt-5.4-mini': ['vision'],
+  llama: [],
+  'gpt-5.6-terra': ['vision'],
+  'command-a-plus': ['tools'],
+  mistral: ['vision'],
+  'muse-glimmer': ['vision'],
+  'deepseek/deepseek-v4-flash-vision-exp': ['vision'],
+  'gpt-5.4': ['vision'],
+  'kimi-code': ['vision'],
+  perplexity: ['search'],
+  'qwen3.8-2.4t-a95b': [],
+  'gemini-flash-lite-3.5': ['vision', 'audio'],
+  gemini: ['vision', 'audio', 'video'],
+  'grok-4.6': ['vision'],
+  gemma: ['vision'],
+  'mistral-large': ['vision'],
+  claude: ['vision'],
+  'gemini-search': ['vision', 'audio'],
+  'claude-fast': ['vision'],
+  'qwen3.7-flash': ['vision'],
+  'qwen-vision': ['vision'],
+  'gemma-4-31b': ['vision'],
+  'claude-large': ['vision'],
+  laguna: [],
+  'claude-sonnet-5': ['vision'],
+  'gemini-3-flash': ['vision', 'audio'],
+  'gemini-large': ['vision', 'audio', 'video'],
+  'claude-fable-5': ['vision'],
+  'llama-scout': ['vision'],
+  'qwen-large': ['vision'],
+  'mistral-small-3.2': [],
+  'anthropic/claude-fable-5.1': ['vision'],
+  'google/gemini-3.8-flash': ['vision', 'audio', 'video'],
+  'mimo-v2.5': ['vision'],
+  'step-flash': ['vision'],
+  'openai/gpt-6-astra': ['vision'],
+  'qwen3.8-27b': ['vision'],
+  'muse-spark-1.2': [],
+  'qwen3.8-max': ['vision'],
+  'qwen-vision-pro': ['vision'],
+  'llama-maverick': ['vision'],
+  'qwen-coder-large': [],
+  'mimo-v2.5-pro': ['vision'],
+  mercury: [],
+  'step-3.5-flash': [],
+  'claude-opus-4.7': ['vision'],
+  'claude-opus-4.6': ['vision'],
+  inkling: ['vision', 'audio'],
+  longcat: [],
+  'qwen3.7-max': [],
+  'thinkingmachines/inkling': ['vision', 'audio'],
+  nemotron: [],
+  'qwen/qwen3.8-max-0902': ['vision'],
+  'inception/mercury-2.5-preview': [],
+  'minimax-m2.7': []
+};
+
+const modelCaps = (id) => ['text', ...(MODEL_CAPS[id] || [])];
+
 const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 if (marked) {
@@ -61,7 +150,8 @@ const el = {
   logoutBtn:    $('logoutBtn'),
   attachBtn:    $('attachBtn'),
   fileInput:    $('fileInput'),
-  pendingFiles: $('pendingFiles')
+  pendingFiles: $('pendingFiles'),
+  modelCaps:    $('modelCaps')
 };
 
 const EMPTY_HTML = `
@@ -199,6 +289,48 @@ const addMessage = (role, content, attachments = []) => {
   group.appendChild(bubble);
   el.messages.appendChild(group);
   return bubble;
+};
+
+/* ---------- Capabilities + token usage ---------- */
+
+const renderCaps = () => {
+  const caps = modelCaps(el.modelSelect.value || 'openai');
+  el.modelSelect.title = 'Capabilities: ' + caps.map((c) => CAP_LABELS[c] || c).join(', ');
+  el.modelCaps.innerHTML = '';
+  for (const c of caps) {
+    const b = document.createElement('span');
+    b.className = `cap cap-${c}`;
+    b.textContent = CAP_LABELS[c] || c;
+    el.modelCaps.appendChild(b);
+  }
+};
+
+const num = (v) => (Number.isFinite(Number(v)) ? Math.round(Number(v)) : null);
+
+const fmtUsage = (u) => {
+  if (!u || typeof u !== 'object') return '';
+  const inT  = num(u.prompt_tokens ?? u.input_tokens);
+  const outT = num(u.completion_tokens ?? u.output_tokens);
+  const tot  = num(u.total_tokens ?? ((inT != null && outT != null) ? inT + outT : null));
+  const parts = [];
+  if (inT != null) parts.push(`in ${inT}`);
+  if (outT != null) parts.push(`out ${outT}`);
+  if (tot != null) parts.push(`total ${tot}`);
+  return parts.length ? `Tokens — ${parts.join(' · ')}` : '';
+};
+
+const showUsage = (bubble, usage) => {
+  const text = fmtUsage(usage);
+  if (!text) return;
+  const group = bubble.closest('.msg-group');
+  if (!group) return;
+  let foot = group.querySelector('.usage');
+  if (!foot) {
+    foot = document.createElement('div');
+    foot.className = 'usage';
+    group.appendChild(foot);
+  }
+  foot.textContent = text;
 };
 
 /* ---------- Files ---------- */
@@ -570,6 +702,24 @@ const send = async () => {
   const text = el.input.value.trim();
   if ((!text && !pendingFiles.length) || busy || !session) return;
 
+  // Reject files the selected model can't handle.
+  const caps = modelCaps(el.modelSelect.value || 'openai');
+  const blocked = [];
+  for (const f of pendingFiles) {
+    if (isTextFile(f)) continue;
+    const m = f.type || '';
+    const need = m.startsWith('image/') ? 'vision'
+               : m.startsWith('audio/') ? 'audio'
+               : m.startsWith('video/') ? 'video'
+               : null;
+    if (need && !caps.includes(need)) blocked.push(`${f.name} (${CAP_LABELS[need] || need})`);
+  }
+  if (blocked.length) {
+    const modelName = el.modelSelect.options[el.modelSelect.selectedIndex]?.text || 'This model';
+    setMsg(el.chatMsg, `${modelName} can't read ${blocked.join(', ')} — pick another model or remove the file.`, true);
+    return;
+  }
+
   // Split staged files: small text files inline into the prompt, big ones as attachments.
   const attachments = [];
   const cards = [];
@@ -637,6 +787,8 @@ const send = async () => {
         acc += obj.content;
         setBubbleContent(botBubble, acc);
         scrollBottom();
+      } else if (obj.usage) {
+        showUsage(botBubble, obj.usage);
       }
     });
   } catch (err) {
@@ -677,6 +829,7 @@ const init = async () => {
     opt.textContent = label;
     el.modelSelect.appendChild(opt);
   }
+  renderCaps();
 
   let cfg = {};
   try {
@@ -720,6 +873,7 @@ el.fileInput.onchange = () => {
   handleFiles(el.fileInput.files);
   el.fileInput.value = '';
 };
+el.modelSelect.onchange = renderCaps;
 
 el.input.onkeydown = (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {

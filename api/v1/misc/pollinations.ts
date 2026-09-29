@@ -297,20 +297,30 @@ async function chat(req, res, userId) {
 
   const emit = (o) => res.write(`data: ${JSON.stringify(o)}\n\n`);
   let out = '';
+  let usage = null;
+  let saved = false;
+  let finished = false;
 
   // Persist the assistant reply BEFORE ending the response so the serverless
   // runtime can't freeze the function right after `res.end()` and drop the save.
+  // Idempotent (the catch path calls it again for partial output) and never
+  // throws, so a DB hiccup can't turn a successful reply into "Stream failed".
   const saveReply = async () => {
-    if (!out.trim()) return;
-    const { error } = await insertMessage({
-      user_id: userId,
-      conversation_id: convId,
-      role: 'assistant',
-      content: await pack(out.trim()),
-      model
-    });
-    if (error) console.error('Failed to save reply:', error.message);
-    await db().from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', convId);
+    if (saved || !out.trim()) return;
+    saved = true;
+    try {
+      const { error } = await insertMessage({
+        user_id: userId,
+        conversation_id: convId,
+        role: 'assistant',
+        content: await pack(out.trim()),
+        model
+      });
+      if (error) console.error('Failed to save reply:', error.message);
+      await db().from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', convId);
+    } catch (e) {
+      console.error('Failed to save reply:', e?.message || e);
+    }
   };
 
   try {
@@ -325,6 +335,7 @@ async function chat(req, res, userId) {
           const o = JSON.parse(t);
           const c = o?.choices?.[0]?.message?.content ?? o?.choices?.[0]?.text ?? o?.content ?? o?.output_text;
           if (typeof c === 'string') content = c;
+          if (o?.usage) usage = o.usage;
         } catch {}
       }
       out = content;
@@ -354,7 +365,8 @@ async function chat(req, res, userId) {
           try {
             const j = JSON.parse(p);
             if (typeof j === 'string') text = j;
-            else
+            else {
+              if (j?.usage) usage = j.usage;
               text =
                 j?.choices?.[0]?.delta?.content ??
                 j?.choices?.[0]?.message?.content ??
@@ -362,6 +374,7 @@ async function chat(req, res, userId) {
                 j?.content ??
                 j?.delta ??
                 j?.text;
+            }
             if (typeof text !== 'string') text = null;
           } catch {
             text = p;
@@ -373,16 +386,18 @@ async function chat(req, res, userId) {
         }
       }
     }
+    finished = true;
     await saveReply();
+    if (usage) emit({ usage });
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (err) {
     console.error('Stream failed:', err?.message || err);
-    await saveReply().catch(() => {}); // keep whatever partial text made it through
-    try {
-      emit({ error: 'Stream failed' });
-      res.end();
-    } catch {}
+    await saveReply(); // save partial output (idempotent)
+    if (!finished) {
+      try { emit({ error: 'Stream failed' }); } catch {}
+    }
+    try { res.end(); } catch {}
   }
 }
 

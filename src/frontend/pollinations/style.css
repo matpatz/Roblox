@@ -639,3 +639,22 @@ html, body {
   z-index: 1100;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Model capability badges + token usage */
+.model-caps { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; padding: 2px 0 0; }
+.cap {
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 6px;
+  letter-spacing: 0.03em;
+}
+.cap-vision { color: var(--accent-h); }
+.cap-audio { color: #7fc98f; }
+.cap-video { color: #d39be0; }
+.cap-search { color: #e0b37a; }
+.cap-tools { color: #7fc9c9; }
+
+.usage { font-size: 11px; color: var(--muted2); padding: 2px 2px 0; }

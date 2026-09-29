@@ -11,88 +11,88 @@ const MAX_FILE_BYTES    = 5 * 1024 * 1024;   // per-file upload cap
 
 // Capabilities per model id (text is always assumed). Gates non-text uploads
 // and drives the model tooltip in the composer.
-const CAP_LABELS = { text: 'Text', vision: 'Images', audio: 'Audio', video: 'Video', search: 'Search', tools: 'Tools' };
+const CAP_LABELS = { text: 'Text', vision: 'Images', audio: 'Audio', video: 'Video', search: 'Search', thinking: 'Thinking', tools: 'Tools' };
 const MODEL_CAPS = {
   openai: ['vision'],
   'openai-fast': [],
-  deepseek: [],
+  deepseek: ['thinking'],
   'nova-fast': [],
   'qwen-coder': [],
-  glm: ['vision'],
-  'glm-5.3': ['vision'],
+  glm: ['vision', 'thinking'],
+  'glm-5.3': ['vision', 'thinking'],
   minimax: [],
-  'gpt-5.6-luna': ['vision'],
-  grok: ['vision'],
-  'openai-large': ['vision'],
+  'gpt-5.6-luna': ['vision', 'thinking'],
+  grok: ['vision', 'thinking'],
+  'openai-large': ['vision', 'thinking'],
   'perplexity-fast': ['search'],
-  'grok-large': ['vision'],
-  kimi: ['vision'],
-  'z-ai/glm-5.3-flash': ['vision'],
-  nova: [],
+  'grok-large': ['vision', 'thinking'],
+  kimi: ['vision', 'thinking'],
+  'z-ai/glm-5.3-flash': ['vision', 'thinking'],
+  nova: ['thinking'],
   'qwen-safety': [],
   midijourney: [],
   'kimi-k3': ['vision'],
-  'deepseek-pro': [],
+  'deepseek-pro': ['thinking'],
   'gemini-fast': ['vision', 'audio'],
-  'gpt-oss': [],
-  'gpt-5.6-sol': ['vision'],
+  'gpt-oss': ['thinking'],
+  'gpt-5.6-sol': ['vision', 'thinking'],
   'midijourney-large': [],
-  'perplexity-reasoning': ['search'],
-  'nemotron-3.5-lightning': [],
+  'perplexity-reasoning': ['search', 'thinking'],
+  'nemotron-3.5-lightning': ['thinking'],
   'gpt-5.4-mini': ['vision'],
   llama: [],
-  'gpt-5.6-terra': ['vision'],
+  'gpt-5.6-terra': ['vision', 'thinking'],
   'command-a-plus': ['tools'],
   mistral: ['vision'],
   'muse-glimmer': ['vision'],
-  'deepseek/deepseek-v4-flash-vision-exp': ['vision'],
-  'gpt-5.4': ['vision'],
-  'kimi-code': ['vision'],
+  'deepseek/deepseek-v4-flash-vision-exp': ['vision', 'thinking'],
+  'gpt-5.4': ['vision', 'thinking'],
+  'kimi-code': ['vision', 'thinking'],
   perplexity: ['search'],
-  'qwen3.8-2.4t-a95b': [],
-  'gemini-flash-lite-3.5': ['vision', 'audio'],
-  gemini: ['vision', 'audio', 'video'],
-  'grok-4.6': ['vision'],
+  'qwen3.8-2.4t-a95b': ['thinking'],
+  'gemini-flash-lite-3.5': ['vision', 'audio', 'thinking'],
+  gemini: ['vision', 'audio', 'video', 'thinking'],
+  'grok-4.6': ['vision', 'thinking'],
   gemma: ['vision'],
   'mistral-large': ['vision'],
   claude: ['vision'],
-  'gemini-search': ['vision', 'audio'],
+  'gemini-search': ['vision', 'audio', 'search'],
   'claude-fast': ['vision'],
-  'qwen3.7-flash': ['vision'],
+  'qwen3.7-flash': ['vision', 'thinking'],
   'qwen-vision': ['vision'],
-  'gemma-4-31b': ['vision'],
-  'claude-large': ['vision'],
-  laguna: [],
-  'claude-sonnet-5': ['vision'],
-  'gemini-3-flash': ['vision', 'audio'],
-  'gemini-large': ['vision', 'audio', 'video'],
-  'claude-fable-5': ['vision'],
+  'gemma-4-31b': ['vision', 'thinking'],
+  'claude-large': ['vision', 'thinking'],
+  laguna: ['thinking'],
+  'claude-sonnet-5': ['vision', 'thinking'],
+  'gemini-3-flash': ['vision', 'audio', 'thinking'],
+  'gemini-large': ['vision', 'audio', 'video', 'thinking'],
+  'claude-fable-5': ['vision', 'thinking'],
   'llama-scout': ['vision'],
   'qwen-large': ['vision'],
   'mistral-small-3.2': [],
-  'anthropic/claude-fable-5.1': ['vision'],
-  'google/gemini-3.8-flash': ['vision', 'audio', 'video'],
-  'mimo-v2.5': ['vision'],
-  'step-flash': ['vision'],
-  'openai/gpt-6-astra': ['vision'],
-  'qwen3.8-27b': ['vision'],
+  'anthropic/claude-fable-5.1': ['vision', 'thinking'],
+  'google/gemini-3.8-flash': ['vision', 'audio', 'video', 'thinking'],
+  'mimo-v2.5': ['vision', 'thinking'],
+  'step-flash': ['vision', 'thinking'],
+  'openai/gpt-6-astra': ['vision', 'thinking'],
+  'qwen3.8-27b': ['vision', 'thinking'],
   'muse-spark-1.2': [],
-  'qwen3.8-max': ['vision'],
-  'qwen-vision-pro': ['vision'],
+  'qwen3.8-max': ['vision', 'thinking'],
+  'qwen-vision-pro': ['vision', 'thinking'],
   'llama-maverick': ['vision'],
   'qwen-coder-large': [],
-  'mimo-v2.5-pro': ['vision'],
+  'mimo-v2.5-pro': ['vision', 'thinking'],
   mercury: [],
-  'step-3.5-flash': [],
-  'claude-opus-4.7': ['vision'],
-  'claude-opus-4.6': ['vision'],
-  inkling: ['vision', 'audio'],
-  longcat: [],
+  'step-3.5-flash': ['thinking'],
+  'claude-opus-4.7': ['vision', 'thinking'],
+  'claude-opus-4.6': ['vision', 'thinking'],
+  inkling: ['vision', 'audio', 'thinking'],
+  longcat: ['thinking'],
   'qwen3.7-max': [],
-  'thinkingmachines/inkling': ['vision', 'audio'],
-  nemotron: [],
-  'qwen/qwen3.8-max-0902': ['vision'],
-  'inception/mercury-2.5-preview': [],
+  'thinkingmachines/inkling': ['vision', 'audio', 'thinking'],
+  nemotron: ['thinking'],
+  'qwen/qwen3.8-max-0902': ['vision', 'thinking'],
+  'inception/mercury-2.5-preview': ['thinking'],
   'minimax-m2.7': []
 };
 
@@ -352,6 +352,22 @@ const showUsage = (bubble, usage) => {
     group.appendChild(foot);
   }
   foot.textContent = text;
+};
+
+const showThinking = (group, text) => {
+  let det = group.querySelector('.thinking');
+  if (!det) {
+    det = document.createElement('details');
+    det.className = 'thinking';
+    const sum = document.createElement('summary');
+    sum.textContent = 'Thinking';
+    const body = document.createElement('div');
+    body.className = 'thinking-body';
+    det.append(sum, body);
+    const bubble = group.querySelector('.bubble');
+    group.insertBefore(det, bubble);
+  }
+  det.querySelector('.thinking-body').textContent = text;
 };
 
 /* ---------- Files ---------- */
@@ -777,6 +793,7 @@ const send = async () => {
 
   let received = false;
   let acc = '';
+  let thinking = '';
   try {
     const res = await fetch(API, {
       method: 'POST',
@@ -810,6 +827,9 @@ const send = async () => {
         botGroup._text = acc;
         setBubbleContent(botBubble, acc);
         scrollBottom();
+      } else if (obj.thinking) {
+        thinking += obj.thinking;
+        showThinking(botGroup, thinking);
       } else if (obj.usage) {
         showUsage(botBubble, obj.usage);
       }

@@ -656,6 +656,7 @@ html, body {
 .cap-video { color: #d39be0; }
 .cap-search { color: #e0b37a; }
 .cap-tools { color: #7fc9c9; }
+.cap-thinking { color: #c9a7e0; }
 
 .usage { font-size: 11px; color: var(--muted2); padding: 2px 2px 0; }
 
@@ -672,3 +673,25 @@ html, body {
   transition: color 0.12s, border-color 0.12s;
 }
 .msg-copy:hover { color: var(--text); border-color: var(--muted2); }
+
+.thinking {
+  font-size: 12px;
+  color: var(--muted);
+  border-left: 2px solid var(--line);
+  padding-left: 8px;
+  margin: 2px 0;
+  max-width: 680px;
+}
+.thinking summary {
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--muted2);
+  user-select: none;
+  list-style: none;
+}
+.thinking-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding-top: 4px;
+  color: var(--muted);
+}

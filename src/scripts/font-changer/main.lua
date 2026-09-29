@@ -59,11 +59,6 @@ local function revert()
 	end
 end
 
-local function HasProcessed()
-	-- its was orginally intended to NOT rechange already done fonnts
-	-- since we relog every2s and rerun everytime even if the font hasnt changed
-end
-
 services["CoreGui"].DescendantAdded:Connect(function(item)
 	if getgenv()["active"] then
 		process(item)

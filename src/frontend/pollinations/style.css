@@ -658,3 +658,17 @@ html, body {
 .cap-tools { color: #7fc9c9; }
 
 .usage { font-size: 11px; color: var(--muted2); padding: 2px 2px 0; }
+
+.msg-copy {
+  font: inherit;
+  font-size: 11px;
+  color: var(--muted2);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 1px 6px;
+  margin-top: 2px;
+  transition: color 0.12s, border-color 0.12s;
+}
+.msg-copy:hover { color: var(--text); border-color: var(--muted2); }

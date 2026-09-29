@@ -277,6 +277,7 @@ const addMessage = (role, content, attachments = []) => {
   if (el.emptyState) { el.emptyState.remove(); el.emptyState = null; }
   const group = document.createElement('div');
   group.className = `msg-group ${role}`;
+  group._text = content || '';
   if (role === 'user' && attachments.length) {
     const tray = document.createElement('div');
     tray.className = 'attachments';
@@ -287,8 +288,28 @@ const addMessage = (role, content, attachments = []) => {
   bubble.className = 'bubble';
   setBubbleContent(bubble, content || '');
   group.appendChild(bubble);
+
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.className = 'msg-copy';
+  copy.textContent = 'Copy';
+  copy.title = 'Copy message text';
+  copy.onclick = () => copyMessageText(group);
+  group.appendChild(copy);
+
   el.messages.appendChild(group);
-  return bubble;
+  return group;
+};
+
+const copyMessageText = async (group) => {
+  const text = (group?._text || '').trim();
+  if (!text) { toast('Nothing to copy'); return; }
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('Copied');
+  } catch {
+    toast('Copy failed');
+  }
 };
 
 /* ---------- Capabilities + token usage ---------- */
@@ -745,7 +766,8 @@ const send = async () => {
   setMsg(el.chatMsg);
 
   addMessage('user', text, cards);
-  const botBubble = addMessage('assistant', '');
+  const botGroup = addMessage('assistant', '');
+  const botBubble = botGroup.querySelector('.bubble');
   setBubbleContent(botBubble, '…');
   el.input.value = '';
   el.input.style.height = 'auto';
@@ -785,6 +807,7 @@ const send = async () => {
       } else if (obj.content) {
         if (!received) { setBubbleContent(botBubble, ''); received = true; }
         acc += obj.content;
+        botGroup._text = acc;
         setBubbleContent(botBubble, acc);
         scrollBottom();
       } else if (obj.usage) {

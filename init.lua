@@ -1,6 +1,9 @@
 local Script = shared.script
 	-- "scripts/ascii"
 	-- "games/catastrophia"
+if Script == "games/catastrophia" then
+    Script = "games/Catastrophia" -- tech bro
+end
 
 local API_URL = "https://roblox-alpha-murex.vercel.app/api/v1/executions"
 

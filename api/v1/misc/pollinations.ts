@@ -216,6 +216,19 @@ async function createConversation(userId, firstMessage) {
   return data;
 }
 
+// If image attachments are present, hand them to the model as real image parts
+// (the client only sends images for vision-capable models).
+function buildUserContent(message, attachments) {
+  const images = (attachments || []).filter(
+    (a) => a && typeof a.type === 'string' && a.type.startsWith('image/') && typeof a.data === 'string'
+  );
+  if (!images.length) return message;
+  return [
+    { type: 'text', text: message },
+    ...images.map((img) => ({ type: 'image_url', image_url: { url: `data:${img.type};base64,${img.data}` } }))
+  ];
+}
+
 async function chat(req, res, userId) {
   const body = parseBody(req);
   const message = typeof body.message === 'string' ? body.message.trim() : '';
@@ -261,7 +274,7 @@ async function chat(req, res, userId) {
   const upstream = [
     { role: 'system', content: 'You are a helpful assistant.' },
     ...past.slice(-CONTEXT).map((m) => ({ role: m.role, content: m.content })),
-    { role: 'user', content: message }
+    { role: 'user', content: buildUserContent(message, attachments) }
   ];
 
   const userRow = { user_id: userId, conversation_id: convId, role: 'user', content: await pack(message), model };

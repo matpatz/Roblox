@@ -146,15 +146,16 @@ async function findConversation(userId, convId) {
 }
 
 async function messagesFor(convId) {
-  const base = () =>
+  const query = (columns) =>
     db()
       .from('chat_messages')
+      .select(columns)
       .eq('conversation_id', convId)
       .order('created_at', { ascending: true })
       .limit(200);
-  let { data, error } = await base().select('id, role, content, created_at, attachments');
+  let { data, error } = await query('id, role, content, created_at, attachments');
   if (error && /attachments/i.test(error.message || '')) {
-    ({ data, error } = await base().select('id, role, content, created_at'));
+    ({ data, error } = await query('id, role, content, created_at'));
   }
   if (error) throw new ApiError(500, 'Failed to load messages');
   return Promise.all((data || []).map(async (m) => ({ ...m, content: await unpack(m.content) })));

@@ -5,7 +5,6 @@ local conmanager = Knit.conmanager
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
-const RunService = game:GetService("RunService")
 const CollectionService = game:GetService("CollectionService")
 
 -- // Remotes
@@ -51,7 +50,7 @@ local config = {
 -- // cheat
 local cheat = {
 	Utils = {
-        ["Soldier"] = {},
+        ["Marleyans"] = {},
         ["Titan"] = {}
     }
 }
@@ -85,7 +84,7 @@ function Utils.IsEnemy(Player)
 	return Team ~= nil and LocalTeam ~= nil and Team ~= LocalTeam
 end
 
-function Utils.Soldier.GetClosest()
+function Utils.Marleyans.GetClosest()
 	local Nearest = nil
 	local NearestDistance = math.huge
 
@@ -160,7 +159,7 @@ const Combat = Window:CreateTab("Main", 4483362458)
 Combat:CreateLabel("Titan", "wind")
 
 Combat:CreateToggle({
-	Name = "Kill Aura (Eldian / Pve)",
+	Name = "Kill Aura -- Titan Marleyans and Pure Titans (pve)",
 	CurrentValue = config.Combat.KillAura,
 	Flag = "ka",
 	Callback = function(Value)
@@ -174,15 +173,17 @@ Combat:CreateToggle({
 
 		-- the game's own blade damage scales with swing speed, 401 drops titans fast.
 		-- Same gate the game uses for its titan helpers: a Nape part on a live titan.
-		conmanager.connect("KillAura", RunService.Heartbeat, function()
-            local Titan = Utils["Titan"].GetClosest()
-            if not Titan then
-                return
-            end
-            local Nape = Titan:FindFirstChild("Nape")
-            --local TitanHumanoid = Titan:FindFirstChildOfClass("Humanoid")
+		-- 0.2 is an interval, conmanager loops it on a thread instead of every frame.
+		conmanager.connect("KillAura", 0.2, function()
+			const Titan = Utils["Titan"].GetClosest()
 
-            BladesHit:FireServer(Nape, 401)
+			if not Titan then
+				return
+			end
+
+			const Nape = Titan:FindFirstChild("Nape")
+
+			BladesHit:FireServer(Nape, 401)
 		end)
 	end
 })
@@ -201,7 +202,7 @@ Combat:CreateToggle({
 		end
 
 		-- Punch takes the same boolean the game passes from attack(false) / attack(true)
-		conmanager.connect("AutoPunch", RunService.Heartbeat, function()
+		conmanager.connect("AutoPunch", 0.3, function()
 			-- the game tags every titan humanoid, so this only punches while actually a titan
 			if not CollectionService:HasTag(Humanoid, "TitanShifted") then
 				return
@@ -215,7 +216,7 @@ Combat:CreateToggle({
 Combat:CreateLabel("Pvp", "wind")
 
 Combat:CreateToggle({
-	Name = "Soldier Aura",
+	Name = "Kill Aura -- Eldians (pvp)",
 	CurrentValue = config.Combat.SoldierAura,
 	Flag = "sniper",
 	Callback = function(Value)
@@ -227,8 +228,8 @@ Combat:CreateToggle({
 			return
 		end
 
-		conmanager.connect("SoldierAura", RunService.Heartbeat, function()
-			const Target = Utils["Soldier"].GetClosest()
+		conmanager.connect("SoldierAura", 0.2, function()
+			const Target = Utils["Marleyans"].GetClosest()
 
 			if not Target then
 				return

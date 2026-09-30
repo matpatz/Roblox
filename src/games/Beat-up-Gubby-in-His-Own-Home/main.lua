@@ -1,12 +1,17 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
-local rep = game:GetService("ReplicatedStorage")
-local re = rep.Networking.Server.RemoteEvents
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RemoteEvents = ReplicatedStorage.Networking.Server.RemoteEvents
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
 while task.wait() do
-    for i = 1, game:GetService("Stats").Workspace.FPS:GetValue() / 7 do
-        local inv = rep.PlayerData[game:GetService("Players").LocalPlayer.Name].Inventory.OwnedActions
-		if not inv:FindFirstChild("SlapHand") then re.PurchaseAction:FireServer("SlapHand") else re.DamageEvents.SlapDamage:FireServer(Vector3.new()) re.DamageEvents.PhysicsDamage:FireServer(115, Vector3.new()) end
+    for i = 1, 25 do
+        local inv = ReplicatedStorage.PlayerData[LocalPlayer.Name].Inventory.OwnedActions
+		if not inv:FindFirstChild("SlapHand") then
+            RemoteEvents.PurchaseAction:FireServer("SlapHand")
+        else
+            RemoteEvents.DamageEvents.SlapDamage:FireServer(Vector3.new())
+            RemoteEvents.DamageEvents.PhysicsDamage:FireServer(115, Vector3.new())
+        end
     end
 end

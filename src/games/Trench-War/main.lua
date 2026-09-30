@@ -4,26 +4,25 @@ local services = Knit.services
 
 local device = Knit.require("Modules/Telementry/v1", "platform")
 
-local get = (type(cloneref) == "function") and cloneref or function(x) return x end
-local players = get(game:GetService("Players")); local lp = players["LocalPlayer"]
-local rs = get(game:GetService("RunService"))
-local input = get(game:GetService("UserInputService"))
-local vim = get(game:GetService("VirtualInputManager"))
-local rep = get(game:GetService("ReplicatedStorage"))
-local core = get(game:GetService("CoreGui"))
-local lighting = get(game:GetService("Lighting"))
-local https = get(game:GetService("HttpService"))
-local cs = get(game:GetService("CollectionService"))
-local stats = get(game:GetService("Stats"))
-local marketplace = get(game:GetService("MarketplaceService"))
-local analytic = get(game:GetService("RbxAnalyticsService"))
-local log = get(game:GetService("LogService"))
+local Players = services.Players; local lp = Players["LocalPlayer"]
+local RunService = services.RunService
+local UserInputService = services.UserInputService
+local VirtualInputManager = services.VirtualInputManager
+local ReplicatedStorage = services.ReplicatedStorage
+local CoreGui = services.CoreGui
+local Lighting = services.Lighting
+local HttpService = services.HttpService
+local CollectionService = services.CollectionService
+local Stats = services.Stats
+local MarketplaceService = services.MarketplaceService
+local RbxAnalyticsService = services.RbxAnalyticsService
+local LogService = services.LogService
 
 local cam = workspace.CurrentCamera
 
 local Rayfield = Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
-    Name = "Voltex - " .. tostring(game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name),
+    Name = `Voltex - {shared.game_name}`,
     LoadingTitle = "Title",
     LoadingSubtitle = "Subtitle",
     ConfigurationSaving = {
@@ -37,15 +36,15 @@ local main = Window:CreateTab("Main")
 main:CreateSection("Aimbot / Combat")
 
 local function isme(char)
-    local player = players:GetPlayerFromCharacter(char)
+    local player = Players:GetPlayerFromCharacter(char)
     return player ~= lp
 end
 
 local function gclosest()
     local closest, dist = nil, math.huge
-    local mouse = input:GetMouseLocation()
+    local mouse = UserInputService:GetMouseLocation()
 
-    for _, p in ipairs(players:GetPlayers()) do
+    for _, p in ipairs(Players:GetPlayers()) do
         if p ~= lp and p.Character then
             local t = p.Character:FindFirstChild("HumanoidRootPart") or p.Character:FindFirstChild("Torso")
             if t then
@@ -88,13 +87,13 @@ main:CreateToggle({
 })
 
 local holding = false
-input.InputBegan:Connect(function(i)
+UserInputService.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton2 then
         holding = true
     end
 end)
 
-input.InputEnded:Connect(function(i)
+UserInputService.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton2 then
         holding = false
     end
@@ -103,7 +102,7 @@ end)
 if device == "Mobile" then
     local gui = Instance.new("ScreenGui")
     gui.Name = "aimlock"
-    gui.Parent = core
+    gui.Parent = CoreGui
 
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 100, 0, 50)
@@ -121,7 +120,7 @@ if device == "Mobile" then
 end
 
 local last = 0
-rs.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function()
     local target = gclosest()
     if not target or not target.Character then return end
 
@@ -141,7 +140,7 @@ rs.RenderStepped:Connect(function()
     if tbot then
         local pos, onScreen = cam:WorldToViewportPoint(hrp.Position)
         if onScreen then
-            local mouse = input:GetMouseLocation()
+            local mouse = UserInputService:GetMouseLocation()
             local dx = pos.X - mouse.X
             local dy = pos.Y - mouse.Y
             local dist = dx*dx + dy*dy
@@ -150,8 +149,8 @@ rs.RenderStepped:Connect(function()
             if dist < 144 and (time() - last) > 0.05 then
                 last = time()
 
-                vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
             end
         end
     end
@@ -234,11 +233,11 @@ local function hookPlayer(p)
     end
 end
 
-for _, p in ipairs(players:GetPlayers()) do
+for _, p in ipairs(Players:GetPlayers()) do
     hookPlayer(p)
 end
 
-players.PlayerAdded:Connect(hookPlayer)
+Players.PlayerAdded:Connect(hookPlayer)
 
 main:CreateToggle({
     Name = "Hitbox Expander",
@@ -247,7 +246,7 @@ main:CreateToggle({
     Callback = function(v)
         hitbox = v
 
-        for _, p in ipairs(players:GetPlayers()) do
+        for _, p in ipairs(Players:GetPlayers()) do
             if p.Character then
                 applyHitbox(p.Character)
             end
@@ -266,7 +265,7 @@ main:CreateSlider({
         hsize = v
 
         if hitbox then
-            for _, p in ipairs(players:GetPlayers()) do
+            for _, p in ipairs(Players:GetPlayers()) do
                 if p.Character then
                     applyHitbox(p.Character)
                 end
@@ -388,17 +387,17 @@ misc:CreateButton({
 })
 
 local function report(user)
-    rep.Event:FireServer(
+    ReplicatedStorage.Event:FireServer(
         "BanHacker",
         {
-            game:GetService("Players")[tostring(user)]
+            Players[tostring(user)]
         }
     )
 end
 
 local function getNames()
     local t = {}
-    for _, p in ipairs(players:GetPlayers()) do
+    for _, p in ipairs(Players:GetPlayers()) do
         table.insert(t, p.Name)
     end
     return t
@@ -420,8 +419,8 @@ local function refresh()
     player:Refresh(getNames())
 end
 
-players.PlayerAdded:Connect(refresh)
-players.PlayerRemoving:Connect(refresh)
+Players.PlayerAdded:Connect(refresh)
+Players.PlayerRemoving:Connect(refresh)
 
 misc:CreateButton({
     Name = "Report Player",

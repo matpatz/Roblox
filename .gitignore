@@ -16,6 +16,7 @@ TODO
 
 # decompiled scripts
 **/Scripts/
+!src/scripts/
 # scripts generated using decompiled scripts and will used to plan new features
 **/source/
 

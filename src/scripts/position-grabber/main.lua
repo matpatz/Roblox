@@ -1,24 +1,24 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
-local hrp = game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]
+local Knit = shared.Knit
+local player = Knit.player
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "e" .. math.random(1e9, 2e9)
-gui.Parent = gethui() or game.CoreGui
-gui.ResetOnSpawn = false
+local instances = Knit.instances
+local ui = Knit.ui
 
-local frame = Instance.new("Frame")
+local hrp = player.HumanoidRootPart
+
+local ScreenGui = instances.new("ScreenGui", true)
+
+local frame = instances.new("Frame", true)
 frame.Size = UDim2.new(0, 300, 0, 150)
 frame.Position = UDim2.new(0.5, -150, 0.5, -75)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.Active = true
 frame.Draggable = true
-frame.Parent = gui
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+frame.Parent = ScreenGui
+ui.assign_ui_corner(frame, {0, 10})
 
 local title = Instance.new("TextLabel")
-title.Text = "Voltex"
+title.Text = "Position Grabber"
 title.Size = UDim2.new(0, 200, 0, 20)
 title.Position = UDim2.new(0, 5, 0, 5)
 title.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
@@ -38,10 +38,9 @@ close.Font = Enum.Font.SourceSansBold
 close.TextScaled = true
 close.BackgroundTransparency = 0.95
 close.Parent = frame
-Instance.new("UICorner", close).CornerRadius = UDim.new(0, 6)
-close.MouseButton1Click:Connect(function()
-	gui:Destroy()
-end)
+
+ui.assign_ui_corner(close, {0, 6})
+ui.destroy_ui_button(close, ScreenGui)
 
 local textbox = Instance.new("TextBox")
 textbox.Text = "x, y, z"
@@ -52,7 +51,7 @@ textbox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 textbox.Font = Enum.Font.SourceSans
 textbox.TextScaled = true
 textbox.Parent = frame
-Instance.new("UICorner", textbox).CornerRadius = UDim.new(0, 6)
+ui.assign_ui_corner(textbox, {0, 10})
 
 local save = Instance.new("TextButton")
 save.Text = "Save"
@@ -63,7 +62,8 @@ save.TextColor3 = Color3.new(1, 1, 1)
 save.Font = Enum.Font.SourceSansBold
 save.TextScaled = true
 save.Parent = frame
-Instance.new("UICorner", save).CornerRadius = UDim.new(0, 6)
+
+ui.assign_ui_corner(textbox, {0, 6})
 
 local cpos = Instance.new("TextButton")
 cpos.Text = "Copy Position"
@@ -90,7 +90,7 @@ delayBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 delayBox.Font = Enum.Font.SourceSans
 delayBox.TextScaled = true
 delayBox.Parent = frame
-Instance.new("UICorner", delayBox).CornerRadius = UDim.new(0, 4)
+ui.assign_ui_corner(delayBox, {0, 4})
 
 local loop = Instance.new("TextButton")
 loop.Text = "Off"
@@ -101,7 +101,7 @@ loop.TextColor3 = Color3.new(1, 1, 1)
 loop.Font = Enum.Font.SourceSans
 loop.TextScaled = true
 loop.Parent = frame
-Instance.new("UICorner", loop).CornerRadius = UDim.new(0, 4)
+ui.assign_ui_corner(loop, {0, 4})
 
 local looping = false; local lthread
 
@@ -155,7 +155,7 @@ tpDelay.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 tpDelay.Font = Enum.Font.SourceSans
 tpDelay.TextScaled = true
 tpDelay.Parent = frame
-Instance.new("UICorner", tpDelay).CornerRadius = UDim.new(0, 4)
+ui.assign_ui_corner(tpDelay, {0, 4})
 
 local tpLoop = Instance.new("TextButton")
 tpLoop.Text = "Off"
@@ -166,7 +166,7 @@ tpLoop.TextColor3 = Color3.new(1, 1, 1)
 tpLoop.Font = Enum.Font.SourceSans
 tpLoop.TextScaled = true
 tpLoop.Parent = frame
-Instance.new("UICorner", tpLoop).CornerRadius = UDim.new(0, 4)
+ui.assign_ui_corner(tpLoop, {0, 4})
 
 local teleporting = false; local tpthread
 tpLoop.MouseButton1Click:Connect(function()
@@ -202,4 +202,4 @@ loopt.TextColor3 = Color3.new(1, 1, 1)
 loopt.Font = Enum.Font.SourceSans
 loopt.TextSize = 20
 loopt.Parent = frame
-Instance.new("UICorner", loopt).CornerRadius = UDim.new(0, 6)
+ui.assign_ui_corner(loopt, {0, 6})

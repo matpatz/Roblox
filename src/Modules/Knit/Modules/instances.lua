@@ -31,6 +31,10 @@ instances.new = function(classname: string, random_name: boolean?): Instance
 
     instance.Parent = secure_parent
 
+    if classname == "ScreenGui" then
+        instance.ResetOnSpawn = false
+    end
+    
     return instance
 end
 

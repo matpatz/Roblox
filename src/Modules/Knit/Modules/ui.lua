@@ -25,4 +25,10 @@ ui.assign_ui_stroke = function(parent, thickness: number)
     return UiStroke
 end
 
+ui.destroy_ui_button = function(Button, ScreenGui)
+    Button.MouseButton1Click:Connect(function()
+    	ScreenGui:Destroy()
+    end)
+end
+
 return ui

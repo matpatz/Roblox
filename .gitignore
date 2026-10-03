@@ -4,6 +4,7 @@
 
 *.env
 discord-webhooks.secret.json
+hits.json
 
 schema/
 supabase/.temp/
@@ -19,6 +20,7 @@ TODO
 !src/scripts/
 # scripts generated using decompiled scripts and will used to plan new features
 **/source/
+**/source.lua
 
 # wip/broken/private
 *-ignore*

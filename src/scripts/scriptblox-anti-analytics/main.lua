@@ -1,3 +1,5 @@
+-- this can be detected but thunderpookie wouldnt do that
+
 local clonefunction = clonefunction and clonefunction or function(x)
 	return x
 end
@@ -6,9 +8,11 @@ local hookfunction = hookfunction and hookfunction or function(targetfunction, h
     
     return targetfunction
 end
-
 local isfunctionhooked = isfunctionhooked and isfunctionhooked or function(x)
 	return false
+end
+local newcclosure = newcclosure and newcclosure or function(x)
+	return x
 end
 
 assert(loadstring, "loadstring required")
@@ -19,10 +23,10 @@ if isfunctionhooked(loadstring) then
 	restorefunction(loadstring)
 end
 
-local Old; Old = hookfunction(loadstring, function(script: string, ...)
+local Old; Old = hookfunction(loadstring, newcclosure(function(script: string, ...)
 	if script:find("https://scriptblox.com/ingest/v1") then
 		error("attempted analytics")
 	end
 
 	return load(script, ...)
-end)
+end))

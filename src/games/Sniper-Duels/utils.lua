@@ -7,34 +7,34 @@ local services = Knit.services
 local scriptmanager = Knit.scriptmanager
 
 --// services
-local Players = services.Players
-local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = services.ReplicatedStorage
+
+local EntityService = require(ReplicatedStorage.Remote.EntityService)
+local HumanoidEntity = require(ReplicatedStorage.Remote.EntityService.Entity.HumanoidEntity)
 
 local Aimbot = Knit.require("Modules/Aimbot/v1", "main")
 
 -- // Utils
 
+-- the rewrite dropped the workspace.Characters container: rooms are separate
+-- worlds and everyone in the server hangs straight off workspace, so the focused
+-- world is the only safe pool. ForeachEnemies already drops the local player and
+-- anyone sharing our team
 utils["Aimbot"].GetTargets = function(): { Instance }
-    local LocalCharacter = LocalPlayer.Character
-    local LocalContainer = LocalCharacter and LocalCharacter.Parent
-    local Characters = workspace.Characters
     local Enemies: { Instance } = {}
 
-    for _, Player in Players:GetPlayers() do
-        local Character = Player.Character
+    local LocalEntity = EntityService.GetLocalEntity()
+    local World = EntityService.WorldManager.GetFocusedWorld()
 
-        if Player == LocalPlayer or not Character or not Character.Parent then
-            continue
-        end
-
-        -- teammates share a team container; in FFA every character hangs
-        -- directly off workspace.Characters
-        if Character.Parent == LocalContainer and LocalContainer ~= Characters then
-            continue
-        end
-
-        table.insert(Enemies, Character)
+    if not World then
+        return Enemies
     end
+
+    World:ForeachEnemies(LocalEntity, function(Entity)
+        if HumanoidEntity:is(Entity) and Entity:IsAlive() then
+            table.insert(Enemies, Entity.Instance)
+        end
+    end)
 
     return Enemies
 end
@@ -46,10 +46,9 @@ utils["Aimbot"].GetClosest = function(OriginPosition: Vector3): (BasePart?, Inst
 
     aimconfig["Origin"] = OriginPosition
     aimconfig["Range"] = Config.Range
-    -- the module does the line of sight check itself. The camera has no such
-    -- property as workspace.Camera, and the first-person viewmodel hangs off
-    -- workspace.CurrentCamera (which is why Fire filters it), so the ignore list
-    -- has to exclude the real camera or every ray stops on the viewmodel
+    -- the module does the line of sight check itself. The first-person viewmodel
+    -- hangs off workspace.CurrentCamera, so the ignore list has to exclude the
+    -- real camera or every ray stops on the viewmodel
     aimconfig["Visible"] = true
     aimconfig["Ignore"] = workspace.CurrentCamera
     aimconfig["EntityLists"] = { utils["Aimbot"].GetTargets() }

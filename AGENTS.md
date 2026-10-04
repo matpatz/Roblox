@@ -8,9 +8,13 @@ potassium workspace: C:\Users\$env:USERPROFILE\AppData\Local\Potassium\workspace
 
 I perfer you use the Scripts directory when available over the mcp server
 
+please stop using fucking Core for every single function
+    its only supposed to be for Toggles/features inside of a Interface/ui callback
+
 when modying GetTargets dont forget GetClosest (of the Aimbot Module) filters hp and such already
 
 the chance Aimbot.GetClosest is the issue is almost zero, I have likely checked if a target is actually found
+    its actually fairly high
 
 avoid:
 ```lua
@@ -21,6 +25,6 @@ local a = request({
 if not a or type(a.Body) ~= "string" then
     error("bad lil body")
 end
-``` -- because body will never not exist/not be a string if a does not exist
+``` -- because body will never not exist/not be a string if `a` does not exist
 
 the MCP may shutdown any time so it would be preferable to write any useful files locally (in the Scripts folder of whatever game)

@@ -10,8 +10,8 @@ local utils = scriptmanager.get("utils")
 local ReplicatedStorage = services.ReplicatedStorage
 
 --// Modules
-local Gun = require(ReplicatedStorage.Modules.Controllers.WeaponController.Gun)
-local MultiRaycast = require(ReplicatedStorage.Modules.Misc.MultiRaycast)
+local CameraController = require(ReplicatedStorage.Client.CameraController)
+local ClientShootableComponent = require(ReplicatedStorage.Client.CombatController.ClientComponent.ClientShootableComponent)
 
 local config = scriptmanager.config.set(
     {
@@ -28,42 +28,29 @@ local core = {}
 
 core = scriptmanager.set("core", core)
 
+local CombatOriginFn = debug.getupvalue(ClientShootableComponent.Shoot, 2)
 
-if isfunctionhooked(Gun.Fire) then
-    restorefunction(Gun.Fire)
+assert(CombatOriginFn, "core: CameraController origin closure not found")
+
+if isfunctionhooked(CombatOriginFn) then
+    restorefunction(CombatOriginFn)
 end
 
-if isfunctionhooked(MultiRaycast) then
-    restorefunction(MultiRaycast)
-end
+local Old
+Old = hookfunction(CombatOriginFn, function(...)
+    local Origin, DetectAt, Info = Old(...)
 
--- Fire ends its shot packet at the last hit of its own ray (v73 = last.Instance.Position)
--- and reports that same part, so the bullet is redirected by re-aiming the ray it
--- casts. The camera is never moved - the view stays exactly where the player points it.
-local AimPart: BasePart?
-
-local OldFire
-OldFire = hookfunction(Gun.Fire, function(Self, ...)
-    AimPart = nil
-
-    if config.SilentAim.Value then
-        AimPart = utils["Aimbot"].GetClosest(workspace.CurrentCamera.CFrame.Position)
+    if not (config.SilentAim.Value and typeof(Origin) == "CFrame") then
+        return Origin, DetectAt, Info
     end
 
-    local Results = OldFire(Self, ...)
+    local AimPart = utils["Aimbot"].GetClosest(Origin.Position)
 
-    AimPart = nil
-
-    return Results
-end)
-
-local OldMultiRaycast
-OldMultiRaycast = hookfunction(MultiRaycast, function(OriginPosition, Direction, RaycastParams, ...)
-    if AimPart then
-        Direction = (AimPart.Position - OriginPosition).Unit * Direction.Magnitude
+    if not AimPart then
+        return Origin, DetectAt, Info
     end
 
-    return OldMultiRaycast(OriginPosition, Direction, RaycastParams, ...)
+    return CFrame.lookAt(Origin.Position, AimPart.Position), DetectAt, Info
 end)
 
 return core

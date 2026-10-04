@@ -44,7 +44,7 @@ Old = hookfunction(CombatOriginFn, function(...)
         return Origin, DetectAt, Info
     end
 
-    local AimPart = utils["Aimbot"].GetClosest(Origin.Position)
+    local AimPart = utils["Aimbot"].GetClosest(Origin)
 
     if not AimPart then
         return Origin, DetectAt, Info

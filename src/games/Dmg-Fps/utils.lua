@@ -39,7 +39,9 @@ local aimconfig = {}
 utils["Aimbot"].GetClosest = function(): (BasePart?, Instance?)
     local Config = scriptmanager.config.get().KillAura
 
-    aimconfig["Origin"] = playermanager.HumanoidRootPart.CFrame
+    -- bare position, not the CFrame: KillAura shoots whatever is in range, and a
+    -- CFrame would make Visible restrict it to whatever the character is facing
+    aimconfig["Origin"] = playermanager.HumanoidRootPart.Position
     aimconfig["Range"] = Config.Range
     aimconfig["Visible"] = true
     aimconfig["Ignore"] = workspace.CurrentCamera

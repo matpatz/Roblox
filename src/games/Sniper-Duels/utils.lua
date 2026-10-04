@@ -41,14 +41,17 @@ end
 
 local aimconfig = {}
 
-utils["Aimbot"].GetClosest = function(OriginPosition: Vector3): (BasePart?, Instance?)
+-- Origin is the shot's CFrame rather than a bare position: the module needs its
+-- orientation to be able to reject anything behind the player
+utils["Aimbot"].GetClosest = function(Origin: CFrame): (BasePart?, Instance?)
     local Config = scriptmanager.config.get().SilentAim
 
-    aimconfig["Origin"] = OriginPosition
+    aimconfig["Origin"] = Origin
     aimconfig["Range"] = Config.Range
-    -- the module does the line of sight check itself. The first-person viewmodel
-    -- hangs off workspace.CurrentCamera, so the ignore list has to exclude the
-    -- real camera or every ray stops on the viewmodel
+    -- the module does the visibility check itself: the target has to be in front
+    -- of this CFrame's view and unobstructed. The first-person viewmodel hangs off
+    -- workspace.CurrentCamera, so the ignore list has to exclude the real camera
+    -- or every ray stops on the viewmodel
     aimconfig["Visible"] = true
     aimconfig["Ignore"] = workspace.CurrentCamera
     aimconfig["EntityLists"] = { utils["Aimbot"].GetTargets() }

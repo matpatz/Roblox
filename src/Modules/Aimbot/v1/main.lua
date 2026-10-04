@@ -21,7 +21,7 @@ export type AimbotConfig = {
 	MinDistance: number?,
 	TeamCheck: boolean?,
 	AimPart: AimPartType?,
-	Visible: boolean?,
+	Visible: boolean?, -- in front of the origin's view and unobstructed
 	Ignore: IgnoreType?,
 	Blacklist: BlacklistType?,
 	EntityList: EntityListType?,
@@ -47,7 +47,7 @@ end
 
 function aimbot.IsVisible(Origin: OriginType, Target: Instance, Config: AimbotConfig?): boolean
 	assert(Config, "Aimbot.IsVisible: Config is required")
-	return Helpers["Is"].LineOfSight(Helpers["Get"].Origin(Origin), Target, Config)
+	return Helpers["Is"].Visible(Origin, Target, Config)
 end
 
 function aimbot.Raycast(Origin: OriginType, Target: Instance, Config: AimbotConfig?): Vector3?

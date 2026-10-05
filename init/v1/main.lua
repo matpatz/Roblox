@@ -31,6 +31,7 @@ local Identifier = wrappers.gethwid()
 local Executor = identifyexecutor and identifyexecutor() or nil
 
 local success, err = pcall(function()
+    error("ur mom")
     local response = request({
         Url = API_URL,
         Method = "POST",

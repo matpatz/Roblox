@@ -91,7 +91,6 @@ visuals:CreateSlider({
 
 visuals:CreateSection("Colors")
 
--- Element label -> ESP color setting.
 local Colors = {
     { "Box", "BoxColor" },
     { "Name", "NameColor" },

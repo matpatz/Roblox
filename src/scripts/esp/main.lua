@@ -20,23 +20,22 @@ local Window = Rayfield:CreateWindow({
 local visuals = Window:CreateTab("Visuals", 4483362458)
 local visualsSection = visuals:CreateSection("Player")
 
-local esp = Knit.require("Libraries/Esp", "main")
+local esp = Knit.require("Libraries/Esp/v1", "main")
 
 local Options = {
     { "Box", "ShowBox" },
-    { "Corners", "ShowCorners" },
     { "Name", "ShowName" },
     { "Held Item", "ShowHeld" },
     { "Tracer", "ShowTracer" },
-    { "Quad", "ShowQuad" },
+    --{ "Quad", "ShowQuad" },
     { "Health", "ShowHealth" },
     { "Distance", "ShowDistance" },
     { "Chams", "ShowChams" },
     { "Health Bar", "ShowHealthBar" },
     { "Team Color", "TeamColor" },
-    { "Performance Mode", "PerformanceMode" },
     { "Skeleton", "ShowSkeleton" },
     { "3D Box", "Show3DBox" },
+    { "Performance Mode", "PerformanceMode" },
 }
 
 local OptionNames = table.create(#Options)
@@ -49,7 +48,7 @@ local eSettings = visuals:CreateDropdown({
     Options = OptionNames,
     CurrentOption = {},
     MultipleOptions = true,
-    Flag = "ef",
+    Flag = "",
 
     Callback = function(selected)
         local Enabled = {}
@@ -63,10 +62,10 @@ local eSettings = visuals:CreateDropdown({
     end,
 })
 
-local espToggle = visuals:CreateToggle({
+visuals:CreateToggle({
     Name = "Enable",
     CurrentValue = false,
-    Flag = "met",
+    Flag = "",
 
     Callback = function(v)
         if v then
@@ -83,11 +82,38 @@ visuals:CreateSlider({
     Increment = 10,
     Suffix = "studs",
     CurrentValue = 1000,
-    Flag = "ed",
+    Flag = "",
 
     Callback = function(v)
         esp:SetProperty("MaxDist", v)
     end,
 })
 
-local rf = Window:CreateTab("rayfield")
+visuals:CreateSection("Colors")
+
+-- Element label -> ESP color setting.
+local Colors = {
+    { "Box", "BoxColor" },
+    { "Name", "NameColor" },
+    { "Tracer", "TracerColor" },
+    { "Chams", "ChamsColor" },
+    { "Skeleton", "SkeletonColor" },
+    { "3D Box", "Box3DColor" },
+    { "Health Text", "HealthTextColor" },
+    { "Health Bar", "HealthBarColorOverride" },
+}
+
+for _, Entry in ipairs(Colors) do
+    local Name, Property = Entry[1], Entry[2]
+
+    visuals:CreateColorPicker({
+        Name = Name,
+        Color = esp[Property] or Color3.fromRGB(255, 255, 255),
+
+        Callback = function(Value)
+            esp:SetProperty(Property, Value)
+        end,
+    })
+end
+
+Window:CreateTab("rayfield")

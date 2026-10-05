@@ -139,7 +139,7 @@ end
 
 -- // Esp
 
-const Esp = Knit.require("Libraries/Esp", "main")
+const Esp = Knit.require("Libraries/Esp/v1", "main")
 
 local EspContainers = {
 	Titans = { Location = Titans, Color = Color3.fromRGB(255, 60, 60) },

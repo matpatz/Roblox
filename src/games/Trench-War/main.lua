@@ -158,7 +158,7 @@ end)
 
 main:CreateSection("Combat + Visuals")
 
-local esp = Knit.require("Libraries/Esp", "main")
+local esp = Knit.require("Libraries/Esp/v1", "main")
 main:CreateDropdown({
     Name = "Esp Settings",
     Options = {"Box", "Name", "Held Item", "Tracer", "Health", "Distance", "Chams", "Health Bar", "Team Color", "Performance Mode"},

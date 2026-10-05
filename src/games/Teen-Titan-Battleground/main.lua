@@ -169,13 +169,12 @@ end)
 
 main:CreateSection("Combat + Visuals")
 
-local esp = Knit.require("Libraries/Esp", "main")
+local esp = Knit.require("Libraries/Esp/v1", "main")
 
 main:CreateDropdown({
     Name = "Esp Settings",
     Options = {
         "Box",
-        "Corners",
         "Name",
         "Held Item",
         "Tracer",
@@ -195,7 +194,6 @@ main:CreateDropdown({
     Callback = function(selectedOptions)
         -- Reset all options
         esp:SetProperty("ShowBox", false)
-        esp:SetProperty("ShowCorners", false)
         esp:SetProperty("ShowName", false)
         esp:SetProperty("ShowHeld", false)
         esp:SetProperty("ShowTracer", false)
@@ -213,8 +211,6 @@ main:CreateDropdown({
         for _, option in ipairs(selectedOptions) do
             if option == "Box" then
                 esp:SetProperty("ShowBox", true)
-            elseif option == "Corners" then
-                esp:SetProperty("ShowCorners", true)
             elseif option == "Name" then
                 esp:SetProperty("ShowName", true)
             elseif option == "Held Item" then

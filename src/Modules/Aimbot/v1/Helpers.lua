@@ -84,6 +84,34 @@ Helpers["Get"].Character = function(Target: Instance): Model?
 	return nil
 end
 
+-- FindFirstChild(name, true) returns whatever claimed the name first, and rigs
+-- that group the head hand back a Model named "Head" instead of a part. Callers
+-- read .Position off the result, so only BaseParts may come out of here: prefer a
+-- part with the name, then any part inside whatever did match.
+local function NamedPart(Character: Model, Name: string): BasePart?
+	const Found = Character:FindFirstChild(Name, true)
+	if Helpers["Get"].Type(Found) == "BasePart" then
+		return Found :: BasePart
+	end
+
+	if Found == nil then
+		return nil
+	end
+
+	local Fallback: BasePart? = nil
+	for _, Descendant in (Found :: Instance):GetDescendants() do
+		if Helpers["Get"].Type(Descendant) ~= "BasePart" then
+			continue
+		end
+		if Descendant.Name == Name then
+			return Descendant :: BasePart
+		end
+		Fallback = Fallback or (Descendant :: BasePart)
+	end
+
+	return Fallback
+end
+
 Helpers["Get"].AimPart = function(Target: Instance, AimPart: AimPartType?): BasePart?
 	const Character = Helpers["Get"].Character(Target)
 	if not Character then
@@ -116,11 +144,11 @@ Helpers["Get"].AimPart = function(Target: Instance, AimPart: AimPartType?): Base
 		if #Names == 0 then
 			return nil
 		end
-		return Character:FindFirstChild(Names[math.random(#Names)], true) :: BasePart?
+		return NamedPart(Character, Names[math.random(#Names)])
 	end
 
 	const Name = if type(AimPart) == "string" then AimPart :: string else "HumanoidRootPart"
-	return Character:FindFirstChild(Name, true) :: BasePart?
+	return NamedPart(Character, Name)
 end
 
 -- Is the candidate usable as a target? Never the local player; with TeamCheck

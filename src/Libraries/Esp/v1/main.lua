@@ -392,10 +392,11 @@ function Target.new(Parent, Source, CustomName, Definition)
 end
 
 function Target:CreateDrawings()
+    -- Transparency is opaque-visibility in some executors (1 = fully visible) and
+    -- Roblox-style in others (0 = fully visible), so leave it at the executor default.
     self.Box = CreateDrawing("Square", {
         Thickness = 2,
         Filled = false,
-        Transparency = 0,
         Color = White,
         Visible = false,
     })

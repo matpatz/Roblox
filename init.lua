@@ -46,7 +46,7 @@ local success, err = pcall(function()
 end)
 
 if not success then
-    warn("Execution log failed:", err)
+    --warn("Execution log failed:", err)
 end
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/scriptblox.lua"))()

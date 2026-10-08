@@ -1,16 +1,19 @@
 local keymanager = {}
+setmetatable(keymanager, {
+    __index = function(_, Index)
+        if Index == "keylist" then
+            local keylist = Knit.require("Modules/misc", "keylist")
+            return keylist
+        end
 
-local Knit = shared.Knit
+        return rawget(_, Index)
+    end
+})
+
+local conmanager = shared.Knit.conmanager
+
 repeat
-    Knit = shared.Knit
-    task.wait()
-until
-    Knit
-
-local conmanager = Knit.conmanager
-
-repeat
-    conmanager = Knit.conmanager
+    conmanager = shared.Knit.conmanager
     task.wait()
 until
     conmanager

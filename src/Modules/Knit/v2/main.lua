@@ -73,6 +73,10 @@ Knit.require = function(path: string, filename: string, localize: boolean)
 end
 
 --@param1 Options: player, conmanager, whatnot
+--[[
+    Could also be:
+    Knit[v] = bundlekey -- but ya
+]]
 Knit.new = function(desiredmodules)
     local bundle = {}
     for i, v in desiredmodules do

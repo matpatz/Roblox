@@ -1,7 +1,11 @@
 local Knit = {}
 
 local defualts = {
-    domain = "https://www.voltex.website"
+    domains = {
+        "https://gitlab.com/voltex-group3/voltex-project/-/raw/main",
+        "https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main",
+        "https://www.voltex.website",
+    },
     fetch_timeout = 5
 }
 
@@ -17,8 +21,10 @@ local defualt_paths = {
 }
 
 local function checklocal(path: string, filename: string)
-    local filecontent = readfile(`{path}/{filename}`)
-    if filecontent then
+    local ok, filecontent = pcall(function(...)
+		return readfile(`{path}/{filename}`)
+	end)
+    if ok and filecontent then
         return filecontent
     end
 
@@ -29,17 +35,28 @@ Knit.require = function(path: string, filename: string, localize: boolean)
     local extension = ".lua"
     filename = `{filename}{extension}`
 
-    local start = 0
+    local attempts = 0
 
-    local filecontent = game:HttpGet(`{defualts.domain}/src/{path}/{filename}`)
-    repeat
-        start += 1
+    local ok, filecontent
+    while not filecontent do
+        attempts += 1
+        
+        local currentdomain = defualts.domains[attempts]
+        if not currentdomain then
+            break
+        end
 
-        task.wait(1)
-    until filecontent or (start == defualts.fetch_timeout)
+        ok, filecontent = pcall(function(...)
+            return game:HttpGet(`{currentdomain}/src/{path}/{filename}`)
+        end)
+
+        if not ok then
+            filecontent = nil
+        end
+    end
 
     if not filecontent then
-        return checklocal(path, filename)
+        filecontent = checklocal(path, filename)
     end
 
     if localize then
@@ -47,13 +64,18 @@ Knit.require = function(path: string, filename: string, localize: boolean)
         writefile(`{path}/{filename}`, filecontent)
     end
 
-    return loadstring(filecontent)()
+    local compiled = loadstring(filecontent)
+    if not compiled then
+        error("error compiling required script, Knit.")
+    end
+
+    return compiled()
 end
 
 --@param1 Options: player, conmanager, whatnot
 Knit.new = function(desiredmodules)
     local bundle = {}
-    for i, v in next, desiredmodules do
+    for i, v in desiredmodules do
         local bundlekey = Knit.require(
             defualt_paths["web"].knit_modules,
             v
@@ -73,8 +95,10 @@ Knit.v1 = function()
 end
 
 --[[
+
 local Modules = Knit.new({
     "ui",
     "services"
 })
+
 ]]

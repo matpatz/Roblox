@@ -32,7 +32,6 @@ ui.destroy_ui_button = function(Button, ScreenGui)
 end
 
 ui.hover_button = function(Button)
-    Button.
 end
 
 return ui

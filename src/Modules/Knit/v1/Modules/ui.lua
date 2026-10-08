@@ -1,7 +1,7 @@
 local ui = {}
 
 local Knit = shared.Knit
-local instances = Knit.require("Modules/Knit/Modules", "instances")
+local instances = Knit.require("Modules/Knit/v1/Modules", "instances")
 
 -- @param1: Obsidian/Rayfield
 ui.new = function(Library: string)
@@ -29,6 +29,10 @@ ui.destroy_ui_button = function(Button, ScreenGui)
     Button.MouseButton1Click:Connect(function()
     	ScreenGui:Destroy()
     end)
+end
+
+ui.hover_button = function(Button)
+    Button.
 end
 
 return ui

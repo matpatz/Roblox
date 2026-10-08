@@ -10,7 +10,7 @@ local Knit = {
 }
 shared.Knit = Knit
 
-local script: string = "Modules/Knit/Modules"
+local script: string = "Modules/Knit/v1/Modules"
 
 if not isfolder("voltex") then
     makefolder("voltex")

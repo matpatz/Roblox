@@ -1,6 +1,7 @@
 local Knit = {}
 
 local defualts = {
+    domain = "https://www.voltex.website"
     fetch_timeout = 5
 }
 
@@ -30,7 +31,7 @@ Knit.require = function(path: string, filename: string, localize: boolean)
 
     local start = 0
 
-    local filecontent = game:HttpGet(`https://www.voltex.website/src/{path}/{filename}`)
+    local filecontent = game:HttpGet(`{defualts.domain}/src/{path}/{filename}`)
     repeat
         start += 1
 

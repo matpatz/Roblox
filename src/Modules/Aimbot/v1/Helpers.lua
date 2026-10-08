@@ -19,7 +19,7 @@ type AimbotConfig = {
 	MinDistance: number?,
 	TeamCheck: boolean?,
 	AimPart: AimPartType?,
-	Visible: boolean?,
+	Visible: boolean?, -- in front of the origin's view and unobstructed
 	Ignore: IgnoreType?,
 	Blacklist: BlacklistType?,
 	EntityList: EntityListType?,
@@ -59,6 +59,17 @@ Helpers["Get"].Origin = function(Origin: OriginType): Vector3
 	error("Aimbot.GetOrigin: expected CFrame, Vector3, or BasePart, got " .. tostring(Kind))
 end
 
+-- Orientation of the origin, when it carries one; nil for a bare position.
+Helpers["Get"].LookVector = function(Origin: OriginType): Vector3?
+	const Kind = Helpers["Get"].Type(Origin)
+	if Kind == "CFrame" then
+		return (Origin :: CFrame).LookVector
+	elseif Kind == "BasePart" then
+		return (Origin :: BasePart).CFrame.LookVector
+	end
+	return nil
+end
+
 -- Target helpers
 
 Helpers["Get"].Character = function(Target: Instance): Model?
@@ -71,6 +82,34 @@ Helpers["Get"].Character = function(Target: Instance): Model?
 		return Target.Parent :: Model
 	end
 	return nil
+end
+
+-- FindFirstChild(name, true) returns whatever claimed the name first, and rigs
+-- that group the head hand back a Model named "Head" instead of a part. Callers
+-- read .Position off the result, so only BaseParts may come out of here: prefer a
+-- part with the name, then any part inside whatever did match.
+local function NamedPart(Character: Model, Name: string): BasePart?
+	const Found = Character:FindFirstChild(Name, true)
+	if Helpers["Get"].Type(Found) == "BasePart" then
+		return Found :: BasePart
+	end
+
+	if Found == nil then
+		return nil
+	end
+
+	local Fallback: BasePart? = nil
+	for _, Descendant in (Found :: Instance):GetDescendants() do
+		if Helpers["Get"].Type(Descendant) ~= "BasePart" then
+			continue
+		end
+		if Descendant.Name == Name then
+			return Descendant :: BasePart
+		end
+		Fallback = Fallback or (Descendant :: BasePart)
+	end
+
+	return Fallback
 end
 
 Helpers["Get"].AimPart = function(Target: Instance, AimPart: AimPartType?): BasePart?
@@ -105,11 +144,11 @@ Helpers["Get"].AimPart = function(Target: Instance, AimPart: AimPartType?): Base
 		if #Names == 0 then
 			return nil
 		end
-		return Character:FindFirstChild(Names[math.random(#Names)], true) :: BasePart?
+		return NamedPart(Character, Names[math.random(#Names)])
 	end
 
 	const Name = if type(AimPart) == "string" then AimPart :: string else "HumanoidRootPart"
-	return Character:FindFirstChild(Name, true) :: BasePart?
+	return NamedPart(Character, Name)
 end
 
 -- Is the candidate usable as a target? Never the local player; with TeamCheck
@@ -187,6 +226,17 @@ Helpers["Is"].InRange = function(OriginPosition: Vector3, TargetPosition: Vector
 	return Distance >= MinDistance and Distance <= MaxDistance
 end
 
+-- A target behind the origin's view is out of the picture even with a clean line
+-- of sight. Origins that carry no orientation (a bare Vector3) cannot be tested,
+-- so they always pass.
+Helpers["Is"].Facing = function(Origin: OriginType, TargetPosition: Vector3, OriginPosition: Vector3): boolean
+	const LookVector = Helpers["Get"].LookVector(Origin)
+	if not LookVector then
+		return true
+	end
+	return LookVector:Dot((TargetPosition - OriginPosition).Unit) > 0
+end
+
 Helpers["Get"].IgnoreList = function(Target: Instance, Config: AimbotConfig): { Instance }
 	const IgnoreList: { Instance } = {}
 
@@ -212,7 +262,26 @@ Helpers["Get"].IgnoreList = function(Target: Instance, Config: AimbotConfig): { 
 	return IgnoreList
 end
 
--- Line of sight to the target's aim part (already-resolved config); backs aimbot.IsVisible.
+-- A target is only visible when it sits in front of the origin's view and nothing
+-- blocks the line to it. An origin without an orientation (a bare Vector3) has no
+-- view to test against, so those fall back to line of sight alone. Backs
+-- aimbot.IsVisible.
+Helpers["Is"].Visible = function(Origin: OriginType, Target: Instance, Config: AimbotConfig): boolean
+	const AimPart = Helpers["Get"].AimPart(Target, Config.AimPart)
+	if not AimPart then
+		return false
+	end
+
+	const OriginPosition = Helpers["Get"].Origin(Origin)
+
+	if not Helpers["Is"].Facing(Origin, AimPart.Position, OriginPosition) then
+		return false
+	end
+
+	return Helpers["Is"].LineOfSight(OriginPosition, Target, Config)
+end
+
+-- Ray only, on an already-resolved origin position; used by Helpers["Is"].Visible.
 Helpers["Is"].LineOfSight = function(OriginPosition: Vector3, Target: Instance, Config: AimbotConfig): boolean
 	const AimPart = Helpers["Get"].AimPart(Target, Config.AimPart)
 	if not AimPart then
@@ -241,7 +310,7 @@ Helpers["Validate"].Target = function(Target: Instance, Config: AimbotConfig, Or
 	if not Helpers["Is"].InRange(OriginPosition, AimPart.Position, Config.MinDistance or 0, Config.Range or 200) then
 		return false
 	end
-	if Config.Visible and not Helpers["Is"].LineOfSight(OriginPosition, Target, Config) then
+	if Config.Visible and not Helpers["Is"].Visible(Config.Origin, Target, Config) then
 		return false
 	end
 	return true

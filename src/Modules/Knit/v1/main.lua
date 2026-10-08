@@ -1,9 +1,16 @@
 local Knit = {
     services = {},
     cache = {},
-    wrappers = {}
+    wrappers = {},
+    git = {},
+    player = {},
+    ui = {},
+    instances = {},
+    bundle = {}
 }
-local script: string = "Modules/Knit/v1"
+shared.Knit = Knit
+
+local script: string = "Modules/Knit/v1/Modules"
 
 if not isfolder("voltex") then
     makefolder("voltex")
@@ -30,16 +37,87 @@ local function isscript(script, module)
 end
 
 local function loadscript(script, module, configurable)
-    if configurable then
+    if configurable and Knit.cache and Knit.cache.set then
         Knit.cache.set(`{module}/configurable`, configurable) -- any temp value, like getgenv().config = {} -- well you get the point
     end
 
-    if isscript(script, module) then
-        local compiled = loadstring(readfile(`voltex/{script}/{module}.lua`), `voltex/{script}/{module}.lua`)()
- 
-        return compiled
+    if not isscript(script, module) then
+        return nil
     end
+
+    local chunk = loadstring(readfile(`voltex/{script}/{module}.lua`), `voltex/{script}/{module}.lua`)
+    if not chunk then
+        return nil
+    end
+
+    return chunk()
+end
+
+-- executors disagree on newlines when they round-trip a file, compare without \r
+local function normalize(content: string): string
+    return (content:gsub("\r", ""))
+end
+
+-- Mirrors to try in order. raw.githubusercontent has no SLA and will 429 under
+-- load, so jsDelivr (which mirrors the repo) is the automatic fallback when raw
+-- is rate-limited. jsDelivr caches for ~12h, so the fallback can serve a slightly
+-- stale module -- better than loading nothing, and the disk cache below is
+-- fresher whenever it exists.
+local HOSTS = {
+    "https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main",
+    "https://cdn.jsdelivr.net/gh/matpatz/Roblox@main"
+}
+
+-- Fetches the first mirror whose body actually compiles as Lua. A 429/HTML body
+-- is rejected (not accepted), so a rate-limited raw correctly falls through to
+-- jsDelivr instead of poisoning the cache.
+local function fetch(script, module, root)
+    for _, host in HOSTS do
+        local url = `{host}/{root}/{script}/{module}.lua`
+        local ok, content = pcall(game.HttpGet, game, url)
+
+        if ok and type(content) == "string" and #content > 0 and loadstring(content) then
+            return content
+        end
+    end
+
     return nil
+end
+
+-- keeps voltex/{script}/{module}.lua in sync with the website and hands back the fresh
+-- chunk. "if the file exists, never look again" meant an edit to an already cached
+-- module was invisible forever (a file that loads fine and then errors still gets
+-- cached), so the body is always fetched and the cached copy is only reused when it
+-- actually matches what the website is serving
+local function sync(script, module, root)
+    root = root or "src"
+
+    local path = `voltex/{script}/{module}.lua`
+    local script_content = fetch(script, module, root)
+
+    if not script_content then
+        return nil -- every host died, caller falls back to the cache
+    end
+
+    local chunk = loadstring(script_content)
+    if not chunk then
+        return nil
+    end
+
+    local cached = if isfile(path) then readfile(path) else nil
+
+    if cached and normalize(cached) == normalize(script_content) then
+        return chunk, true -- already current, leave the file alone
+    end
+
+    -- writefile refuses to overwrite on some executors, so clear the old one first
+    if cached and delfile then
+        delfile(path)
+    end
+
+    writescript(script, module, script_content)
+
+    return chunk, isfile(path)
 end
 
 local modules = {
@@ -48,40 +126,69 @@ local modules = {
     "utils"
 }
 
-Knit.require = function(script: string, module: string, configurable: table?)
-    local script_content = game:HttpGet(`https://voltex.website/src/{script}/{module}.lua`)
-    if not writescript(script, module, script_content) then
-        return loadstring(script_content)()
-    end
-    
-    repeat
-        task.wait()
-    until
-        isscript(script, module)
-    
-    if not configurable then
-        configurable = nil
+local loaded: { [string]: { value: any } } = {}
+
+Knit.require = function(script: string, module: string, root: string?)
+    -- one instance per module, otherwise every require re-runs it (Modules/globals.lua
+    -- rebuilds _G.globals on load, so a second require would wipe it)
+    local name = `{root or "src"}/{script}/{module}`
+    if loaded[name] then
+        return loaded[name].value
     end
 
-    return loadscript(script, module, configurable)
+    local chunk, ondisk = sync(script, module, root)
+
+    if chunk and ondisk then
+        -- fresh body landed on disk, load it the normal way
+        local value = loadscript(script, module)
+        loaded[name] = { value = value }
+
+        return value
+    end
+
+    if chunk then
+        -- couldnt write to disk (missing folder, read-only, ...) so run it straight
+        local value = chunk()
+        loaded[name] = { value = value }
+
+        return value
+    end
+
+    -- nothing fresh (offline, 404): a stale cache still beats loading nothing
+    local value = loadscript(script, module)
+    loaded[name] = { value = value }
+
+    return value
+end
+
+Knit.getdir = function(script: string): string
+    return `voltex/{script}`
 end
 
 Knit.cache = Knit.require(script, "cache")
 
-Knit.services = Knit.require(script, "services", {
-    PlayerHelper = false
-})
-Knit.git = Knit.require(script, "git")
+Knit.services = Knit.require(script, "services")
+-- playermanager blocks on CharacterAdded:Wait(), so it cant hold up this load. fill
+-- the table weve already published instead of swapping it, or anything that grabbed
+-- Knit.player before this fires (games/*/core.lua) keeps the empty stub forever
+task.delay(0.2, function()
+    local manager = Knit.require(script, "playermanager")
 
--- so this COULD be detected, but is fairly unlikely so whatever
-
-Knit.cache.make_cache(shared, 5)
-task.delay(5, function()
-    Knit.cache.reset_cache(shared)
+    for key, value in pairs(manager) do
+        Knit.player[key] = value
+    end
 end)
 
-shared.Knit = Knit
+Knit.git = Knit.require(script, "git")
 
 Knit.wrappers = Knit.require(script, "function_wrappers")
 
+Knit.instances = Knit.require(script, "instances")
+Knit.ui = Knit.require(script, "ui")
+Knit.conmanager = Knit.require(script, "conmanager")
+Knit.scriptmanager = Knit.require(script, "scriptmanager")
+
+Knit.bundle = Knit.require(script, "bundle")
+
 return Knit
+

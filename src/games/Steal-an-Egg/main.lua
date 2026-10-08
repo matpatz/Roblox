@@ -2,6 +2,10 @@
 	[+] Min Egg Size Slider
 --]]
 
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -17,7 +21,7 @@ const AreaEggSlotIdentity = require(ReplicatedStorage.Shared.Util.AreaEggSlotIde
 const EggToolDisplay = require(ReplicatedStorage.Shared.Eggs.EggToolDisplay)
 const Trails = require(ReplicatedStorage.Data.Trails)
 
-const Anticheat = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/Steal-an-Egg/bypass.lua"))()
+const Anticheat = Knit.require("games/Steal-an-Egg", "bypass")
 
 -- // Workspace
 const SpawmPoint = workspace:FindFirstChildWhichIsA("SpawnLocation")
@@ -543,7 +547,7 @@ end
 
 -- // Interface
 
-local Rayfield = loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua"))()
+local Rayfield = Knit.ui.new("Rayfield")()
 Flags = Rayfield.Flags
 
 local Window = Rayfield:CreateWindow({

@@ -17,11 +17,29 @@ async function handler_fn(req, res) {
 
   const raw = validateString(body.identifier, 'identifier', { min: 1, max: 150 });
   const identifier = createHash('sha256').update(raw).digest('hex');
+
+  // Game attribution is best-effort: older clients don't send it, and we don't
+  // want to reject an execution over a missing/odd game name. Trim and cap it so
+  // it can't bloat a row; store NULL when absent so the stats code can skip it.
+  let game = null;
+  if (typeof body.game === 'string') {
+    const trimmed = body.game.trim();
+    if (trimmed) game = trimmed.slice(0, 100);
+  }
+
+  // Same best-effort handling as `game` above -- executors that don't expose
+  // identifyexecutor() omit the field entirely.
+  let executor = null;
+  if (typeof body.executor === 'string') {
+    const trimmed = body.executor.trim();
+    if (trimmed) executor = trimmed.slice(0, 100);
+  }
+
   const supabase = getSupabase();
 
   const { data, error } = await supabase
     .from('identifiers')
-    .insert({ identifier })
+    .insert({ identifier, game, executor })
     .select('id')
     .single();
 
@@ -30,7 +48,12 @@ async function handler_fn(req, res) {
     throw new ApiError(500, 'Failed to save');
   }
 
-  await supabase.rpc('increment_executions');
+  // No counter call here on purpose. `totals.total_executions` is bumped by the
+  // identifiers_bump_totals trigger, so the counter is an invariant of the table
+  // itself. The old `supabase.rpc('increment_executions')` was fire-and-forget --
+  // when the RPC stopped resolving in production the number froze at 1512 while
+  // ~3k executions/day kept being logged, and nothing ever reported it.
+  // See supabase-executions-counter.sql.
 
   return successResponse(res, req, { id: data.id }, 201);
 }

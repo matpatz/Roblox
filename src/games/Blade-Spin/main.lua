@@ -1,11 +1,21 @@
-local LocalPlayer = game:GetService("Players").LocalPlayer
-local Events = game:GetService("ReplicatedStorage").ReplicatedStorageHolders.Events
+local Knit = shared.Knit
+local services = Knit.services
 
+--// Services
+local RunService = services.RunService
+
+--// Variables
+local LocalPlayer = services.Players.LocalPlayer
+local Events = services.ReplicatedStorage.ReplicatedStorageHolders.Events
+
+--// Events
 local AddCoins = Events.AddCoins
 local AddXP = Events.AddXP
 
+-- core
+
 local conn
-conn = game:GetService("RunService").RenderStepped:Connect(function()
+conn = RunService.RenderStepped:Connect(function()
     if not LocalPlayer:GetAttribute("InRound") then
 		return
 	end

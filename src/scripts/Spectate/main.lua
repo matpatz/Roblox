@@ -1,16 +1,9 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
-local Rayfield = loadstring(game:HttpGet(
-    "https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"
-))()
+local Knit = shared.Knit
+local services = Knit.services
 
-local services = loadstring(game:HttpGet(
-    "https://website-iota-ivory-12.vercel.app/code/loader/u/vars.lua"
-))()
-
-local Player = services.player
-local cam = services.cam
+local Players = services.Players
+local Player = Players.LocalPlayer
+local cam = workspace.CurrentCamera
 
 local states = {
 	Spectating = false,
@@ -19,6 +12,7 @@ local states = {
 	MovementFrozen = false
 }
 
+local Rayfield = Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
    Name = "Spectaction",
    LoadingTitle = "1 != 2",
@@ -28,7 +22,7 @@ local Window = Rayfield:CreateWindow({
 
 local function GetPlayerNames()
 	local List = {}
-	for _, p in ipairs(services.players:GetPlayers()) do
+	for _, p in ipairs(Players:GetPlayers()) do
 		if p ~= Player then
 			table.insert(List, p.Name)
 		end
@@ -44,7 +38,7 @@ local function StartSpectate(plr)
 
 	cam.CameraType = Enum.CameraType.Scriptable
 
-	states.RenderConnection = services.rs.RenderStepped:Connect(function()
+	states.RenderConnection = services.RunService.RenderStepped:Connect(function()
 		if not states.Spectating then return end
 		if not states.TargetPlayer or not states.TargetPlayer.Character then return end
 
@@ -71,7 +65,7 @@ end
 
 local function SetMovementBlocked(state)
 	if state then
-		services.context:BindAction(
+		services.ContextActionService:BindAction(
 			"BlockMovement",
 			function()
 				return Enum.ContextActionResult.Sink
@@ -84,7 +78,7 @@ local function SetMovementBlocked(state)
 			Enum.PlayerActions.CharacterJump
 		)
 	else
-		services.context:UnbindAction("BlockMovement")
+		services.ContextActionService:UnbindAction("BlockMovement")
 	end
 end
 
@@ -99,7 +93,7 @@ local Dropdown = SpectateTab:CreateDropdown({
 
    Callback = function(Options)
       local name = Options[1]
-      local plr = services.players:FindFirstChild(name)
+      local plr = Players:FindFirstChild(name)
 
       if plr then
          StartSpectate(plr)
@@ -118,8 +112,8 @@ local function Refresh()
 	Dropdown:Refresh(GetPlayerNames())
 end
 
-services.players.PlayerAdded:Connect(Refresh)
-services.players.PlayerRemoving:Connect(Refresh)
+Players.PlayerAdded:Connect(Refresh)
+Players.PlayerRemoving:Connect(Refresh)
 
 local SettingsTab = Window:CreateTab("Settings")
 

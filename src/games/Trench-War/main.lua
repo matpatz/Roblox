@@ -1,29 +1,28 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
-loadstring(game:HttpGet("https://www.voltex.website/src/Modules/Platform.lua"))()
-local device = getgenv()["device"]
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
 
-local get = (type(cloneref) == "function") and cloneref or function(x) return x end
-local players = get(game:GetService("Players")); local lp = players["LocalPlayer"]
-local rs = get(game:GetService("RunService"))
-local input = get(game:GetService("UserInputService"))
-local vim = get(game:GetService("VirtualInputManager"))
-local rep = get(game:GetService("ReplicatedStorage"))
-local core = get(game:GetService("CoreGui"))
-local lighting = get(game:GetService("Lighting"))
-local https = get(game:GetService("HttpService"))
-local cs = get(game:GetService("CollectionService"))
-local stats = get(game:GetService("Stats"))
-local marketplace = get(game:GetService("MarketplaceService"))
-local analytic = get(game:GetService("RbxAnalyticsService"))
-local log = get(game:GetService("LogService"))
+local device = Knit.require("Modules/Telementry/v1", "platform")
+
+local Players = services.Players; local lp = Players["LocalPlayer"]
+local RunService = services.RunService
+local UserInputService = services.UserInputService
+local VirtualInputManager = services.VirtualInputManager
+local ReplicatedStorage = services.ReplicatedStorage
+local CoreGui = services.CoreGui
+local Lighting = services.Lighting
+local HttpService = services.HttpService
+local CollectionService = services.CollectionService
+local Stats = services.Stats
+local MarketplaceService = services.MarketplaceService
+local RbxAnalyticsService = services.RbxAnalyticsService
+local LogService = services.LogService
 
 local cam = workspace.CurrentCamera
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
-    Name = "Voltex - " .. tostring(game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name),
+    Name = `Voltex - {shared.game_name}`,
     LoadingTitle = "Title",
     LoadingSubtitle = "Subtitle",
     ConfigurationSaving = {
@@ -37,15 +36,15 @@ local main = Window:CreateTab("Main")
 main:CreateSection("Aimbot / Combat")
 
 local function isme(char)
-    local player = players:GetPlayerFromCharacter(char)
+    local player = Players:GetPlayerFromCharacter(char)
     return player ~= lp
 end
 
 local function gclosest()
     local closest, dist = nil, math.huge
-    local mouse = input:GetMouseLocation()
+    local mouse = UserInputService:GetMouseLocation()
 
-    for _, p in ipairs(players:GetPlayers()) do
+    for _, p in ipairs(Players:GetPlayers()) do
         if p ~= lp and p.Character then
             local t = p.Character:FindFirstChild("HumanoidRootPart") or p.Character:FindFirstChild("Torso")
             if t then
@@ -88,13 +87,13 @@ main:CreateToggle({
 })
 
 local holding = false
-input.InputBegan:Connect(function(i)
+UserInputService.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton2 then
         holding = true
     end
 end)
 
-input.InputEnded:Connect(function(i)
+UserInputService.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton2 then
         holding = false
     end
@@ -103,7 +102,7 @@ end)
 if device == "Mobile" then
     local gui = Instance.new("ScreenGui")
     gui.Name = "aimlock"
-    gui.Parent = core
+    gui.Parent = CoreGui
 
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 100, 0, 50)
@@ -121,19 +120,19 @@ if device == "Mobile" then
 end
 
 local last = 0
-rs.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function()
     local target = gclosest()
     if not target or not target.Character then return end
 
     local hrp = target.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    local camPos = cam.CFrame.Position
-    local direction = (hrp.Position - camPos).Unit
+    local camera_position = cam.CFrame.Position
+    local direction = (hrp.Position - camera_position).Unit
 
     if aimbot and holding then
         cam.CFrame = cam.CFrame:Lerp(
-            CFrame.new(camPos, camPos + direction),
+            CFrame.new(camera_position, camera_position + direction),
             0.6
         )
     end
@@ -141,7 +140,7 @@ rs.RenderStepped:Connect(function()
     if tbot then
         local pos, onScreen = cam:WorldToViewportPoint(hrp.Position)
         if onScreen then
-            local mouse = input:GetMouseLocation()
+            local mouse = UserInputService:GetMouseLocation()
             local dx = pos.X - mouse.X
             local dy = pos.Y - mouse.Y
             local dist = dx*dx + dy*dy
@@ -150,8 +149,8 @@ rs.RenderStepped:Connect(function()
             if dist < 144 and (time() - last) > 0.05 then
                 last = time()
 
-                vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
             end
         end
     end
@@ -159,7 +158,7 @@ end)
 
 main:CreateSection("Combat + Visuals")
 
-local cesp = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/esp.lua"))();local esp = cesp()
+local esp = Knit.require("Libraries/Esp/v1", "main")
 main:CreateDropdown({
     Name = "Esp Settings",
     Options = {"Box", "Name", "Held Item", "Tracer", "Health", "Distance", "Chams", "Health Bar", "Team Color", "Performance Mode"},
@@ -167,28 +166,28 @@ main:CreateDropdown({
     MultipleOptions = true,
     Flag = "es",
     Callback = function(selectedOptions)
-        esp:box(false)
-        esp:name(false)
-        esp:held(false)
-        esp:tracer(false)
-        esp:health(false)
-        esp:distance(false)
-        esp:chams(false)
-        esp:healthbar(false)
-        esp:team(false)
-        esp:performance(false)
+        esp.ShowBox = false
+        esp.ShowName = false
+        esp.ShowHeld = false
+        esp.ShowTracer = false
+        esp.ShowHealth = false
+        esp.ShowDistance = false
+        esp.ShowChams = false
+        esp.ShowHealthBar = false
+        esp.TeamColor = false
+        esp.PerformanceMode = false
 
         for _, option in pairs(selectedOptions) do
-            if option == "Box" then esp:box(true)
-            elseif option == "Name" then esp:name(true)
-            elseif option == "Held Item" then esp:held(true)
-            elseif option == "Tracer" then esp:tracer(true)
-            elseif option == "Health" then esp:health(true)
-            elseif option == "Distance" then esp:distance(true)
-            elseif option == "Chams" then esp:chams(true)
-            elseif option == "Health Bar" then esp:healthbar(true)
-            elseif option == "Team Color" then esp:team(true)
-            elseif option == "Performance Mode" then esp:performance(true)
+            if option == "Box" then esp.ShowBox = true
+            elseif option == "Name" then esp.ShowName = true
+            elseif option == "Held Item" then esp.ShowHeld = true
+            elseif option == "Tracer" then esp.ShowTracer = true
+            elseif option == "Health" then esp.ShowHealth = true
+            elseif option == "Distance" then esp.ShowDistance = true
+            elseif option == "Chams" then esp.ShowChams = true
+            elseif option == "Health Bar" then esp.ShowHealthBar = true
+            elseif option == "Team Color" then esp.TeamColor = true
+            elseif option == "Performance Mode" then esp.PerformanceMode = true
             end
         end
     end,
@@ -199,7 +198,7 @@ main:CreateToggle({
     CurrentValue = false,
     Flag = "esp",
     Callback = function(v)
-        if v then esp:enable() else esp:disable() end
+        if v then esp:Enable() else esp:Disable() end
     end,
 })
 
@@ -234,11 +233,11 @@ local function hookPlayer(p)
     end
 end
 
-for _, p in ipairs(players:GetPlayers()) do
+for _, p in ipairs(Players:GetPlayers()) do
     hookPlayer(p)
 end
 
-players.PlayerAdded:Connect(hookPlayer)
+Players.PlayerAdded:Connect(hookPlayer)
 
 main:CreateToggle({
     Name = "Hitbox Expander",
@@ -247,7 +246,7 @@ main:CreateToggle({
     Callback = function(v)
         hitbox = v
 
-        for _, p in ipairs(players:GetPlayers()) do
+        for _, p in ipairs(Players:GetPlayers()) do
             if p.Character then
                 applyHitbox(p.Character)
             end
@@ -266,7 +265,7 @@ main:CreateSlider({
         hsize = v
 
         if hitbox then
-            for _, p in ipairs(players:GetPlayers()) do
+            for _, p in ipairs(Players:GetPlayers()) do
                 if p.Character then
                     applyHitbox(p.Character)
                 end
@@ -388,17 +387,17 @@ misc:CreateButton({
 })
 
 local function report(user)
-    rep.Event:FireServer(
+    ReplicatedStorage.Event:FireServer(
         "BanHacker",
         {
-            game:GetService("Players")[tostring(user)]
+            Players[tostring(user)]
         }
     )
 end
 
 local function getNames()
     local t = {}
-    for _, p in ipairs(players:GetPlayers()) do
+    for _, p in ipairs(Players:GetPlayers()) do
         table.insert(t, p.Name)
     end
     return t
@@ -420,8 +419,8 @@ local function refresh()
     player:Refresh(getNames())
 end
 
-players.PlayerAdded:Connect(refresh)
-players.PlayerRemoving:Connect(refresh)
+Players.PlayerAdded:Connect(refresh)
+Players.PlayerRemoving:Connect(refresh)
 
 misc:CreateButton({
     Name = "Report Player",

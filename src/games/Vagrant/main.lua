@@ -6,7 +6,7 @@ until
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot.lua"))()
+local aimbot = Knit.require("Modules", "Aimbot")
 
 repeat
 	task.wait()

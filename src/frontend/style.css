@@ -1,13 +1,15 @@
 :root {
-  --bg: #0a0a0f;
-  --bg-soft: #111118;
-  --line: #2a2a35;
-  --text: #f0f0f4;
-  --muted: #888892;
-  --accent: #c8cad0;
-  --accent-color: #5a6b8a;
-  --accent-hover: #7088b0;
-  --accent-subtle: #3d4a60;
+  --bg: #0a000a;
+  --card: rgba(60, 60, 67, 0.92);
+  --bg-soft: #4a4a52;
+  --bg-raised: #55555e;
+  --line: #575760;
+  --text: #f2f2f5;
+  --muted: #d8d8e0;
+  --accent: #d3d6dc;
+  --accent-color: #7b93bf;
+  --accent-hover: #c2d3f0;
+  --accent-subtle: #8798b8;
 }
 
 * { box-sizing: border-box; }
@@ -39,7 +41,7 @@ body {
   display: flex;
   justify-content: center;
   padding: 22px 24px;
-  background: linear-gradient(to bottom, rgba(8,8,13,0.9), rgba(8,8,13,0));
+  background: linear-gradient(to bottom, rgba(10,0,10,0.92), rgba(10,0,10,0));
   backdrop-filter: blur(6px);
 }
 
@@ -58,7 +60,7 @@ body {
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  color: var(--accent-color);
+  color: var(--accent-hover);
   font-family: 'Chakra Petch', sans-serif;
   font-weight: 700;
   font-size: 18px;
@@ -138,8 +140,8 @@ body {
 }
 
 .hero-bolt {
-  width: 52px;
-  height: 52px;
+  width: 200px;
+  height: 200px;
   margin-bottom: 28px;
 }
 
@@ -172,7 +174,7 @@ h1 {
   align-items: center;
   gap: 10px;
   padding: 10px 20px;
-  background: rgba(90, 107, 138, 0.1);
+  background: rgba(90, 107, 138, 0.16);
   border: 1px solid var(--accent-subtle);
   border-radius: 6px;
   font-size: 15px;
@@ -201,6 +203,86 @@ h1 {
   flex-wrap: wrap;
 }
 
+.about {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 24px 96px;
+}
+
+.about-inner {
+  width: 100%;
+  max-width: 720px;
+}
+
+.about-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 36px;
+  text-align: left;
+  transition: border-color 0.25s ease;
+}
+
+.about-card:hover {
+  border-color: var(--accent-color);
+}
+
+.about-card h2 {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: 0.02em;
+  margin: 0 0 18px;
+}
+
+.about-card h3 {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 26px 0 12px;
+}
+
+.about-list {
+  margin: 0;
+  padding-left: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.about-list li::marker {
+  color: var(--accent-color);
+}
+
+.about-card p {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+.about-card .about-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.about-btn {
+  margin-top: 10px;
+  padding: 12px 22px;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .about-card { padding: 24px; }
+}
+
 .discord-btn {
   display: inline-flex;
   align-items: center;
@@ -224,6 +306,7 @@ h1 {
 }
 
 .discord-btn.secondary:hover {
+  background: var(--bg-raised);
   border-color: var(--accent-color);
 }
 

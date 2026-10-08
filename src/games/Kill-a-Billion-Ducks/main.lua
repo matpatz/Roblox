@@ -1,3 +1,7 @@
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Servics
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -8,8 +12,8 @@ local Classes = require(ReplicatedStorage:FindFirstChild("UmePointer").Value);
 -- // Network
 local Network = Classes.Network
 
-local RealNetwork = debug.getupvalue(Network.GetEvent, 3) -- u5
-local Remotes: Instance = debug.getupvalue(RealNetwork._getRemote, 3) -- u1
+--local RealNetwork = debug.getupvalue(Network.GetEvent, 3) -- u5
+--local Remotes: Instance = debug.getupvalue(RealNetwork._getRemote, 3) -- u1
 
 -- // WeaponController
 local WeaponController = Classes.WeaponController
@@ -43,7 +47,10 @@ local u126 -- where this will break: the user shooting manully (unsyced count) t
 
 const Constants = {
     DUCK_PREFIX = "DuckController_Client_",
-    Shoot = "Shoot"
+    Shoot = "Shoot",
+    -- index of tryShoot's shot counter upvalue (u22 in `Client - WeaponController`),
+    -- re-check with `debug.getupvalues(tryShoot)[SHOT_COUNTER]` after game updates
+    SHOT_COUNTER = 17
 }
 
 -- // config
@@ -102,6 +109,16 @@ function Utils.GetClosestDuck(): Instance?
     return closest, origin;
 end;
 
+function Utils.GetShotId(): number?
+    local Counter = debug.getupvalues(tryShoot)[Constants["SHOT_COUNTER"]];
+
+    if type(Counter) ~= "number" then
+        return nil;
+    end;
+
+    return Counter + 1;
+end;
+
 function Util.Fire()
     local Target, Origin = Utils.GetClosestDuck();
 
@@ -115,10 +132,19 @@ function Util.Fire()
         return;
     end;
 
+    local ShotId = Utils.GetShotId();
+
+    if not ShotId then
+        return;
+    end;
+
     local Direction = (Part.Position - Origin).Unit;
 
-    local ShotId = debug.getupvalue(tryShoot, 16) + 1;
-    pcall(debug.setupvalue, tryShoot, 16, ShotId); -- keep the game's shot counter in sync
+    -- keep the game's shot counter in sync
+    if not pcall(debug.setupvalue, tryShoot, Constants["SHOT_COUNTER"], ShotId) then
+        return;
+    end;
+
     Network.Fire("WeaponController_Shoot", Origin, Direction, ShotId, workspace:GetServerTimeNow(), Constants["Shoot"]);
 end;
 
@@ -137,7 +163,7 @@ end)
 
 -- // Interface
 
-local Rayfield = loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua"))()
+local Rayfield = Knit.ui.new("Rayfield")()
 
 local Window = Rayfield:CreateWindow({
     Name = "Catch a billion Ducks",

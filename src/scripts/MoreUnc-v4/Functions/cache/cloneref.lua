@@ -1,4 +1,4 @@
-return function(object: Instance): table
+return function(object: Instance)
     local Proxy = {}
     return setmetatable(Proxy, {
         __index = object,

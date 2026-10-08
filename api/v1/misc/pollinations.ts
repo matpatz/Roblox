@@ -21,10 +21,13 @@ import { gzipSync, gunzipSync } from 'node:zlib';
 export const config = { runtime: 'nodejs' };
 
 const POLL_URL = 'https://gen.pollinations.ai/text';
+const POLL_CHAT_URL = 'https://gen.pollinations.ai/v1/chat/completions';
 const DEFAULT_MODEL = 'openai';
 const TITLE_MODEL = 'openai';
 const CONTEXT = 20;
-const MAX_MSG = 400000;
+const MAX_MSG = 40000000; // added two zeros (undo)
+const MAX_ATTACH_BYTES = 5 * 1024 * 1024; // per-file attachment cap (raw bytes)
+const MAX_ATTACH_COUNT = 20;
 
 // Message `content` is compressed at rest with Node's built-in zlib (gzip → base64),
 // stored in the TEXT column under a `~z:` marker. Every non-empty value is compressed
@@ -61,6 +64,28 @@ async function unpack(content) {
   return content;
 }
 
+// Attachments are embedded in `content` (no separate column/migration needed):
+// user messages with files are stored as `~a:` + JSON { text, attachments }.
+const A = '~a:';
+
+function packUserContent(message, attachments) {
+  if (!attachments || !attachments.length) return pack(message);
+  return pack(A + JSON.stringify({ text: message, attachments }));
+}
+
+async function unpackMessage(content) {
+  const raw = await unpack(content);
+  if (typeof raw === 'string' && raw.startsWith(A)) {
+    try {
+      const o = JSON.parse(raw.slice(A.length));
+      if (o && typeof o.text === 'string') {
+        return { content: o.text, attachments: Array.isArray(o.attachments) ? o.attachments : null };
+      }
+    } catch {}
+  }
+  return { content: raw, attachments: null };
+}
+
 function parseBody(req) {
   if (typeof req.body !== 'string') return req.body || {};
   try {
@@ -68,6 +93,12 @@ function parseBody(req) {
   } catch {
     throw new ApiError(400, 'Invalid JSON');
   }
+}
+
+// Insert a chat message.
+async function insertMessage(row) {
+  const { error } = await db().from('chat_messages').insert(row);
+  return error;
 }
 
 // KV-backed rate limiting; lazy import + swallowed failures so missing KV never breaks the chat.
@@ -139,7 +170,12 @@ async function messagesFor(convId) {
     .order('created_at', { ascending: true })
     .limit(200);
   if (error) throw new ApiError(500, 'Failed to load messages');
-  return Promise.all((data || []).map(async (m) => ({ ...m, content: await unpack(m.content) })));
+  return Promise.all(
+    (data || []).map(async (m) => {
+      const { content, attachments } = await unpackMessage(m.content);
+      return { ...m, content, attachments };
+    })
+  );
 }
 
 async function deleteConversation(userId, convId) {
@@ -197,6 +233,37 @@ async function createConversation(userId, firstMessage) {
   return data;
 }
 
+// The client only sends images for vision-capable models. Vision lives on the
+// OpenAI-compatible /v1/chat/completions endpoint, not the plain /text one.
+function imageAttachments(attachments) {
+  return (attachments || []).filter(
+    (a) => a && typeof a.type === 'string' && a.type.startsWith('image/') && typeof a.data === 'string'
+  );
+}
+
+function buildUserContent(message, images) {
+  if (!images.length) return message;
+  return [
+    { type: 'text', text: message },
+    ...images.map((img) => ({ type: 'image_url', image_url: { url: `data:${img.type};base64,${img.data}` } }))
+  ];
+}
+
+// Reasoning models stream their chain-of-thought under a few different keys.
+function extractThinking(j) {
+  if (!j || typeof j !== 'object') return null;
+  const delta = j.choices?.[0]?.delta;
+  const src = delta?.reasoning_content ?? delta?.reasoning ?? delta?.thinking ?? delta?.reasoning_details ?? j.reasoning_content ?? j.reasoning;
+  if (typeof src === 'string') return src || null;
+  if (Array.isArray(src)) {
+    const parts = src
+      .map((r) => (typeof r === 'string' ? r : r?.text ?? r?.summary ?? ''))
+      .filter((s) => typeof s === 'string' && s);
+    return parts.length ? parts.join('\n') : null;
+  }
+  return null;
+}
+
 async function chat(req, res, userId) {
   const body = parseBody(req);
   const message = typeof body.message === 'string' ? body.message.trim() : '';
@@ -208,6 +275,21 @@ async function chat(req, res, userId) {
       : DEFAULT_MODEL;
   const rawT = Number(body.temperature);
   const temperature = Number.isFinite(rawT) ? Math.min(2, Math.max(0, rawT)) : 0.7;
+
+  // Optional file attachments — the client sends files > 10KB as attachments.
+  let attachments = null;
+  if (Array.isArray(body.attachments)) {
+    const clean = body.attachments
+      .filter((a) => a && typeof a === 'object' && typeof a.name === 'string' && typeof a.data === 'string')
+      .slice(0, MAX_ATTACH_COUNT)
+      .map((a) => ({
+        name: String(a.name).slice(0, 255),
+        type: typeof a.type === 'string' ? String(a.type).slice(0, 128) : '',
+        size: Number.isFinite(Number(a.size)) ? Math.max(0, Math.min(Number(a.size), MAX_ATTACH_BYTES)) : 0,
+        data: String(a.data).slice(0, MAX_ATTACH_BYTES * 1.5)
+      }));
+    if (clean.length) attachments = clean;
+  }
 
   await limit(`u:${userId}`, { limit: 20, window: 60 });
   await limit(`u:${userId}`, { limit: 400, window: 86400 });
@@ -223,22 +305,22 @@ async function chat(req, res, userId) {
   }
   const convId = conv.id;
 
+  const images = imageAttachments(attachments);
   const past = await messagesFor(convId);
   const upstream = [
     { role: 'system', content: 'You are a helpful assistant.' },
     ...past.slice(-CONTEXT).map((m) => ({ role: m.role, content: m.content })),
-    { role: 'user', content: message }
+    { role: 'user', content: buildUserContent(message, images) }
   ];
 
-  const { error: saveErr } = await db()
-    .from('chat_messages')
-    .insert({ user_id: userId, conversation_id: convId, role: 'user', content: await pack(message), model });
+  const userRow = { user_id: userId, conversation_id: convId, role: 'user', content: await packUserContent(message, attachments), model };
+  const saveErr = await insertMessage(userRow);
   if (saveErr) throw new ApiError(500, 'Failed to save message');
   await db().from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', convId);
 
   let up;
   try {
-    up = await fetch(POLL_URL, {
+    up = await fetch(images.length ? POLL_CHAT_URL : POLL_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -263,6 +345,31 @@ async function chat(req, res, userId) {
 
   const emit = (o) => res.write(`data: ${JSON.stringify(o)}\n\n`);
   let out = '';
+  let usage = null;
+  let saved = false;
+  let finished = false;
+
+  // Persist the assistant reply BEFORE ending the response so the serverless
+  // runtime can't freeze the function right after `res.end()` and drop the save.
+  // Idempotent (the catch path calls it again for partial output) and never
+  // throws, so a DB hiccup can't turn a successful reply into "Stream failed".
+  const saveReply = async () => {
+    if (saved || !out.trim()) return;
+    saved = true;
+    try {
+      const { error } = await insertMessage({
+        user_id: userId,
+        conversation_id: convId,
+        role: 'assistant',
+        content: await pack(out.trim()),
+        model
+      });
+      if (error) console.error('Failed to save reply:', error.message);
+      await db().from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', convId);
+    } catch (e) {
+      console.error('Failed to save reply:', e?.message || e);
+    }
+  };
 
   try {
     emit({ conv: { id: convId, title: conv.title } });
@@ -276,6 +383,7 @@ async function chat(req, res, userId) {
           const o = JSON.parse(t);
           const c = o?.choices?.[0]?.message?.content ?? o?.choices?.[0]?.text ?? o?.content ?? o?.output_text;
           if (typeof c === 'string') content = c;
+          if (o?.usage) usage = o.usage;
         } catch {}
       }
       out = content;
@@ -305,7 +413,10 @@ async function chat(req, res, userId) {
           try {
             const j = JSON.parse(p);
             if (typeof j === 'string') text = j;
-            else
+            else {
+              if (j?.usage) usage = j.usage;
+              const think = extractThinking(j);
+              if (think) emit({ thinking: think });
               text =
                 j?.choices?.[0]?.delta?.content ??
                 j?.choices?.[0]?.message?.content ??
@@ -313,6 +424,7 @@ async function chat(req, res, userId) {
                 j?.content ??
                 j?.delta ??
                 j?.text;
+            }
             if (typeof text !== 'string') text = null;
           } catch {
             text = p;
@@ -324,21 +436,18 @@ async function chat(req, res, userId) {
         }
       }
     }
+    finished = true;
+    await saveReply();
+    if (usage) emit({ usage });
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (err) {
     console.error('Stream failed:', err?.message || err);
-    try {
-      emit({ error: 'Stream failed' });
-      res.end();
-    } catch {}
-  }
-
-  if (out.trim()) {
-    const { error } = await db()
-      .from('chat_messages')
-      .insert({ user_id: userId, conversation_id: convId, role: 'assistant', content: await pack(out.trim()), model });
-    if (error) console.error('Failed to save reply:', error.message);
+    await saveReply(); // save partial output (idempotent)
+    if (!finished) {
+      try { emit({ error: 'Stream failed' }); } catch {}
+    }
+    try { res.end(); } catch {}
   }
 }
 

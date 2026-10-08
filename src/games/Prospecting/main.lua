@@ -1,288 +1,239 @@
-getgenv().SecureMode = true
+--// Knit
+local Knit = shared.Knit
+const services = Knit.services
 
-local services = loadstring(game:HttpGet(
-    "https://website-iota-ivory-12.vercel.app/code/loader/u/vars.lua"
-))()
+--// services
+const LocalPlayer = services.Players.LocalPlayer
 
-local Rayfield = loadstring(game:HttpGet(
-    "https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"
-))()
-
-local lp = services["player"]
-
-local window = Rayfield:CreateWindow({
-    Name = "Prospecting",
-    LoadingTitle = "Prospecting",
-    LoadingSubtitle = "Automation",
-    ConfigurationSaving = { Enabled = true, FileName = "figcon" },
-    Discord = { Enabled = false },
-    KeySystem = false,
-})
-
-local Tabs = {
-    main = window:CreateTab("Main", 4483362458),
-    settings = window:CreateTab("Settings", 4483362458),
+--// config
+local config = {
+    AutoFarm = {
+        Enabled = true,
+    },
+    -- where to stand while the pan fills (shaking only fills the pan in range)
+    PlayerPosition = nil,
+    -- where to stand while panning
+    WaterPosition = nil,
+    -- seconds between pan calls. lower = faster
+    PanSpeed = 0.05,
 }
 
-local Connections = {
-    automation = {},
-}
-
-local States = {
-    runtime = {},
-    values = {
-        AutoFarm = false,
-        CurrentAction = "Collecting",
-        SavedPosition = nil,
-        WaterPosition = nil,
-        PlayerPosition = nil,
-        PanSpeed = 0.05,
+--// cheat
+local cheat = {
+    Utils = {},
+    Core = {
+        AutoFarm = {},
     },
 }
+local Utils = cheat.Utils
+local Core = cheat.Core
 
-local function SetValue(obj, key, value)
-    obj[key] = value
+--// Utils
+
+Utils.Root = function()
+    local Character = LocalPlayer.Character
+
+    return Character and Character:FindFirstChild("HumanoidRootPart")
 end
 
-local function AddConnection(category, name, connection)
-    if category[name] then
-        pcall(function()
-            if typeof(category[name]) == "RBXScriptConnection" then
-                category[name]:Disconnect()
-            else
-                task.cancel(category[name])
-            end
-        end)
-    end
+-- the pan tool owns the remotes and the fill ui, so nothing below exists
+-- while it is unequipped
+Utils.Tool = function()
+    local Character = LocalPlayer.Character
 
-    category[name] = connection
-    States.runtime[name] = true
+    return Character and Character:FindFirstChildOfClass("Tool")
 end
 
-local function RemoveConnection(category, name)
-    if not category[name] then return end
-
-    pcall(function()
-        if typeof(category[name]) == "RBXScriptConnection" then
-            category[name]:Disconnect()
-        else
-            task.cancel(category[name])
-        end
-    end)
-
-    category[name] = nil
-    States.runtime[name] = false
-end
-
-local function GetTool()
-    return lp.Character and lp.Character:FindFirstChildOfClass("Tool")
-end
-
-local function GetRemotes()
-    local Tool = GetTool()
+-- Collect / Pan / Shake live under the tool's Scripts folder
+Utils.Remote = function(Name: string)
+    local Tool = Utils.Tool()
     local Scripts = Tool and Tool:FindFirstChild("Scripts")
-    return Scripts and {
-        Collect = Scripts:FindFirstChild("Collect"),
-        Pan = Scripts:FindFirstChild("Pan"),
-        Shake = Scripts:FindFirstChild("Shake"),
-        PanningComplete = Scripts:FindFirstChild("PanningComplete"),
-    } or {}
+
+    return Scripts and Scripts:FindFirstChild(Name)
 end
 
-local function GetCurrentFill()
-    local FillText = lp.PlayerGui
-        and lp.PlayerGui:FindFirstChild("ToolUI")
-        and lp.PlayerGui.ToolUI:FindFirstChild("FillingPan")
-        and lp.PlayerGui.ToolUI.FillingPan:FindFirstChild("FillText")
+-- the fill meter reads "12/40"
+Utils.Fill = function()
+    local ToolUI = LocalPlayer.PlayerGui:FindFirstChild("ToolUI")
+    local FillingPan = ToolUI and ToolUI:FindFirstChild("FillingPan")
+    local FillText = FillingPan and FillingPan:FindFirstChild("FillText")
 
     return tonumber(FillText and FillText.Text:match("^(%d+)") or "0") or 0
 end
 
-local function GetMaxCapacity()
-    local Tool = GetTool()
+Utils.Capacity = function()
+    local Tool = Utils.Tool()
     local Stats = Tool and Tool:FindFirstChild("Stats")
+
     return Stats and Stats:GetAttribute("Capacity") or 0
 end
 
-local function CFrameToTable(cframe)
-    return {
-        cframe.X, cframe.Y, cframe.Z,
-        cframe:GetComponents()
-    }
-end
+--// Core
 
-local function TableToCFrame(t)
-    if not t or #t < 12 then return nil end
-    return CFrame.new(t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9], t[10], t[11], t[12])
-end
+-- "Collecting" while the pan fills, "Panning" while the dirt is washed out
+local action = "Collecting"
 
-local function RunAutomation()
-    local Hrp
-    local Tool
+Core.AutoFarm.Enabled = function()
+    action = "Collecting"
 
-    repeat
-        Hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-        Tool = GetTool()
-        task.wait(0.02)
-    until Hrp and Tool and States.values.AutoFarm
+    Core.AutoFarm.Loop = task.spawn(function()
+        while true do
+            local Root = Utils.Root()
+            local Tool = Utils.Tool()
 
-    while States.values.AutoFarm do
-        Hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-        Tool = GetTool()
-        local Remotes = GetRemotes()
-        local MaxCap = GetMaxCapacity()
-        local CurrentFill = GetCurrentFill()
-        local Action = States.values.CurrentAction
-        local SavedPos = States.values.SavedPosition
-        local PlayerPos = States.values.PlayerPosition
-        local WaterPos = States.values.WaterPosition
+            if Root and Tool then
+                if action == "Collecting" then
+                    local Shake = Utils.Remote("Shake")
+                    if Shake then
+                        Shake:FireServer()
+                    end
 
-        if Action == "Collecting" then
-            if Remotes.Shake then
-                Remotes.Shake:FireServer()
-            end
+                    -- the pan only fills while it is shaken in range, so hold the spot
+                    if config.PlayerPosition then
+                        Root.CFrame = config.PlayerPosition
+                    end
 
-            if Hrp and PlayerPos then
-                Hrp.CFrame = PlayerPos
-            elseif Hrp and SavedPos then
-                Hrp.CFrame = SavedPos
-            end
+                    local Collect = Utils.Remote("Collect")
+                    if Collect then
+                        Collect:InvokeServer(1)
+                    end
 
-            if Remotes.Collect then
-                Remotes.Collect:InvokeServer(1)
+                    task.wait(0.02)
+
+                    if Utils.Fill() >= Utils.Capacity() then
+                        action = "Panning"
+                    end
+                else
+                    if config.WaterPosition then
+                        Root.CFrame = config.WaterPosition
+                    end
+
+                    local Pan = Utils.Remote("Pan")
+                    if Pan then
+                        Pan:InvokeServer()
+                    end
+
+                    local Shake = Utils.Remote("Shake")
+                    if Shake then
+                        Shake:FireServer()
+                    end
+
+                    task.wait(config.PanSpeed)
+
+                    -- the pan empties itself once the dirt is panned out
+                    if Utils.Fill() == 0 then
+                        action = "Collecting"
+                    end
+                end
             end
 
             task.wait(0.02)
-
-            if CurrentFill >= MaxCap then
-                SetValue(States.values, "CurrentAction", "Panning")
-            end
-
-        elseif Action == "Panning" then
-            if Hrp and WaterPos then
-                Hrp.CFrame = WaterPos
-            end
-
-            if Remotes.Pan then
-                Remotes.Pan:InvokeServer()
-            end
-
-            if Remotes.Shake then
-                Remotes.Shake:FireServer()
-            end
-
-            task.wait(States.values.PanSpeed)
-
-            CurrentFill = GetCurrentFill()
-            if CurrentFill == 0 then
-                SetValue(States.values, "CurrentAction", "Collecting")
-            end
         end
+    end)
+end
 
-        task.wait(0.02)
+Core.AutoFarm.Disable = function()
+    if Core.AutoFarm.Loop then
+        task.cancel(Core.AutoFarm.Loop)
+        Core.AutoFarm.Loop = nil
     end
 end
 
-Tabs.main:CreateLabel("Automation")
+--// Interface
 
-Tabs.main:CreateToggle({
+local Game = shared.game_name or shared.name or "Prospecting"
+
+local Rayfield = Knit.ui.new("Rayfield")()
+const Window = Rayfield:CreateWindow({
+    Name = Game,
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "#matpatz",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "voltexconfig",
+        FileName = Game,
+    },
+})
+
+const tabs = {
+    Main = Window:CreateTab("Main"),
+    Settings = Window:CreateTab("Settings"),
+}
+
+--// Main
+
+tabs.Main:CreateToggle({
     Name = "Auto Collect / Pan / Sell",
-    CurrentValue = false,
-    Callback = function(value)
-        SetValue(States.values, "AutoFarm", value)
-        SetValue(States.values, "CurrentAction", "Collecting")
-
-        if value then
-            local Hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-            if Hrp then
-                SetValue(States.values, "SavedPosition", Hrp.CFrame)
-            end
-
-            AddConnection(Connections, "automation", task.spawn(RunAutomation))
-        else
-            RemoveConnection(Connections, "automation")
-        end
+    CurrentValue = config.AutoFarm.Enabled,
+    Flag = "AutoFarm",
+    Callback = function(Value)
+        config.AutoFarm.Enabled = Value
+        ;(Value and Core.AutoFarm.Enabled or Core.AutoFarm.Disable)()
     end,
 })
 
-Tabs.settings:CreateLabel("Position Saving")
+--// Settings
 
-Tabs.settings:CreateButton({
+tabs.Settings:CreateSection("Position saving")
+
+tabs.Settings:CreateButton({
     Name = "Save Player Position",
     Callback = function()
-        local Hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-        if Hrp then
-            SetValue(States.values, "PlayerPosition", Hrp.CFrame)
-            Rayfield:Notify({
-                Title = "Position Saved",
-                Content = "Player position saved! ✓",
-                Duration = 3,
-                Image = 4483362458,
-            })
-        else
-            Rayfield:Notify({
-                Title = "Error",
-                Content = "Could not find player position.",
-                Duration = 3,
-                Image = 4483362458,
-            })
+        local Root = Utils.Root()
+
+        if not Root then
+            Rayfield:Notify({ Title = Game, Content = "No character" })
+            return
         end
+
+        config.PlayerPosition = Root.CFrame
+
+        Rayfield:Notify({ Title = Game, Content = "Player position saved" })
     end,
 })
 
-Tabs.settings:CreateButton({
+tabs.Settings:CreateButton({
     Name = "Save Water Position",
     Callback = function()
-        local Hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-        if Hrp then
-            SetValue(States.values, "WaterPosition", Hrp.CFrame)
-            Rayfield:Notify({
-                Title = "Position Saved",
-                Content = "Water position saved!",
-                Duration = 3,
-                Image = 4483362458,
-            })
-        else
-            Rayfield:Notify({
-                Title = "Error",
-                Content = "Could not find water position.",
-                Duration = 3,
-                Image = 4483362458,
-            })
+        local Root = Utils.Root()
+
+        if not Root then
+            Rayfield:Notify({ Title = Game, Content = "No character" })
+            return
         end
+
+        config.WaterPosition = Root.CFrame
+
+        Rayfield:Notify({ Title = Game, Content = "Water position saved" })
     end,
 })
 
-Tabs.settings:CreateLabel("Pan Speed")
-
-Tabs.settings:CreateSlider({
-    Name = "Pan Speed (Lower = Faster)",
-    Range = {0.01, 0.2},
-    Increment = 0.01,
-    Suffix = "s",
-    CurrentValue = 0.05,
-    Callback = function(value)
-        SetValue(States.values, "PanSpeed", value)
-    end,
-})
-
-Tabs.settings:CreateButton({
+tabs.Settings:CreateButton({
     Name = "Clear Saved Positions",
     Callback = function()
-        SetValue(States.values, "PlayerPosition", nil)
-        SetValue(States.values, "WaterPosition", nil)
-        Rayfield:Notify({
-            Title = "Cleared",
-            Content = "All saved positions cleared.",
-            Duration = 3,
-            Image = 4483362458,
-        })
+        config.PlayerPosition = nil
+        config.WaterPosition = nil
+
+        Rayfield:Notify({ Title = Game, Content = "Positions cleared" })
     end,
 })
 
-Rayfield:Notify({
-    Title = "Prospecting",
-    Content = "successfully loaded!",
-    Duration = 5,
-    Image = 4483362458,
+tabs.Settings:CreateSection("Panning")
+
+tabs.Settings:CreateSlider({
+    Name = "Pan Speed (lower = faster)",
+    Range = { 0.01, 0.2 },
+    Increment = 0.01,
+    Suffix = "s",
+    CurrentValue = config.PanSpeed,
+    Flag = "PanSpeed",
+    Callback = function(Value)
+        config.PanSpeed = Value
+    end,
 })
+
+-- Rayfield only runs a toggle callback once the user touches the toggle, so a
+-- config that is already on has to be started here or nothing ever runs
+if config.AutoFarm.Enabled then
+    Core.AutoFarm.Enabled()
+end

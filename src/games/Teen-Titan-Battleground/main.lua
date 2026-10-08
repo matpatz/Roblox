@@ -1,20 +1,17 @@
-loadstring(game:HttpGet("https://www.voltex.website/src/Modules/Platform.lua"))()
-local device = getgenv()["device"]
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
 
-getgenv().PlayerHelper = true
+--// Services
+local Players = services.Players
+local Player = Players.LocalPlayer
+local RunService = services.RunService
+local UserInputService = services.UserInputService
+local VirtualInputManager = services.VirtualInputManager
+local CoreGui = services.CoreGui
+local CurrentCamera = services.Workspace.CurrentCamera
 
-local Services = loadstring(game:HttpGet(
-    "https://roblox-alpha-murex.vercel.app/src/Modules/Variables.lua"
-))()
-
-local Players = Services.Players
-local Player = Services.Player
-local RunService = Services.RunService
-local UserInputService = Services.UserInputService
-local VirtualInputManager = Services.VirtualInputManager
-local CoreGui = Services.CoreGui
-local CurrentCamera = Services.Workspace.CurrentCamera
-
+--// LocalPlayer
 if not Player.Character then
     Player.CharacterAdded:Wait()
 end
@@ -28,7 +25,10 @@ Player.CharacterAdded:Connect(function(NewCharacter)
     Humanoid = NewCharacter:WaitForChild("Humanoid")
 end)
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+--// vars
+local device = Knit.require("Modules/Telementry/v1", "platform")
+
+local Rayfield = Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
     Name = "Teen-Titan Battleground",
     LoadingTitle = "Title",
@@ -169,13 +169,12 @@ end)
 
 main:CreateSection("Combat + Visuals")
 
-local esp = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Libraries/Esp/main.lua"))()
+local esp = Knit.require("Libraries/Esp/v1", "main")
 
 main:CreateDropdown({
     Name = "Esp Settings",
     Options = {
         "Box",
-        "Corners",
         "Name",
         "Held Item",
         "Tracer",
@@ -195,7 +194,6 @@ main:CreateDropdown({
     Callback = function(selectedOptions)
         -- Reset all options
         esp:SetProperty("ShowBox", false)
-        esp:SetProperty("ShowCorners", false)
         esp:SetProperty("ShowName", false)
         esp:SetProperty("ShowHeld", false)
         esp:SetProperty("ShowTracer", false)
@@ -213,8 +211,6 @@ main:CreateDropdown({
         for _, option in ipairs(selectedOptions) do
             if option == "Box" then
                 esp:SetProperty("ShowBox", true)
-            elseif option == "Corners" then
-                esp:SetProperty("ShowCorners", true)
             elseif option == "Name" then
                 esp:SetProperty("ShowName", true)
             elseif option == "Held Item" then

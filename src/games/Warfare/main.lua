@@ -1,4 +1,6 @@
--- ai slop, kinda
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
 
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -58,7 +60,7 @@ local config = {
 	},
 }
 
-const Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
+const Aimbot = Knit.require("Modules/Aimbot", "main")
 
 -- // Utils
 Utils.GetTargets = function(): { Instance }

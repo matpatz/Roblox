@@ -5,7 +5,7 @@
     "description": "Autofarm",
     "updated": "10 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Answer-Or-Die/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Answer-Or-Die\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/11966456877/Answer-or-Die",
     "playButtonText": "Play on Roblox"
@@ -16,7 +16,7 @@
     "description": "Auto Farm",
     "updated": "2 days ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Block-Puzzle/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Block-Puzzle\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/15564827526/Block-Puzzle",
     "playButtonText": "Play on Roblox"
@@ -27,7 +27,7 @@
     "description": "Get Best Animal",
     "updated": "4 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Catch-And-Tame/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Catch-And-Tame\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/96645548064314/Catch-And-Tame",
     "playButtonText": "Play on Roblox"
@@ -38,7 +38,7 @@
     "description": "Basic Aimbot and Esp",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected", "First Script for a game"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/catastrophia/main.lua\"))()",
+    "loadstring": "shared.script = \"games/catastrophia\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/1087852616/CATASTROPHIA-Survive",
     "playButtonText": "Play on Roblox"
@@ -49,7 +49,7 @@
     "description": "Misc",
     "updated": "5 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Escape-Tsunami-for-Brainrots/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Escape-Tsunami-for-Brainrots\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/131623223084840/Escape-Tsunami-For-Brainrots",
     "playButtonText": "Play on Roblox"
@@ -60,7 +60,7 @@
     "description": "Autofarm",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Guess-The-Flag-Or-Die/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Guess-The-Flag-Or-Die\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/88817068170433/Guess-the-Country-Flag-or-Die",
     "playButtonText": "Play on Roblox"
@@ -71,7 +71,7 @@
     "description": "Silent Aim",
     "updated": "5 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Heavy-Metal/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Heavy-Metal\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/74669489500088/Heavy-Rust",
     "playButtonText": "Play on Roblox"
@@ -82,7 +82,7 @@
     "description": "Auto Farm",
     "updated": "2 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Idle-Blocks/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Idle-Blocks\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/101759436219635/Idle-Blocks",
     "playButtonText": "Play on Roblox"
@@ -93,7 +93,7 @@
     "description": "Best Kick",
     "updated": "2 months ago",
     "tags": ["Functional", "Undetected"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Kick-a-Lucky-Block-for-Brainrots/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Kick-a-Lucky-Block-for-Brainrots\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/89469502395769/Kick-a-Lucky-Block",
     "playButtonText": "Play on Roblox"
@@ -104,7 +104,7 @@
     "description": "Get Blocks Instantly",
     "updated": "2 weeks ago",
     "tags": ["Functional", "Undetected", "Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Lucky-Blocks-Battleground/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Lucky-Blocks-Battleground\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/662417684/LUCKY-BLOCKS-Battlegrounds",
     "playButtonText": "Play on Roblox"
@@ -115,20 +115,9 @@
     "description": "Basic Aimbot and Esp",
     "updated": "last month",
     "tags": ["Functional", "Undetected", "Key System"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Operation-One/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Operation-One\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/72920620366355/Operation-One",
-    "playButtonText": "Play on Roblox"
-  },
-  {
-    "id": "Prospecting",
-    "title": "Prospecting",
-    "description": "Autofarm",
-    "updated": "2 hours ago",
-    "tags": ["Functional", "Undetected", "Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Prospecting/main.lua\"))()",
-    "buttonText": "Get Script",
-    "playUrl": "https://www.roblox.com/games/129827112113663/Prospecting",
     "playButtonText": "Play on Roblox"
   },
   {
@@ -137,7 +126,7 @@
     "description": "Autofarm, Esp, Aimbot, Triggerbot",
     "updated": "last month",
     "tags": ["Functional", "Undetected", "Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Teen-Titan-Battleground/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Teen-Titan-Battleground\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/3082002798/T-Titans-Battlegrounds",
     "playButtonText": "Play on Roblox"
@@ -148,7 +137,7 @@
     "description": "Kill Aura for Titans and People",
     "updated": "3 months ago",
     "tags": ["Functional", "Undetected", "Open Source"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Titan-Warfare/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Titan-Warfare\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script",
     "playUrl": "https://www.roblox.com/games/6297822481/Titan-Warfare",
     "playButtonText": "Play on Roblox"
@@ -158,7 +147,7 @@
     "title": "Age Every Click",
     "description": "Auto Max Age",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Age-Every-Click/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Age-Every-Click\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -166,7 +155,7 @@
     "title": "Be a Beggar",
     "description": "Auto Minigame",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Be-a-Beggar/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Be-a-Beggar\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -174,7 +163,7 @@
     "title": "Blade Spin",
     "description": "Auto Coins & XP",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Blade-Spin/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Blade-Spin\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -182,7 +171,7 @@
     "title": "Build a Scam Empire",
     "description": "Autofarm",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Build-a-Scam-Empire/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Build-a-Scam-Empire\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -190,15 +179,7 @@
     "title": "Clone Line Challenge",
     "description": "Auto Level & Money",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Clone-Line-Challenge/main.lua\"))()",
-    "buttonText": "Get Script"
-  },
-  {
-    "id": "desertstorm",
-    "title": "Desert Storm",
-    "description": "Anticheat Bypass",
-    "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Desert-Storm/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Clone-Line-Challenge\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -206,7 +187,7 @@
     "title": "Dig to Earth Core",
     "description": "Auto Farm",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Dig-to-Earth-Core/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Dig-to-Earth-Core\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -214,7 +195,7 @@
     "title": "Grow Bigger Every Step",
     "description": "Auto Grow",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Grow-Bigger-Every-Step/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Grow-Bigger-Every-Step\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -222,7 +203,7 @@
     "title": "Horse Race",
     "description": "Auto Win",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Horse-Race/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Horse-Race\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -230,7 +211,7 @@
     "title": "Hunting Season",
     "description": "Aimbot, ESP, Teleports",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Hunting-Season/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Hunting-Season\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -238,7 +219,7 @@
     "title": "Hyper Speed Runner",
     "description": "Auto XP",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Hyper-Speed-Runner/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Hyper-Speed-Runner\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -246,7 +227,7 @@
     "title": "Industrialist",
     "description": "Anti-AFK & Clear Pollution",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Industrialist/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Industrialist\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -254,7 +235,7 @@
     "title": "Kill a Billion Ducks",
     "description": "Auto Kill Ducks",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Kill-a-Billion-Ducks/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Kill-a-Billion-Ducks\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -262,7 +243,7 @@
     "title": "Launch ur Plane",
     "description": "Auto Money",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Launch-ur-Plane/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Launch-ur-Plane\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -270,7 +251,7 @@
     "title": "Merge Soldiers",
     "description": "Tycoon Auto Farm",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Merge-Soldiers/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Merge-Soldiers\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -278,15 +259,7 @@
     "title": "Pickaxe Swing Escape",
     "description": "Auto Farm & Teleports",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Pickaxe-Swing-Escape/main.lua\"))()",
-    "buttonText": "Get Script"
-  },
-  {
-    "id": "rostalpha",
-    "title": "Rost Alpha",
-    "description": "Silent Aim",
-    "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Rost-Alpha/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Pickaxe-Swing-Escape\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -294,7 +267,7 @@
     "title": "Speed vs Giant",
     "description": "Autofarm & Teleports",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Speed-vs-Giant/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Speed-vs-Giant\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -302,7 +275,7 @@
     "title": "Steal an Egg",
     "description": "Auto Steal & Hatch",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Steal-an-Egg/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Steal-an-Egg\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -310,7 +283,7 @@
     "title": "Step for Jumps",
     "description": "Auto Jumps & Rebirth",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Step-for-Jumps/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Step-for-Jumps\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -318,7 +291,7 @@
     "title": "Timebomb Duel",
     "description": "Auto Teleport",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Timebomb-Duel/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Timebomb-Duel\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -326,7 +299,7 @@
     "title": "Trench War",
     "description": "Aimbot, Triggerbot, ESP",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Trench-War/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Trench-War\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
   },
   {
@@ -334,7 +307,296 @@
     "title": "Vagrant",
     "description": "Aimbot",
     "tags": ["Functional"],
-    "loadstring": "loadstring(game:HttpGet(\"https://roblox-alpha-murex.vercel.app/src/games/Vagrant/main.lua\"))()",
+    "loadstring": "shared.script = \"games/Vagrant\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
     "buttonText": "Get Script"
+  },
+  {
+    "id": "100waveslater",
+    "title": "100 Waves Later",
+    "description": "Auto Revive, Infinite Money & Kill All",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/100-Waves-Later\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/92371631484540/100-Waves-Later",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "airdropfps",
+    "title": "Airdrop Fps",
+    "description": "Silent Aim & Wallbang",
+    "updated": "5 days ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Airdrop-Fps\"; loadstring(game:HttpGet(\"https://voltex.website/init/v1/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/93091759101123/Airdrop-Fps",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "choosethestrongeranime",
+    "title": "Choose the Stronger Anime",
+    "description": "Auto Draft & Bidding",
+    "updated": "6 days ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Choose-the-Stronger-Anime\"; loadstring(game:HttpGet(\"https://voltex.website/init/v1/main.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "collectleaves",
+    "title": "Collect Leaves",
+    "description": "Auto Collect & Sell",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Collect-Leaves\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/92637789841354/Collect-Leaves",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "dmgfps",
+    "title": "Dmg Fps",
+    "description": "Kill Aura",
+    "updated": "6 hours ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Dmg-Fps\"; loadstring(game:HttpGet(\"https://voltex.website/init/v1/main.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/100753254401525/Dmg-Fps",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "drawaperfectcircle",
+    "title": "Draw a Perfect Circle",
+    "description": "Auto Draw Perfect Circle",
+    "updated": "6 hours ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Draw-a-perfect-circle\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "flickfootball",
+    "title": "Flick Football",
+    "description": "Auto Score Goals",
+    "updated": "12 days ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Flick-Football\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/79530930758685/Flick-Football",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "fpsflick",
+    "title": "Fps Flick",
+    "description": "Silent Aim",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Fps-Flick\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/136801880565837/Fps-Flick",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "heatfps",
+    "title": "Heat Fps",
+    "description": "Silent Aim",
+    "updated": "3 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Heat-Fps\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/83055872352243/Heat-Fps",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "hoodwars",
+    "title": "Hood Wars",
+    "description": "Silent Aim",
+    "updated": "3 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Hood-Wars\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/116965629608311/Hood-Wars",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "illegalsoccer",
+    "title": "Illegal Soccer",
+    "description": "Infinite Stamina",
+    "updated": "6 days ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Illegal-Soccer\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/126987974021910/Illegal-Soccer",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "murderduels",
+    "title": "Murder Duels",
+    "description": "Silent Aim & Wallbang",
+    "updated": "6 days ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Murder-Duels\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/120851538706364/Murder-Duels",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "navalwarfare",
+    "title": "Naval Warfare",
+    "description": "Kill Aura & Auto Fire",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Naval-Warfare\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/2210085102/Naval-Warfare",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "nomansland",
+    "title": "No Man's Land",
+    "description": "Silent Aim",
+    "updated": "2 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/No-mans-Land\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/113859684940866/No-Mans-Land",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "operationssiege",
+    "title": "Operations Siege",
+    "description": "Silent Aim",
+    "updated": "2 weeks ago",
+    "tags": ["Functional", "Detected"],
+    "loadstring": "shared.script = \"games/Operations-Siege\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/13997018456/Operations-Siege",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "pordieratwar",
+    "title": "Pordier at War",
+    "description": "Silent Aim",
+    "updated": "3 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Pordier-at-War\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/8791578652/Pordier-at-War",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "revenge",
+    "title": "Revenge",
+    "description": "Silent Aim, Infinite Ammo & No Recoil",
+    "updated": "3 minutes ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Revenge\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/131101029195036/Revenge",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "rocketrumble",
+    "title": "Rocket Rumble",
+    "description": "Silent Aim",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Rocket-Rumble\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/89704645856683/Rocket-Rumble",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "strafefps",
+    "title": "Strafe Fps",
+    "description": "Silent Aim",
+    "updated": "13 days ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Strafe-Fps\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/109020905733214/Strafe-Fps",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "strikewarfare",
+    "title": "Strike Warfare",
+    "description": "Silent Aim",
+    "updated": "3 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Strike-Warfare\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/130404059693601/Strike-Warfare",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "surviveandkillthekillers",
+    "title": "Survive and Kill the Killers",
+    "description": "Silent Aim & Wallbang",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Survive-and-Kill-the-Killers\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/155382109/Survive-and-Kill-the-Killers",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "trident",
+    "title": "Trident",
+    "description": "Silent Aim, Aimbot, ESP & More",
+    "updated": "4 weeks ago",
+    "tags": ["Functional", "Open Source"],
+    "loadstring": "shared.script = \"games/Trident\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "unamedshooter",
+    "title": "Unamed Shooter",
+    "description": "Silent Aim",
+    "updated": "2 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Unamed-Shooter\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script"
+  },
+  {
+    "id": "warrivals",
+    "title": "War Rivals",
+    "description": "Silent Aim",
+    "updated": "13 days ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/War-Rivals\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/121918565917280/War-Rivals",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "warfare",
+    "title": "Warfare",
+    "description": "Silent Aim",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Warfare\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/81748781442029/Warfare",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "zombierushsurvival",
+    "title": "Zombie Rush Survival",
+    "description": "Silent Aim",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Zombie-Rush-Survival\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/82457571485380/Zombie-Rush-Survival",
+    "playButtonText": "Play on Roblox"
+  },
+  {
+    "id": "zombieuprising",
+    "title": "Zombie Uprising",
+    "description": "Silent Aim",
+    "updated": "4 weeks ago",
+    "tags": ["Functional"],
+    "loadstring": "shared.script = \"games/Zombie-Uprising\"; loadstring(game:HttpGet(\"https://voltex.website/init.lua\"))()",
+    "buttonText": "Get Script",
+    "playUrl": "https://www.roblox.com/games/4972091010/Zombie-Uprising",
+    "playButtonText": "Play on Roblox"
   }
 ]

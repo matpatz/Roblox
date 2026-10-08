@@ -1,5 +1,8 @@
 -- Only tested on Endless mode, and only works for PVE
 
+--// Knit
+local Knit = shared.Knit
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -53,7 +56,7 @@ local config = {
     },
 }
 
-const Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
+const Aimbot = Knit.require("Modules/Aimbot", "main")
 
 Utils["Aimbot"].GetClosest = function(): (BasePart?)
     config["Origin"] = HumanoidRootPart.Position

@@ -1,10 +1,16 @@
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
 
 -- // Modules
-local WeaponInstance = require(ReplicatedStorage.Shared.WeaponSystem.WeaponInstance)
-local GunRaycaster = require(ReplicatedStorage.Shared.WeaponSystem.GunRaycaster)
+local WeaponSystem = ReplicatedStorage.Shared.WeaponSystem
+
+local WeaponInstance = require(WeaponSystem.WeaponInstance)
+local GunRaycaster = require(WeaponSystem.GunRaycaster)
 
 -- // Variables
 const table_insert = table.insert -- + zeptosecond 
@@ -50,7 +56,7 @@ local config = {
     }
 }
 
-local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
+local Aimbot = Knit.require("Modules/Aimbot", "main")
 
 Utils["Aimbot"].GetClosest = function(): (BasePart?)
     config["Origin"] = HumanoidRootPart.Position

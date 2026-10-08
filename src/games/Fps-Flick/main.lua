@@ -49,7 +49,7 @@ local config = {
     Blacklist = {}
 }
 
-local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
+local Aimbot = shared.Knit.require("Modules/Aimbot", "main")
 
 Utils["Aimbot"].GetClosest = function(): (BasePart?)
     config["Origin"] = HumanoidRootPart.Position

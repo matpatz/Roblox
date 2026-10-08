@@ -1,19 +1,23 @@
-local get = (type(cloneref) == "function") and cloneref or function(x) return x end
-local marketplace = get(game:GetService("MarketplaceService"))
-local players = get(game:GetService("Players"))
-local rep = get(game:GetService("ReplicatedStorage"))
-local tweens = get(game:GetService("TweenService"))
-local lighting = get(game:GetService("Lighting"))
-local uis = get(game:GetService("UserInputService"))
-local cas = get(game:GetService("ContextActionService"))
-local runs = get(game:GetService("RunService"))
+local Knit = shared.Knit
+local services = Knit.services
+local ui = Knit.ui
+--local player = Knit.player
 
-local player = players["LocalPlayer"]
-local hrp = player["Character"]["HumanoidRootPart"]
+local marketplace = services.MarketplaceService
+local Players = services.Players
+local rep = services.ReplicatedStorage
+local tweens = services.TweenService
+local lighting = services.Lighting
+local uis = services.UserInputService
+local cas = services.ContextActionService
+local runs = services.RunService
 
-local library = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local LocalPlayer = Players["LocalPlayer"]
+local hrp = LocalPlayer["Character"]["HumanoidRootPart"]
+
+local library = ui.new("Rayfield")()
 local window = library:CreateWindow({
-	Name = marketplace:GetProductInfo(game.PlaceId).Name,
+	Name = shared.game_name,
 	LoadingTitle = "fah you",
 	LoadingSubtitle = "subtitle",
 })
@@ -60,7 +64,7 @@ local function rarest()
 end
 
 if require and hookfunction then
-    local handler = require(player["PlayerScripts"]["Controllers"]["Visuals"]["lassoController"]["lassoMinigameHandler"])
+    local handler = require(LocalPlayer["PlayerScripts"]["Controllers"]["Visuals"]["lassoController"]["lassoMinigameHandler"])
 
     local oldStart = hookfunction(handler.Start, function(...)
         oldStart(...)
@@ -73,7 +77,7 @@ if require and hookfunction then
         end)
     end)
 
-    local lasso = require(player["PlayerScripts"]["Controllers"]["UI"]["lassoUI"]["throwLasso"])
+    local lasso = require(LocalPlayer["PlayerScripts"]["Controllers"]["UI"]["lassoUI"]["throwLasso"])
     local af, afr = nil, false
     main:CreateToggle({
         Name = "AutoFarm",
@@ -98,7 +102,7 @@ if require and hookfunction then
 
                         local newDir = (ih.Position - hrp.Position).Unit
 
-                        lasso.throwLasso(0.9, newDir, player)
+                        lasso.throwLasso(0.9, newDir, LocalPlayer)
                         --completeMini()
                     end
                 end)

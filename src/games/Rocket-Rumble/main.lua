@@ -1,5 +1,9 @@
 -- silent aim in a game like this isnt very useful
 
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -51,7 +55,7 @@ local config = {
     }
 }
 
-local Aimbot = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/Aimbot/main.lua"))()
+local Aimbot = Knit.require("Modules/Aimbot", "main")
 
 Utils["Aimbot"].GetClosest = function(): (BasePart?)
     aimconfig["Origin"] = HumanoidRootPart.Position

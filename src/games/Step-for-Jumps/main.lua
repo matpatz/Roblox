@@ -1,9 +1,10 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
-local gname = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))(); --local flags = Rayfield.Flags
+local gname = shared.game_name or shared.name or "suiii"
+
+local Rayfield = Knit.ui.new("Rayfield")(); --local flags = Rayfield.Flags
 local Window = Rayfield:CreateWindow({
 	Name = gname,
 	LoadingTitle = "fuh you",

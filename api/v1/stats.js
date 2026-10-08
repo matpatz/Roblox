@@ -9,6 +9,12 @@ export const config = { runtime: 'nodejs' };
 
 const CACHE_KEY = 'stats:cache';
 const CACHE_TTL = 60;
+// discord.gg code linked on the home page (src/frontend/index.html) — keep in sync.
+const DISCORD_INVITE = 'bSPRYhBGtf';
+const PAGE_SIZE = 1000;
+const FETCH_CONCURRENCY = 10;
+const ACTIVE_USERS_DAYS = 30;
+const HISTORY_DAYS = 7;
 
 // PostgREST returns timestamptz values as ISO strings, but not necessarily in
 // UTC (the offset can be +10:00, -05:00, +00, etc.). Slicing the raw string
@@ -25,25 +31,88 @@ function toUtcDay(ts) {
   return isNaN(d.getTime()) ? String(ts).slice(0, 10) : d.toISOString().slice(0, 10);
 }
 
-// PostgREST caps a plain select at 1000 rows (db-max-rows), even when a larger
-// limit is requested. The 7-day window can exceed that, which silently drops the
-// newest executions. Fetch in pages so the whole window is returned.
-async function fetchWindowAddedAt(supabase, sinceIso) {
-  const rows = [];
-  const PAGE = 1000;
+function daysAgo(days) {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - days);
+  return d;
+}
+
+function hoursAgo(hours) {
+  return new Date(Date.now() - hours * 60 * 60 * 1000);
+}
+
+// PostgREST hard-caps a plain select at 1000 rows (db-max-rows), so any window
+// that can exceed that must be paged. This walks every row with `added_at >=
+// since`, calling `consume(rows)` once per page. Pages are fetched in parallel
+// batches; ordering by (added_at, id) keeps page boundaries stable so no row is
+// skipped or double-counted across concurrent queries.
+async function walkIdentifiers(supabase, since, columns, consume) {
   let from = 0;
   for (;;) {
-    const { data, error } = await supabase
-      .from('identifiers')
-      .select('added_at')
-      .gte('added_at', sinceIso)
-      .range(from, from + PAGE - 1);
-    if (error || !data) break;
-    rows.push(...data);
-    if (data.length < PAGE) break;
-    from += PAGE;
+    const offsets = [];
+    for (let i = 0; i < FETCH_CONCURRENCY; i++) offsets.push(from + i * PAGE_SIZE);
+    const pages = await Promise.all(offsets.map((offset) =>
+      supabase
+        .from('identifiers')
+        .select(columns)
+        .gte('added_at', since)
+        .order('added_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(offset, offset + PAGE_SIZE - 1)
+    ));
+
+    for (const { data, error } of pages) {
+      if (error || !data) return;
+      consume(data);
+      if (data.length < PAGE_SIZE) return;
+    }
+    from += FETCH_CONCURRENCY * PAGE_SIZE;
   }
-  return rows;
+}
+
+async function countActiveUsers(supabase, since) {
+  const seen = new Set();
+  await walkIdentifiers(supabase, since, 'identifier', (rows) => {
+    for (const row of rows) seen.add(row.identifier);
+  });
+  return seen.size;
+}
+
+function normalizeGame(game) {
+  if (typeof game !== 'string') return null;
+  const trimmed = game.trim();
+  return trimmed ? trimmed : null;
+}
+
+async function buildExecutionStats(supabase, startUtcMidnight) {
+  const counts = {};
+  for (let i = HISTORY_DAYS - 1; i >= 0; i--) {
+    const day = new Date(startUtcMidnight);
+    day.setUTCDate(day.getUTCDate() + i);
+    counts[day.toISOString().slice(0, 10)] = 0;
+  }
+  const games = {};
+  const executors = {};
+  await walkIdentifiers(supabase, startUtcMidnight.toISOString(), 'added_at, game, executor', (rows) => {
+    for (const row of rows) {
+      const day = toUtcDay(row.added_at);
+      if (day in counts) counts[day]++;
+      const game = normalizeGame(row.game);
+      if (game) games[game] = (games[game] || 0) + 1;
+      const executor = normalizeGame(row.executor);
+      if (executor) executors[executor] = (executors[executor] || 0) + 1;
+    }
+  });
+  const history = Object.entries(counts).map(([date, count]) => ({ date, count }));
+  const topGames = Object.entries(games)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([game, count]) => ({ game, count }));
+  const topExecutors = Object.entries(executors)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([executor, count]) => ({ executor, count }));
+  return { history, topGames, topExecutors };
 }
 
 async function handler_fn(req, res) {
@@ -55,63 +124,43 @@ async function handler_fn(req, res) {
   if (cached) return successResponse(res, req, cached);
 
   const supabase = getSupabase();
-  const guildId = '1355796182143598804';
 
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const oneHourAgo = new Date();
-  oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+  const thirtyDaysAgo = daysAgo(ACTIVE_USERS_DAYS);
+  const oneHourAgo = hoursAgo(1);
 
   // 7-day window aligned to UTC midnight so the query range exactly covers the
-  // same UTC dates used by the history buckets below, regardless of server TZ.
+  // same UTC dates used by the history buckets, regardless of server TZ.
   const now = new Date();
-  const sevenDaysAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6));
+  const sevenDaysAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (HISTORY_DAYS - 1)));
 
   const [discordResult, totalsResult, activeResult, hourlyResult, historyResult] = await Promise.allSettled([
-    fetch(`https://discord.com/api/v10/guilds/${guildId}?with_counts=true`, {
-      headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` }
-    }).then(r => r.ok ? r.json() : null),
+    // The public invite endpoint returns approximate member/presence counts with
+    // no auth. The old /guilds/{id} call needed a bot token and showed 0 whenever
+    // BOT_TOKEN was unset/invalid.
+    fetch(`https://discord.com/api/v10/invites/${DISCORD_INVITE}?with_counts=true`, {
+      headers: { 'User-Agent': 'VoltexStats/1.0 (voltex.website)' }
+    }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
     supabase.from('totals').select('total_executions').eq('id', 1).single(),
-    supabase.from('identifiers').select('identifier', { count: 'exact' })
-      .gte('added_at', thirtyDaysAgo.toISOString()),
+    countActiveUsers(supabase, thirtyDaysAgo.toISOString()),
     supabase.from('identifiers').select('*', { count: 'exact', head: true })
       .gte('added_at', oneHourAgo.toISOString()),
-    fetchWindowAddedAt(supabase, sevenDaysAgo.toISOString())
+    buildExecutionStats(supabase, sevenDaysAgo)
   ]);
 
-  const discordCommunity = discordResult.status === 'fulfilled' && discordResult.value
-    ? { presence_count: discordResult.value.approximate_presence_count || 0, member_count: discordResult.value.approximate_member_count || 0 }
-    : { presence_count: 0, member_count: 0 };
-
-  const totalExecutions = totalsResult.status === 'fulfilled' ? totalsResult.value?.data?.total_executions || 0 : 0;
-
-  const activeUsers = activeResult.status === 'fulfilled' && activeResult.value?.data
-    ? new Set(activeResult.value.data.map(u => u.identifier)).size
-    : 0;
-
-  const executionsLastHour = hourlyResult.status === 'fulfilled' ? hourlyResult.value?.count || 0 : 0;
-
-  let executionHistory = [];
-  if (historyResult.status === 'fulfilled' && historyResult.value?.length) {
-    const counts = {};
-    for (let i = 6; i >= 0; i--) {
-      const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
-      counts[day.toISOString().slice(0, 10)] = 0;
-    }
-    for (const row of historyResult.value) {
-      const day = toUtcDay(row.added_at);
-      if (day in counts) counts[day]++;
-    }
-    executionHistory = Object.entries(counts).map(([date, count]) => ({ date, count }));
-  }
+  const discord = discordResult.status === 'fulfilled' ? discordResult.value : null;
 
   const payload = {
-    total_executions: totalExecutions,
-    active_users: activeUsers,
-    executions_last_hour: executionsLastHour,
+    total_executions: totalsResult.status === 'fulfilled' ? totalsResult.value?.data?.total_executions ?? 0 : 0,
+    active_users: activeResult.status === 'fulfilled' && typeof activeResult.value === 'number' ? activeResult.value : 0,
+    executions_last_hour: hourlyResult.status === 'fulfilled' ? hourlyResult.value?.count ?? 0 : 0,
     api_status: 'Operational',
-    discord_community: discordCommunity,
-    execution_history: executionHistory
+    discord_community: {
+      presence_count: discord?.approximate_presence_count ?? 0,
+      member_count: discord?.approximate_member_count ?? 0
+    },
+    execution_history: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value?.history) ? historyResult.value.history : [],
+    top_games: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value?.topGames) ? historyResult.value.topGames : [],
+    top_executors: historyResult.status === 'fulfilled' && Array.isArray(historyResult.value?.topExecutors) ? historyResult.value.topExecutors : []
   };
 
   await kv.set(CACHE_KEY, payload, { ex: CACHE_TTL });

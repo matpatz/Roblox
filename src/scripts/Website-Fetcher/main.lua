@@ -1,8 +1,6 @@
+local Knit = shared.Knit
 
-local Rayfield = loadstring(game:HttpGet(
-	"https://roblox-alpha-murex.vercel.app/libraries/Rayfield/main.lua"
-))()
-
+local Rayfield = Knit.ui.new("Rayfield")()
 local Window = Rayfield:CreateWindow({
     Name = "Website Fetcher",
     LoadingTitle = "LLEEEEbron",

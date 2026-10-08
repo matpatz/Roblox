@@ -30,7 +30,7 @@
 }
 
 .stat-card {
-  background: var(--bg-soft);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 24px;
@@ -86,7 +86,7 @@
 }
 
 .graph-container {
-  background: var(--bg-soft);
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 28px 28px 20px;
@@ -135,4 +135,77 @@
   color: var(--muted);
   margin-top: 10px;
   text-align: center;
+}
+
+.top-lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.top-lists .top-games-section {
+  margin-top: 0;
+  min-width: 0;
+}
+
+.top-games {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 8px 24px;
+}
+
+.top-game-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.top-game-row:last-child {
+  border-bottom: none;
+}
+
+.top-game-rank {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  width: 32px;
+  text-align: center;
+  flex: none;
+}
+
+.top-game-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-game-count {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+  flex: none;
+}
+
+.top-games-empty {
+  padding: 16px 0;
+  color: var(--muted);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .top-lists {
+    grid-template-columns: 1fr;
+  }
 }

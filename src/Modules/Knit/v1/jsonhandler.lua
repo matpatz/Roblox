@@ -1,3 +1,0 @@
-local jsonhandler = {}
-
-return jsonhandler

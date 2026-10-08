@@ -1,5 +1,9 @@
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 -- // Modules
-const core = assert(loadstring(game:HttpGet("https://voltex.website/src/games/Flick-Football/core.lua")))()
+const core = assert(Knit.require("games/Flick-Football", "core")) -- TODO: Validate this script works
 
 -- // config
 local config = {
@@ -23,7 +27,7 @@ end
 
 -- // Interface
 
-const Rayfield = assert(loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua")))()
+const Rayfield = Knit.ui.new("Rayfield")()
 
 const Window = Rayfield:CreateWindow({
 	Name = "this game",

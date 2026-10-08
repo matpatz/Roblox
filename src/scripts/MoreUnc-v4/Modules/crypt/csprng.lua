@@ -24,12 +24,12 @@
 --!optimize 2
 --!native
 
-local cs = "https://raw.githubusercontent.com/daily3014/rbx-cryptography/refs/heads/main/src/Utilities/CSPRNG/"
+local cs = "https://raw.githubusercontent.com/daily3014/rbx-cryptography/refs/heads/legacy/src/Utilities/CSPRNG/"
 
 local Conversions = loadstring(game:HttpGet(`{cs}Conversions.luau`))
 local ChaCha20 = loadstring(game:HttpGet(`{cs}ChaCha20.luau`))()
 local Blake3 = loadstring(game:HttpGet(`{cs}Blake3.luau`))()
-
+repeat task.wait() until ChaCha20 and Blake3
 export type EntropyProvider = (BytesLeft: number) -> buffer?
 
 type CSPRNGModule = {

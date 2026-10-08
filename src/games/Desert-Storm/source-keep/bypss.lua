@@ -1,4 +1,4 @@
-local functions = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/games/Desert-Storm/functions.lua"))()
+local functions = shared.Knit.require("games/Desert-Storm", "functions")
 --[[
 return {
 	SpectateFunction = SpectateFunction,

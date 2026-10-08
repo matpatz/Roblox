@@ -1,3 +1,5 @@
+local Knit = shared.Knit
+
 -- // Services
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Players = game:GetService("Players")
@@ -176,7 +178,7 @@ end
 
 -- // Interface
 
-local Rayfield = loadstring(game:HttpGet("https://voltex.website/libraries/Rayfield/main.lua"))()
+local Rayfield = Knit.ui.new("Rayfield")()
 Flags = Rayfield.Flags
 
 local Window = Rayfield:CreateWindow({

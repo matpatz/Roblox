@@ -1,12 +1,13 @@
-local Services = loadstring(game:HttpGet(
-    "https://roblox-alpha-murex.vercel.app/src/Modules/Variables.lua"
-))()
+local Knit = shared.Knit
+local services = Knit.services
 
-local Game = Services["MarketplaceService"]:GetProductInfo(game.PlaceId).Name
+--// Services
+local ReplicatedStorage = services.ReplicatedStorage
 
-local Rayfield = loadstring(game:HttpGet(
-    "https://website-iota-ivory-12.vercel.app/code/loader/u/ui/rayfield.lua"
-))()
+--// Interface
+local Game = shared.game_name
+
+local Rayfield = Knit.ui.new("Rayfield")()
 
 local Window = Rayfield:CreateWindow({
     Name = Game,
@@ -76,13 +77,14 @@ end
 
 tabs.main:CreateLabel("Autofarm")
 
-local MoneyPickUp = Services["ReplicatedStorage"].RemoteEvents.MoneyPickedUp
+local MoneyPickUp = ReplicatedStorage.RemoteEvents.MoneyPickedUp
 local function ObtainMoney(Money)
     MoneyPickUp:FireServer(
         Money and Money or 1e5
     )
 end
 
+--[[
 tabs.main:CreateToggle({
     Name = "Autofarm Money",
     CurrentValue = false,
@@ -104,16 +106,17 @@ tabs.main:CreateToggle({
         end
     end,
 })
+]]
 
 tabs.main:CreateButton({
     Name = "Get a bazillion dollars",
     Callback = function()
-        ObtainMoney(1e32)
+        ObtainMoney(1e62)
     end,
 })
 
-local CanBuyUpgrade = Services["ReplicatedStorage"].RemoteFunctions.CanBuyUpgrade
-local PlateUpgrade = Services["ReplicatedStorage"].RemoteEvents.PlateUpgrade
+local CanBuyUpgrade = ReplicatedStorage.RemoteFunctions.CanBuyUpgrade
+local PlateUpgrade = ReplicatedStorage.RemoteEvents.PlateUpgrade
 
 local function UpgradeSpeed()
     if not CanBuyUpgrade:InvokeServer() then
@@ -174,7 +177,7 @@ local Eggs = {
 	"GalacticEggCapsule"
 }
 
-local EggOpened = Services["ReplicatedStorage"].RemoteFunctions.EggOpened
+local EggOpened = ReplicatedStorage.RemoteFunctions.EggOpened
 
 tabs.shop:CreateDropdown({
     Name = "Select Egg",
@@ -209,7 +212,7 @@ local Worlds = {
 	"LostJungle"
 }
 
-local TeleportToBiome = Services["ReplicatedStorage"].RemoteEvents.TeleportToBiome
+local TeleportToBiome = ReplicatedStorage.RemoteEvents.TeleportToBiome
 
 tabs.teleports:CreateDropdown({
     Name = "Model",

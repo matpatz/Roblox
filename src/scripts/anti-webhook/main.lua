@@ -1,43 +1,47 @@
-local Original = request
+--local Knit = shared.Knit
+--local wrappers = Knit.wrappers
 
-local BlockedUrls = {
+--local newcclosure = wrappers.newcclosure
+local getinfo = debug.getinfo
+local setinfo = debug.setinfo
+
+local request_info = getinfo(request)
+local ishooked_info = getinfo(isfunctionhooked)
+
+local blacklist = {
     ["discord.com/api/webhooks"] = true,
     ["discordapp.com/api/webhooks"] = true,
 }
 
-getgenv().request = newcclosure(function(Payload)
-    if type(Payload) ~= "table" then
-		return Original(Payload)
-	end
-    if type(Payload.Url) ~= "string" then
-		return Original(Payload)
-	end
-    if type(Payload.Method) ~= "string" then
-		return Original(Payload)
-	end
+local Old; Old = hookfunction(request, newcclosure(function(options)
+	local url = options.Url
 
-    for Domain in next, (BlockedUrls) do
-        if Payload.Url:find(Domain, 1, true) then
-            warn("Blocked webhook:", Payload.Url)
-            return {
-                Success = true,
-                StatusCode = 203,
-                Body = "",
-            }
-        end
-    end
+	options.Url = "https://example.com" -- incase it is a webhook dont let it fire
+	local original = Old(options) -- input validation
+	options.Url = url
 
-    if Payload.Method == "POST" then
-        local Body = Payload.Body
-        if Body:match("^[0-9A-Fa-f]+$") and #Body > 100 then
-            warn("Blocked POST body")
-            return {
-                Success = true,
-                StatusCode = 203,
-                Body = "",
-            }
-        end
-    end
+	for blacklisted in next, blacklist do
+		if url:find(blacklisted) then
+			return {
+                StatusMessage = "Could not resolve hostname", -- igbro
+                StatusCode = 0,
+                Success = false,
+                Headers = original.Headers,
+                Body = ""
+			}
+		end
+	end
+	return Old(options)
+end))
 
-    return Original(Payload)
+local Old2; Old2 = hookfunction(isfunctionhooked, function(func)
+	if func == request then
+		return false
+	end
+	return Old2(func)
 end)
+
+if setinfo then
+    setinfo(isfunctionhooked, ishooked_info)
+    setinfo(request, request_info)
+end

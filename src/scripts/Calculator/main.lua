@@ -1,6 +1,3 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
 local gui = Instance.new("ScreenGui", gethui() or game.CoreGui)
 gui.Name = "e" .. math.random(1e9, 2e9)
 gui.IgnoreGuiInset = true

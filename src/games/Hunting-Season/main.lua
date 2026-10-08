@@ -1,3 +1,7 @@
+--// Knit
+local Knit = shared.Knit
+local services = Knit.services
+
 local remote = require(game:GetService("ReplicatedStorage").Common.Replica.ReplicaShared.Remote)
 
 local get = (type(cloneref) == "function") and cloneref or function(x) return x end
@@ -13,8 +17,8 @@ local runs = get(game:GetService("RunService"))
 local hrp = players.LocalPlayer.Character.HumanoidRootPart
 local cam = workspace.CurrentCamera
 
-rep["Modules"]["Velocity"]["Settings"]["BanServiceSettings"]["BanDatastoreName"].Value = tostring(math.random(1e9, 2e9))
-rep["Modules"]["Velocity"]["Settings"]["BanServiceSettings"]["BanDefaultReason"].Value = "Sorry! but atleast I know this worked"
+--rep["Modules"]["Velocity"]["Settings"]["BanServiceSettings"]["BanDatastoreName"].Value = tostring(math.random(1e9, 2e9))
+--rep["Modules"]["Velocity"]["Settings"]["BanServiceSettings"]["BanDefaultReason"].Value = "Sorry! but atleast I know this worked"
 
 --[[ -- the module is broken
     local ban = require(rep.Modules.Velocity.Services.BanService)
@@ -28,7 +32,7 @@ rep["Modules"]["Velocity"]["Settings"]["BanServiceSettings"]["BanDefaultReason"]
 
 local gname = marketplace:GetProductInfo(game.PlaceId).Name
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))(); --local flags = Rayfield.Flags
+local Rayfield = Knit.ui.new("Rayfield")(); --local flags = Rayfield.Flags
 local Window = Rayfield:CreateWindow({
 	Name = gname,
 	LoadingTitle = "fuh you",
@@ -39,7 +43,7 @@ local combat = Window:CreateTab("Combat")
 
 combat:CreateLabel("Shoot")
 
-local aimbot = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/aimbot.lua"))()
+--local aimbot = loadstring(game:HttpGet("https://website-iota-ivory-12.vercel.app/code/loader/u/aimbot.lua"))()
 
 local function gclosest()
     local nearest, nearestDist = nil, math.huge

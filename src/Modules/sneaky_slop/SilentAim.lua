@@ -25,7 +25,7 @@ local get_id = loadstring(game:HttpGet("https://sneekysscripts.uk/Scripts/FOV_LI
 
 local SG = loadstring(game:HttpGet("https://sneekysscripts.uk/Scripts/NOTIFICATION_LIBRARY/unrestricted_main.luau"))();
 local GL = loadstring(game:HttpGet("https://sneekysscripts.uk/Scripts/GLOBAL_LISTENER_LIBRARY/main.luau"))();
-local Drawlib = loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/sneaky_slop/Fov.lua"))();
+local Drawlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/src/Modules/sneaky_slop/Fov.lua"))();
 local info = loadstring(game:HttpGet("https://sneekysscripts.uk/Scripts/FOV_LIBRARY/info.luau"))();
 local discord_link = "https://discord.gg/" .. info.discord_link;
 local key = code(info.ggKey);
@@ -142,7 +142,7 @@ return function(sFOV: number, tFunc: (origin: Vector3?) -> (Model | BasePart)?, 
         else
             SG["info"]("Discord server link: " .. discord_link);
         end;
-        loadstring(game:HttpGet("https://roblox-alpha-murex.vercel.app/src/Modules/sneaky_slop/request.lua"))();
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/src/Modules/sneaky_slop/request.lua"))();
     end;
 
     local e_close = function()

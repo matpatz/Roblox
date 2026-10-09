@@ -33,7 +33,15 @@ local function checklocal(path: string, filename: string)
     return error("required file content is missing, Knit.")
 end
 
+local loaded = {}
+
 Knit.require = function(path: string, filename: string, localize: boolean)
+    local key = `{path}/{filename}`
+
+    if loaded[key] ~= nil then
+        return loaded[key]
+    end
+
     local extension = ".lua"
     filename = `{filename}{extension}`
 
@@ -71,7 +79,10 @@ Knit.require = function(path: string, filename: string, localize: boolean)
         error("error compiling required script, Knit.")
     end
 
-    return compiled()
+    local value = compiled()
+    loaded[key] = value
+
+    return value
 end
 
 --@param1 Options: player, conmanager, whatnot
@@ -85,6 +96,7 @@ Knit.new = function(desiredmodules)
 		repeat task.wait() until bundlekey
 
         bundle[v] = bundlekey
+        Knit[v] = bundlekey
     end
 
     return bundle
@@ -95,6 +107,17 @@ Knit.v1 = function()
     local request = Knit.require("Modules/Knit/v1", "main")
     return request
 end
+
+-- set the module surface up here; Knit.require caches, so a client calling
+-- Knit.new for the same modules reuses these instead of loading them again
+Knit.new({
+    "instances",
+    "services",
+    "conmanager",
+    "scriptmanager",
+    "playermanager",
+    "ui",
+})
 
 return Knit
 

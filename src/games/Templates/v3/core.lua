@@ -4,7 +4,7 @@ local Knit = shared.Knit
 local utils = Knit.utils
 local services = Knit.services
 local scriptmanager = Knit.scriptmanager
-local playermanager = Knit.player
+local playermanager = Knit.playermanager
 
 local name = scriptmanager.name
 local config = scriptmanager.config.set(

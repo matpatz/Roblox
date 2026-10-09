@@ -19,41 +19,32 @@ local function random_string(length: number): string
     return table.concat(parts)
 end
 
-instances.new = function(classname: string, random_name: boolean?): Instance
+instances.new = function(classname: string): Instance
     local instance = Instance.new(classname)
-
-    if random_name then
-        instance.Name = random_string(16)
-    else
-        id += 1
-        instance.Name = tostring(id)
-    end
-
-    instance.Parent = secure_parent
-
-    if classname == "ScreenGui" then
-        instance.ResetOnSpawn = false
-    end
+    instance.Name = random_string(16)
     
     return instance
 end
 
-instances.get = function(target: Instance | string): Instance
-    local found_instance
-    if type(target) == "userdata" then
-        found_instance = secure_parent[target]
-    else -- string
-        found_instance = secure_parent[target]
+instances.get = function(target: Instance | string, unique_id: string): Instance
+    local Found: Instance?
+    if unique_id then
+        for i, v in target:GetChildren() do
+            Found = if v:GetDebugId() == unique_id then v else nil
+        end
+    else
+        Found = secure_parent[target]
     end
-    return found_instance
+    
+    return Found
 end
 
 instances.remove = function(instance: Instance)
     instance:Destroy()
 end
 
-instances.query = function(classname: string)
-    return game:QueryDescendants(classname)
+instances.query = function(parent: Instance, classname: string)
+    return parent:QueryDescendants(classname)
 end
 
 return instances

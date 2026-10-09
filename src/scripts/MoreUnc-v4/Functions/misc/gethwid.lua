@@ -1,6 +1,8 @@
 local Knit = shared.Knit
-local wrappers = Knit.wrappers
+local services = Knit.services
+
+local RbxAnalyticsService = services.RbxAnalyticsService
 
 return function()
-    wrappers.gethwid()
+    return RbxAnalyticsService:GetClientId()
 end

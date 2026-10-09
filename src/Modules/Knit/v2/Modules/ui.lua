@@ -25,13 +25,13 @@ ui.assign_ui_stroke = function(parent, thickness: number)
     return UiStroke
 end
 
+ui.make_hover_button = function(Button)
+end
+
 ui.destroy_ui_button = function(Button, ScreenGui)
     Button.MouseButton1Click:Connect(function()
     	ScreenGui:Destroy()
     end)
-end
-
-ui.hover_button = function(Button)
 end
 
 return ui

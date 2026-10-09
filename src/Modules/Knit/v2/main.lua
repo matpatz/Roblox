@@ -1,4 +1,5 @@
 local Knit = {}
+shared.Knit = Knit
 
 local defualts = {
     domains = {
@@ -12,13 +13,14 @@ local defualts = {
 local defualt_paths = {
     ["web"] = {
         modules = "Modules",
-        knit_modules = "Modules/Knit/v1/Modules",
+        knit_modules = "Modules/Knit/v2/Modules",
     },
     ["local"] = {
         directory = "voltex",
         configs = "v",
     }
 }
+Knit.defualt_paths = defualt_paths
 
 local function checklocal(path: string, filename: string)
     local ok, filecontent = pcall(function(...)
@@ -40,7 +42,7 @@ Knit.require = function(path: string, filename: string, localize: boolean)
     local ok, filecontent
     while not filecontent do
         attempts += 1
-        
+
         local currentdomain = defualts.domains[attempts]
         if not currentdomain then
             break
@@ -97,6 +99,8 @@ Knit.v1 = function()
     local request = Knit.require("Modules/Knit/v1", "main")
     return request
 end
+
+return Knit
 
 --[[
 

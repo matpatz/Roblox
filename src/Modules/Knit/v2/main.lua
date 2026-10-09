@@ -20,7 +20,7 @@ local defualt_paths = {
         configs = "v",
     }
 }
-Knit.defualt_paths = defualt_paths
+Knit.paths = defualt_paths
 
 local function checklocal(path: string, filename: string)
     local ok, filecontent = pcall(function(...)
@@ -75,10 +75,6 @@ Knit.require = function(path: string, filename: string, localize: boolean)
 end
 
 --@param1 Options: player, conmanager, whatnot
---[[
-    Could also be:
-    Knit[v] = bundlekey -- but ya
-]]
 Knit.new = function(desiredmodules)
     local bundle = {}
     for i, v in desiredmodules do
@@ -88,7 +84,7 @@ Knit.new = function(desiredmodules)
         )
 		repeat task.wait() until bundlekey
 
-        bundle[bundlekey] = bundlekey
+        bundle[v] = bundlekey
     end
 
     return bundle

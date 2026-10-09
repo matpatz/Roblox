@@ -1,4 +1,7 @@
 local keymanager = {}
+
+local Knit = shared.Knit
+
 setmetatable(keymanager, {
     __index = function(_, Index)
         if Index == "keylist" then
@@ -21,15 +24,17 @@ until
 local UserInputService = game:GetService("UserInputService")
 
 local function manage(KeybindList, Callback)
-    for i,v in next KeybindList do
-        if UserInputService:IsKeyDown(v) then
+    for _, Keybind in KeybindList do
+        if UserInputService:IsKeyDown(Keybind) then
             Callback()
         end
     end
 end
 
 keymanager.new = function(Key, KeybindList, Callback)
-    conmanager.connect(Key, 0.1, manage) -- manage is not passed any params
+    conmanager.connect(Key, 0.1, function()
+        manage(KeybindList, Callback)
+    end)
 end
 
 return keymanager

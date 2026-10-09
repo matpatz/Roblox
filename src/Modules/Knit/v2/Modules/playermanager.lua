@@ -14,7 +14,7 @@ end
 
 playermanager.LocalPlayer = LocalPlayer
 
-LocalPlayer.CharacterAdded:Connect(NewCharacter)
-update()
+LocalPlayer.CharacterAdded:Connect(update)
+update(Character)
 
 return playermanager

@@ -1,4 +1,4 @@
-local script = shared.script
+local script: string = shared.script
 	-- "scripts/ascii"
 	-- "games/catastrophia"
 
@@ -12,6 +12,8 @@ local Knit = loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/
 local Modules = Knit.new({
     "wrappers"
 })
+
+local wrappers = Modules.wrappers
 
 local cloneref = wrappers[{
     type = "cache",

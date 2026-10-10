@@ -1,32 +1,38 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
-local dir, velocity = 0, 2000
+local Direction, Velocity = 0, 2000
 
-local input = game:GetService("UserInputService")
-input.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseWheel then
-        if input.Position.Z > 0 then
-            dir = 1
-        elseif input.Position.Z < 0 then
-            dir = -1
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+UserInputService.InputChanged:Connect(function(InputType)
+    if InputType.UserInputType == Enum.UserInputType.MouseWheel then
+        if InputType.Position.Z > 0 then
+			print("up")
+            Direction = 1
+        elseif InputType.Position.Z < 0 then
+			print("down")
+            Direction = -1
         end
     end
 end)
 
-input.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton3 then
-        dir = 0
+UserInputService.InputBegan:Connect(function(InputType)
+    if InputType.UserInputType == Enum.UserInputType.MouseButton3 then
+		print("inactive")
+        Direction = 0
     end
 end)
 
-local function get() local char = game:GetService("Players").LocalPlayer.Character return char and char:FindFirstChild("HumanoidRootPart") end
+local function HumanoidRootPart()
+	local char = Players.LocalPlayer.Character
+	return char and char:FindFirstChild("HumanoidRootPart")
+end
 
-game:GetService("RunService").Heartbeat:Connect(function()
-    local hrp = get()
+RunService.Heartbeat:Connect(function()
+    local hrp = HumanoidRootPart()
     if hrp then
-        if dir ~= 0 then
-            hrp.AssemblyLinearVelocity = Vector3.new(0, velocity * dir, 0)
+        if Direction ~= 0 then
+            hrp.AssemblyLinearVelocity = Vector3.new(0, Velocity * Direction, 0)
         else
             hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
         end

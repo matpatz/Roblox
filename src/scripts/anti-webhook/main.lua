@@ -4,21 +4,23 @@ local betterfunctions = Knit.betterfunctions
 
 local getinfo = debug.getinfo
 local setinfo = debug.setinfo
-
 local hookfunction = betterfunctions.hookfunction
+
+local config = {
+	BlockAll = true -- dont prompt accept/decline
+}
 
 local blacklist = {
     ["discord.com/api/webhooks"] = true,
     ["discordapp.com/api/webhooks"] = true,
 }
 
-local a = false
-
-local function _warn(webhook: string)
-	if a then
-		return
+local function _warn(webhook: string): boolean
+	if config.BlockAll then
+		return true
 	end
-	a = true
+
+	local accepted: boolean? = nil
 
 	local ScreenGui = instances.new("ScreenGui", true)
 
@@ -56,18 +58,20 @@ local function _warn(webhook: string)
 	Decline.Text = "Decline"
 
 	Accept.Activated:Connect(function()
+		accepted = true
 		ScreenGui:Destroy()
-
-		return true
 	end)
 
 	Decline.Activated:Connect(function()
+		accepted = false
 		ScreenGui:Destroy()
-
-		return false
 	end)
 
-	a = false
+	repeat
+		task.wait()
+	until accepted ~= nil
+
+	return accepted
 end
 
 local request_info = getinfo(request)
@@ -83,9 +87,9 @@ local Old; Old = hookfunction(request, function(options)
 			continue
 		end
 		
-		repeat 
-			task.wait()
-		until _warn(url) ~= nil
+		if _warn(url) then
+			return Old(options)
+		end
 
 		return {
 			StatusMessage = "Could not resolve hostname", -- igbro

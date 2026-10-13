@@ -189,6 +189,7 @@ Knit.conmanager = Knit.require(script, "conmanager")
 Knit.scriptmanager = Knit.require(script, "scriptmanager")
 
 Knit.bundle = Knit.require(script, "bundle")
+Knit.betterfunctions = Knit.require(script, "betterfunctions")
 
 return Knit
 

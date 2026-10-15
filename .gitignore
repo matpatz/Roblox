@@ -1,8 +1,10 @@
 .history
 .vercel
+.wrangler
 .vscode/
 
 *.env
+.dev.vars*
 discord-webhooks.secret.json
 hits.json
 

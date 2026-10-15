@@ -13,6 +13,7 @@ local function update(NewCharacter)
 end
 
 playermanager.LocalPlayer = LocalPlayer
+playermanager.PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 LocalPlayer.CharacterAdded:Connect(update)
 update(Character)

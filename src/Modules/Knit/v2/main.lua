@@ -89,6 +89,10 @@ end
 Knit.new = function(desiredmodules)
     local bundle = {}
     for i, v in desiredmodules do
+        if Knit[v] then
+            return Knit[v]
+        end
+
         local bundlekey = Knit.require(
             defualt_paths["web"].knit_modules,
             v

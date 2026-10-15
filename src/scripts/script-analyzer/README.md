@@ -1,0 +1,1 @@
+Continuation of https://scriptblox.com/script/Script-Analyzer-Open-Source_303 (https://raw.githubusercontent.com/debug420/rbx-script-analyzer/main/Script-Analyzer.lua)

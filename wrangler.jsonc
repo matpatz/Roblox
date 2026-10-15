@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "vtex-win",
+  "account_id": "c1bd52325e0567709f11b3fcb0f1e8a8",
+  "compatibility_date": "2026-10-15",
+  "main": "cloudflare/worker.js",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "run_worker_first": true
+  },
+  "vars": {
+    "API_ORIGIN": "https://www.voltex.website"
+  },
+  "routes": [
+    { "pattern": "vtex.win", "custom_domain": true }
+  ]
+}

@@ -1,0 +1,41 @@
+# Mirror of .gitignore (Vercel only deploys tracked files, so anything ignored
+# there is not currently public) plus build/deploy files that must not be served.
+
+# VCS, local dev, editor state
+.git
+.github
+.history
+.vercel
+.vscode
+.wrangler
+node_modules
+
+# Secrets
+*.env
+.env*
+discord-webhooks.secret.json
+hits.json
+
+# Gitignored dev-only paths
+/Scripts/
+/workspace/
+/tests/
+/scripts-util/
+/schema/
+/supabase/
+/TODO
+*-ignore*
+**/source/
+**/source.lua
+
+# Serverless functions and Worker source (not static assets)
+/api/
+/cloudflare/
+
+# Build/deploy config
+wrangler.jsonc
+vercel.json
+package.json
+package-lock.json
+.gitignore
+.assetsignore

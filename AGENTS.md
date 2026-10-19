@@ -6,7 +6,9 @@ if I didnt tell you to do something dont do it, no stupid ui
 potassium workspace: C:\Users\$env:USERPROFILE\AppData\Local\Potassium\workspace
     instead of reading the workspace contents with some commandprompt command just use execute_script: listfiles("")
 
-I perfer you use the Scripts directory when available over the mcp server
+the MCP may shutdown any time so it would be preferable to write any useful files locally (in the Scripts folder of whatever game)
+Do not use the mcp for simple shit like pure-local code testing, for code that does not interact with the actual game in any way (require, FindFirstChild, etc)
+    - you can figure it out yourself, its basic luau bro
 
 please stop using fucking Core for every single function
     its only supposed to be for Toggles/features inside of a Interface/ui callback
@@ -26,5 +28,3 @@ if not a or type(a.Body) ~= "string" then
     error("bad lil body")
 end
 ``` -- because body will never not exist/not be a string if `a` does not exist
-
-the MCP may shutdown any time so it would be preferable to write any useful files locally (in the Scripts folder of whatever game)

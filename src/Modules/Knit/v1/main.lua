@@ -64,6 +64,7 @@ end
 -- stale module -- better than loading nothing, and the disk cache below is
 -- fresher whenever it exists.
 local HOSTS = {
+    "https://vtex.win",
     "https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main",
     "https://cdn.jsdelivr.net/gh/matpatz/Roblox@main"
 }

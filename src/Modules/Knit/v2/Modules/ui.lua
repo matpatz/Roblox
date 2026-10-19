@@ -1,7 +1,7 @@
 local ui = {}
 
 local Knit = shared.Knit
-local instances = Knit.require("Modules/Knit/v1/Modules", "instances")
+local instances = Knit.instances
 
 -- @param1: Obsidian/Rayfield
 ui.new = function(Library: string)

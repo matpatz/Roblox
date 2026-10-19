@@ -12,7 +12,7 @@ end)
 
 shared.name = if ok and name then name else "Unknown"
 
-local Knit = loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/src/Modules/Knit/init.lua"))()
+local Knit = loadstring(game:HttpGet("https://vtex.win/src/Modules/Knit/init.lua"))()
 repeat task.wait() until Knit and Knit.wrappers and Knit.services and Knit.git -- and whatever
 
 local wrappers = Knit.wrappers
@@ -48,8 +48,8 @@ if not success then
     --warn("Execution log failed:", err)
 end
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/scriptblox.lua"))()
+loadstring(game:HttpGet("https://vtex.win/scriptblox.lua"))()
 
 if not (shared.Webhook and shared.Webhook.Disabled) and shared.webhook_disabled ~= true then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/webhook.lua"))()
+    loadstring(game:HttpGet("https://vtex.win/webhook.lua"))()
 end

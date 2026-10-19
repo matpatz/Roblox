@@ -1,5 +1,5 @@
 local services = {}
-local cloneref = cloneref and cloneref or function(x)
+cloneref = cloneref or function(x) -- globalizes for all scripts
 	return x -- what exec doesnt have cloneref? idk maybe solara or jjsploit ha-ha
 end
 

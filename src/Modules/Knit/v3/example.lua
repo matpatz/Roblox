@@ -1,3 +1,3 @@
-Knit.new({"yourmodules"}):then(function()
+Knit.new({"yourmodules"}):complete(function()
     Aimbot = Knit.GetService("Aimbot")
 end)

@@ -3,6 +3,7 @@ shared.Knit = Knit
 
 local defualts = {
     domains = {
+        "https://vtex.win",
         "https://gitlab.com/voltex-group3/voltex-project/-/raw/main",
         "https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main",
         "https://www.voltex.website",
@@ -89,18 +90,24 @@ end
 Knit.new = function(desiredmodules)
     local bundle = {}
     for i, v in desiredmodules do
-        if Knit[v] then
-            return Knit[v]
+        local module = Knit[v]
+
+        if not module then
+            module = Knit.require(
+                defualt_paths["web"].knit_modules,
+                v
+            )
+
+            -- a module that returns nothing is broken; erroring here beats
+            -- waiting forever on the caller's side
+            if not module then
+                error(`module returned nothing: {v}`, 2)
+            end
+
+            Knit[v] = module
         end
 
-        local bundlekey = Knit.require(
-            defualt_paths["web"].knit_modules,
-            v
-        )
-		repeat task.wait() until bundlekey
-
-        bundle[v] = bundlekey
-        Knit[v] = bundlekey
+        bundle[v] = module
     end
 
     return bundle
@@ -115,8 +122,10 @@ end
 -- set the module surface up here; Knit.require caches, so a client calling
 -- Knit.new for the same modules reuses these instead of loading them again
 Knit.new({
-    "instances",
+    -- instances pulls gethui, which reads Knit.services.CoreGui, so services
+    -- has to be up first
     "services",
+    "instances",
     "conmanager",
     "scriptmanager",
     "playermanager",

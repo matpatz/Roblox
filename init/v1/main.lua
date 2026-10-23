@@ -50,6 +50,6 @@ end
 
 loadstring(game:HttpGet("https://vtex.win/scriptblox.lua"))()
 
-if not (shared.Webhook and shared.Webhook.Disabled) and shared.webhook_disabled ~= true then
+if shared.DisableWebhook ~= true then
     loadstring(game:HttpGet("https://vtex.win/webhook.lua"))()
 end

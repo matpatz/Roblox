@@ -189,7 +189,7 @@ Knit.ui = Knit.require(script, "ui")
 Knit.conmanager = Knit.require(script, "conmanager")
 Knit.scriptmanager = Knit.require(script, "scriptmanager")
 
-Knit.bundle = Knit.require(script, "bundle")
+Knit.bundle = Knit.require("Modules/init/v2", "Bundler")
 Knit.betterfunctions = Knit.require(script, "betterfunctions")
 
 return Knit

@@ -25,7 +25,7 @@ local gethwid = wrappers[{
     name = "gethwid"
 }]
 
-local Bundler = Knit.require("Modules/Bundler/v1", "main")
+local Bundler = Knit.require("Modules/init/v2", "Bundler")
 
 local ok1, err = pcall(function()
     task.spawn(function()
@@ -60,6 +60,6 @@ end
 
 loadstring(game:HttpGet("https://vtex.win/scriptblox.lua"))()
 
-if not (shared.Webhook and shared.Webhook.Disabled) then
+if shared.DisableWebhook ~= true then
     loadstring(game:HttpGet("https://vtex.win/webhook.lua"))()
 end

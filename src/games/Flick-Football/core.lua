@@ -1,163 +1,106 @@
--- // this_game — score solver
--- src/games/this_game/core.lua
---
--- Soccer pool: you shoot one of your discs, it knocks the ball, the ball has to
--- end up in the opponent's goal. The game ships its own deterministic physics
--- (Shared.Sim.SoccerSim) and keeps the live board on the client, so this does
--- NOT guess: it replays candidate shots through the real simulation and only
--- fires one that provably scores.
---
--- It fires through the match session's own shoot handler, not by sending the
--- Shot packet itself. That matters: the shooter's client runs the resolve
--- locally and reports TurnResolved, which is what makes the point register and
--- the board animate. Sending the packet directly leaves the turn unresolved.
---
--- It aims outwards from the goal: the first candidate is the shot that sends
--- the ball straight at the goal mouth, and it only works away from that aim
--- until MinimumRun samples in a row score. So it reacts in a handful of
--- simulations and takes the shot a player would have taken, instead of some
--- wild bank off a rail. It yields on a time budget so the game keeps its frame
--- rate while it searches.
-
 -- // Services
-
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- // Modules
+const SoccerSim = require(ReplicatedStorage.Shared.Sim.SoccerSim)
+const GameConfig = require(ReplicatedStorage.Shared.Config.GameConfig)
 
-const Knit = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"))
-const Shared = ReplicatedStorage:WaitForChild("Shared")
-const SoccerSim = require(Shared.Sim.SoccerSim)
-const GameConfig = require(Shared.Config.GameConfig)
-
--- // Types
-
-export type Shot = {
-	Disc: number,
-	DirX: number,
-	DirY: number,
-	Power: number,
-	Time: number, -- seconds until the ball crosses the line
-	Run: number, -- how many neighbouring angles score the same shot
-}
-
-export type SolverConfig = {
-	TargetGoal: number?, -- 1 = goal at y < 0, 2 = goal at y > FieldH
-	MyDiscs: { number }?, -- disc indices we may shoot
-	Powers: { number }?, -- powers to try, in the order tried
-	AngleStep: number?, -- degrees between samples inside the ball cone
-	MinimumRun: number?, -- scoring samples in a row needed to take the shot
-	BankStep: number?, -- degrees when sweeping the whole circle as a fallback
-	BankPowers: { number }?,
-	MaxTime: number?, -- give up on one shot after this many simulated seconds
-	Budget: number?, -- seconds of solving to do per frame before yielding
-	Fire: boolean?, -- shoot through the match session once a shot is found
-}
-
--- // Config
-
--- Everything here is in the board's local space: our discs are always 1..5 and
--- the goal we attack is always goal 1, whichever side we were given.
+-- // config
 const config = {
-	TargetGoal = 1,
-	MyDiscs = { 1, 2, 3, 4, 5 },
-	Powers = { 1, 0.8 },
-	AngleStep = 0.5,
-	MinimumRun = 2,
+	Targets = { 0, -0.55, 0.55, -1, 1 }, -- fractions of the goal mouth
+	Depths = { 20, 70 }, -- aim this far past the goal line, not at it
+	PowerScale = 0.75,
 	BankStep = 6,
-	BankPowers = { 1 },
-	MaxTime = 7,
-	Budget = 0.008,
-	Fire = true,
+	BankSims = 800, -- a blocked lane isnt worth more of the turn than this
+	Budget = 0.1, -- solve for this long before handing the frame back
 }
+
+const Timestep = GameConfig.FixedTimestep
+const Mouth = GameConfig.GoalWidth / 2 - GameConfig.BallRadius
+const Contact = GameConfig.DiscRadius + GameConfig.BallRadius - 2
 
 local core = {}
-core.config = config
 
 -- // Session
 
--- The live match (OnlineMatch online, LocalMatch against the AI) owns the board
--- and the turn state. Shooting through it is what makes the whole turn resolve.
+-- the live match isnt reachable through a controller, so grab the instance off
+-- the gc. our discs are always 1..5 and we always score in goal 1, mirroring is
+-- handled by the game itself
 local Cached = nil
 
-local function Session()
-	if Cached ~= nil and Cached._board ~= nil then
+local function Find()
+	if not getgc then
+		return nil
+	end
+
+	local Fallback = nil
+
+	for _, Object in getgc(true) do
+		if type(Object) == "table" and rawget(Object, "_myTurn") ~= nil then
+			const Board = rawget(Object, "_board")
+
+			if type(Board) == "table" and Board.GetBodies ~= nil then
+				if Object._phase == "turn" then
+					return Object
+				end
+
+				Fallback = Fallback or Object
+			end
+		end
+	end
+
+	return Fallback
+end
+
+local NextScan = 0
+
+function core.Session()
+	if Cached ~= nil and Cached._phase ~= "over" then
 		return Cached
 	end
 
-	const Ok, Result = pcall(function()
-		return Knit.GetController("GameController")._session
-	end)
-	Cached = if Ok then Result else nil
+	if os.clock() < NextScan then
+		return nil
+	end
+
+	NextScan = os.clock() + 1
+	Cached = Find()
 
 	return Cached
 end
 
--- True while the server says it is our turn to shoot.
 function core.IsMyTurn(): boolean
-	const Live = Session()
-	if Live == nil then
-		return false
-	end
-	if Live._myTurn ~= nil then
-		return Live._phase == "turn" and Live._myTurn == true
-	end
-	return Live._phase == "turn" and Live._turnSide == 1
-end
+	const Live = core.Session()
 
--- // Board
-
--- The live board, cloned so the searches can't touch the real one.
-function core.Board(): { any }?
-	const Live = Session()
-	if Live == nil or Live._board == nil then
-		return nil
-	end
-
-	const Source = Live._board:GetBodies()
-	const Bodies = SoccerSim.newBodies()
-	for Index, Body in Bodies do
-		const Entry = Source[Index]
-		if Entry ~= nil then
-			Body.x, Body.y = Entry.x, Entry.y
-			Body.vx, Body.vy = 0, 0
-		end
-	end
-
-	return Bodies
+	return Live ~= nil and Live._phase == "turn" and Live._myTurn == true
 end
 
 -- // Simulation
 
 local LastYield = os.clock()
 
--- One simulation costs ~2ms, so hand the frame back after every Budget of
--- solving; the search takes longer but the game keeps its frame rate.
 local function Breathe()
-	const Now = os.clock()
-	if Now - LastYield >= config.Budget then
+	if os.clock() - LastYield >= config.Budget then
 		LastYield = os.clock()
 		task.wait()
 	end
 end
 
--- Replay a shot on a copy of the board; returns whether it scores for us and
--- how long the ball took to cross the line.
-local function Play(Bodies: { any }, Disc: number, DirX: number, DirY: number, Power: number): (boolean, number)
+local function Play(Bodies, Order, Disc, DirX, DirY, Power)
 	Breathe()
 
 	const Trial = SoccerSim.clone(Bodies)
 	SoccerSim.applyShot(Trial, Disc, DirX, DirY, Power)
 
 	local Time = 0
-	while Time < config.MaxTime do
-		const Info = SoccerSim.step(Trial, GameConfig.FixedTimestep)
-		Time += GameConfig.FixedTimestep
+	while Time < GameConfig.ResolveMaxTime do
+		const Info = SoccerSim.step(Trial, Timestep, Order)
+		Time += Timestep
 
-		const Goal = Info.goal
-		if Goal ~= nil and Goal ~= 0 then
-			return Goal == config.TargetGoal, Time
+		if Info.goal and Info.goal ~= 0 then
+			return Info.goal == 1, Time
 		end
+
 		if SoccerSim.settled(Trial) then
 			break
 		end
@@ -166,189 +109,150 @@ local function Play(Bodies: { any }, Disc: number, DirX: number, DirY: number, P
 	return false, Time
 end
 
+-- the ball leaves along the line of centres, so the disc has to touch it on the
+-- far side: aim at where the disc centre is at contact, and follow the game's
+-- own distance -> power curve
+local function Aim(Bodies, Disc, TargetX, TargetY)
+	const Ball = Bodies[SoccerSim.BALL]
+	const DeltaX, DeltaY = Ball.x - TargetX, Ball.y - TargetY
+	const Distance = math.sqrt(DeltaX * DeltaX + DeltaY * DeltaY)
+
+	if Distance < 1e-4 then
+		return 0, 1, 0.7
+	end
+
+	const FromX = Ball.x + DeltaX / Distance * Contact - Bodies[Disc].x
+	const FromY = Ball.y + DeltaY / Distance * Contact - Bodies[Disc].y
+	const Length = math.sqrt(FromX * FromX + FromY * FromY)
+
+	if Length < 1e-4 then
+		return 0, 1, 0.7
+	end
+
+	return FromX / Length, FromY / Length, math.clamp(Length / 380 + 0.5, 0.45, 1)
+end
+
+local function Targets()
+	const List = {}
+
+	for _, Fraction in config.Targets do
+		for _, Depth in config.Depths do
+			table.insert(List, { GameConfig.FieldW / 2 + Fraction * Mouth, -Depth })
+		end
+	end
+
+	return List
+end
+
+local function Discs(Bodies)
+	const Ball = Bodies[SoccerSim.BALL]
+	const List = {}
+
+	for Index = 1, 5 do
+		const Body = Bodies[Index]
+
+		if Body ~= nil and not Body.off then
+			const DeltaX, DeltaY = Body.x - Ball.x, Body.y - Ball.y
+			table.insert(List, { Index = Index, Distance = DeltaX * DeltaX + DeltaY * DeltaY })
+		end
+	end
+
+	table.sort(List, function(A, B)
+		return A.Distance < B.Distance
+	end)
+
+	return List
+end
+
 -- // Search
 
--- Sample the cone of directions that actually reach the ball, starting from the
--- one that sends the ball straight at the goal (the shot a player would take)
--- and working outwards. Returns as soon as MinimumRun samples in a row score,
--- which usually means a handful of simulations instead of hundreds.
-local function ScanCone(Bodies: { any }, Disc: number, Ball: any, Goal: { x: number, y: number }): Shot?
-	const Body = Bodies[Disc]
-	const DeltaX = Ball.x - Body.x
-	const DeltaY = Ball.y - Body.y
-	const Distance = math.sqrt(DeltaX * DeltaX + DeltaY * DeltaY)
-	const Reach = GameConfig.DiscRadius + GameConfig.BallRadius
+function core.Find()
+	const Live = core.Session()
 
-	if Distance <= Reach or Distance > 4000 then
+	if Live == nil then
 		return nil
 	end
 
-	const Base = math.atan2(DeltaY, DeltaX)
-	const Spread = math.asin(math.min(1, Reach / Distance))
-	const Steps = math.max(4, math.ceil(math.deg(Spread) * 2 / config.AngleStep))
-
-	-- The aim that punts the ball at the goal mouth.
-	const Wanted = math.atan2(Goal.y - Ball.y, Goal.x - Ball.x)
-	const Middle = math.clamp((Wanted - (Base - Spread)) / (Spread * 2) * Steps, 0, Steps)
-
-	for _, Power in config.Powers do
-		local Count = 0
-		local Total = 0
-
-		for Index = 0, Steps do
-			-- middle, then one either side, then two either side, ...
-			const Offset = math.ceil(Index / 2) * (if Index % 2 == 1 then 1 else -1)
-			const Step = Middle + Offset
-			if Step < 0 or Step > Steps then
-				continue
-			end
-
-			const Angle = Base - Spread + (Step / Steps) * Spread * 2
-			const Scored, Time = Play(Bodies, Disc, math.cos(Angle), math.sin(Angle), Power)
-
-			if not Scored then
-				Count, Total = 0, 0
-				continue
-			end
-
-			Count += 1
-			Total += Step
-			if Count >= config.MinimumRun then
-				const Best = Total / Count
-				const Aim = Base - Spread + (Best / Steps) * Spread * 2
-				return {
-					Disc = Disc,
-					DirX = math.cos(Aim),
-					DirY = math.sin(Aim),
-					Power = Power,
-					Time = Time,
-					Run = Count,
-				}
-			end
-		end
-	end
-
-	return nil
-end
-
--- Fallback: when the ball can't be hit straight at the goal, sweep the whole
--- circle and let the disc bank off a rail first.
-local function ScanBank(Bodies: { any }, Disc: number): Shot?
-	const Steps = math.ceil(360 / config.BankStep)
-
-	for _, Power in config.BankPowers do
-		for Step = 0, Steps - 1 do
-			const Angle = math.rad(Step * config.BankStep)
-			const Scored, Time = Play(Bodies, Disc, math.cos(Angle), math.sin(Angle), Power)
-			if Scored then
-				return {
-					Disc = Disc,
-					DirX = math.cos(Angle),
-					DirY = math.sin(Angle),
-					Power = Power,
-					Time = Time,
-					Run = 1,
-				}
-			end
-		end
-	end
-
-	return nil
-end
-
--- Every shot that scores on the current board, best first. The disc nearest
--- the ball is tried first (the shot a player would actually take), and bank
--- shots are only searched when no direct hit on the ball can score.
-function core.Find(Overrides: SolverConfig?): { Shot }
-	if Overrides ~= nil then
-		for Key, Value in Overrides do
-			if Value ~= nil then
-				config[Key] = Value
-			end
-		end
-	end
-
-	const Bodies = core.Board()
-	assert(Bodies ~= nil, "core: no match session yet")
-
+	const Board = Live._board
+	const Bodies = SoccerSim.clone(Board:GetBodies())
+	const Order = rawget(Board, "_simOrder")
+	const Candidates = Discs(Bodies)
+	const Shots = Targets()
 	const Ball = Bodies[SoccerSim.BALL]
-	const Goal = if config.TargetGoal == 1
-		then { x = GameConfig.FieldW / 2, y = 0 }
-		else { x = GameConfig.FieldW / 2, y = GameConfig.FieldH }
 
-	const Discs = table.clone(config.MyDiscs)
-	table.sort(Discs, function(A: number, B: number): boolean
-		const LeftX, LeftY = Bodies[A].x - Ball.x, Bodies[A].y - Ball.y
-		const RightX, RightY = Bodies[B].x - Ball.x, Bodies[B].y - Ball.y
-		return LeftX * LeftX + LeftY * LeftY < RightX * RightX + RightY * RightY
-	end)
-
-	const Shots: { Shot } = {}
-
-	for _, Disc in Discs do
-		if not Bodies[Disc].off then
-			const Shot = ScanCone(Bodies, Disc, Ball, Goal)
-			if Shot ~= nil then
-				table.insert(Shots, Shot)
-			end
-		end
+	if Ball.y < 0 then
+		return nil -- ball still in the net from the last goal
 	end
 
-	if #Shots == 0 then
-		for _, Disc in Discs do
-			if not Bodies[Disc].off then
-				const Shot = ScanBank(Bodies, Disc)
-				if Shot ~= nil then
-					table.insert(Shots, Shot)
-					break
+	for _, Entry in Candidates do
+		local Best = nil
+
+		for _, Target in Shots do
+			const DirX, DirY, Power = Aim(Bodies, Entry.Index, Target[1], Target[2])
+
+			for _, Try in { Power, 1, Power * config.PowerScale } do
+				const Scored, Time = Play(Bodies, Order, Entry.Index, DirX, DirY, Try)
+
+				if Scored and (Best == nil or Time < Best.Time) then
+					Best = { Disc = Entry.Index, DirX = DirX, DirY = DirY, Power = Try, Time = Time }
 				end
 			end
 		end
+
+		if Best ~= nil then
+			return Best
+		end
 	end
 
-	table.sort(Shots, function(A: Shot, B: Shot): boolean
-		if A.Run ~= B.Run then
-			return A.Run > B.Run
-		end
-		return A.Time < B.Time
-	end)
+	-- lane blocked: bounce the ball off a rail and into the goal
+	local Sims = 0
 
-	return Shots
+	for _, Entry in Candidates do
+		for Degrees = 0, 360 - config.BankStep, config.BankStep do
+			if Sims >= config.BankSims then
+				return nil
+			end
+
+			const Radians = math.rad(Degrees)
+			const DirX, DirY, Power = Aim(Bodies, Entry.Index, Ball.x + math.cos(Radians) * 200, Ball.y + math.sin(Radians) * 200)
+
+			Sims += 1
+
+			const Scored, Time = Play(Bodies, Order, Entry.Index, DirX, DirY, Power)
+
+			if Scored then
+				return { Disc = Entry.Index, DirX = DirX, DirY = DirY, Power = Power, Time = Time }
+			end
+		end
+	end
+
+	return nil
 end
 
 -- // Fire
 
--- Hand the shot to the match session. It sends the Shot packet, simulates the
--- resolve locally and reports TurnResolved back to the server, exactly like a
--- real drag would. Safe to call out of turn: the session ignores it.
-function core.Shoot(Shot: Shot): boolean
-	const Live = Session()
-	if Live == nil then
+-- goes through the session's own shoot handler so the client runs the resolve
+-- and reports TurnResolved, same as a real drag
+function core.Shoot(Shot): boolean
+	const Live = core.Session()
+
+	if Live == nil or not core.IsMyTurn() then
 		return false
 	end
 
-	const Fire = Live._onMyShoot or Live._onPlayerShoot
-	if Fire == nil then
-		return false
-	end
-
-	Fire(Live, Shot.Disc, Shot.DirX, Shot.DirY, Shot.Power)
+	Live:_onMyShoot(Shot.Disc, Shot.DirX, Shot.DirY, Shot.Power)
 
 	return true
 end
 
--- Solve and take the shot. Returns the shot it fired, or nil if nothing scores.
-function core.Solve(Overrides: SolverConfig?): Shot?
+function core.Solve()
 	if not core.IsMyTurn() then
 		return nil
 	end
 
-	const Shot = core.Find(Overrides)[1]
-	if Shot == nil then
-		return nil
-	end
+	const Shot = core.Find()
 
-	if config.Fire and not core.Shoot(Shot) then
+	if Shot == nil or not core.Shoot(Shot) then
 		return nil
 	end
 

@@ -1,9 +1,9 @@
---// Knit
+-- // Knit
 local Knit = shared.Knit
-local services = Knit.services
+local conmanager = Knit.conmanager
 
 -- // Modules
-const core = assert(Knit.require("games/Flick-Football", "core")) -- TODO: Validate this script works
+const core = Knit.require("games/Flick-Football", "core")
 
 -- // config
 local config = {
@@ -19,68 +19,73 @@ local cheat = {
 }
 local Core = cheat.Core
 
--- // Core
+-- // Score
 
 Core.Score = function()
 	return core.Solve()
 end
 
--- // Interface
-
-const Rayfield = Knit.ui.new("Rayfield")()
-
-const Window = Rayfield:CreateWindow({
-	Name = "this game",
-	LoadingTitle = "Loading...",
-	LoadingSubtitle = "subtitle",
-})
-
-const tabs = {
-	Score = Window:CreateTab("Score"),
-	Settings = Window:CreateTab("Settings"),
-}
-
--- // Score
-
-tabs.Score:CreateButton({
-	Name = "Score Goal",
-	Callback = function()
-		Core.Score()
-	end,
-})
-
-tabs.Score:CreateToggle({
-	Name = "Auto Score Goal",
-	CurrentValue = false,
-	Flag = "AutoScoreGoal",
-	Callback = function(Value)
-		config.Goals.AutoScore = Value
-	end,
-})
-
 -- // Auto score
 
--- One shot per turn, and only while it is our turn. Nothing moves during our
--- turn, so a second solve would just repeat the first one: if the board has no
--- goal in it, that turn simply goes unplayed.
+-- one shot per turn: nothing moves during our turn, so a second solve would just
+-- repeat the first one
 local WasMyTurn = false
 
-task.spawn(function()
-	while true do
-		task.wait(0.5)
+Core.Toggle_AutoScore = function(Enabled)
+	conmanager.disconnect("AutoScore")
 
-		if not config.Goals.AutoScore or not core.IsMyTurn() then
+	if not Enabled then
+		WasMyTurn = false
+
+		return
+	end
+
+	conmanager.connect("AutoScore", 0.5, function()
+		if not core.IsMyTurn() then
 			WasMyTurn = false
-			continue
+
+			return
 		end
 
 		if WasMyTurn then
-			continue
+			return
 		end
 
 		-- fresh turn: let the board settle before solving
 		WasMyTurn = true
 		task.wait(config.Goals.Delay)
 		Core.Score()
-	end
-end)
+	end)
+end
+
+-- // Interface
+
+const Rayfield = Knit.ui.new("Rayfield")()
+const Window = Rayfield:CreateWindow({
+	Name = "Flick Football",
+	LoadingTitle = "Loading...",
+	LoadingSubtitle = "subtitle",
+})
+
+const Main = Window:CreateTab("Main")
+
+-- // Main
+
+Main:CreateToggle({
+	Name = "Auto Score Goal",
+	CurrentValue = config.Goals.AutoScore,
+	Flag = "AutoScoreGoal",
+	Callback = function(Value)
+		config.Goals.AutoScore = Value
+		Core.Toggle_AutoScore(Value)
+	end,
+})
+
+Main:CreateDivider()
+
+Main:CreateButton({
+	Name = "Score Goal",
+	Callback = function()
+		Core.Score()
+	end,
+})

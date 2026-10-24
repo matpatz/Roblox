@@ -36,6 +36,7 @@ hits.json
 wrangler.jsonc
 vercel.json
 package.json
+script.py
 package-lock.json
 .gitignore
 .assetsignore

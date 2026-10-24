@@ -41,7 +41,6 @@ local Identifier = gethwid()
 local Executor = identifyexecutor and identifyexecutor() or nil
 
 local ok2, err2 = pcall(function()
-    error("ur mom")
     local response = request({
         Url = "https://roblox-alpha-murex.vercel.app/api/v1/executions",
         Method = "POST",

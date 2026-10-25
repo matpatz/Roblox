@@ -17,7 +17,7 @@ discord-webhooks.secret.json
 hits.json
 
 # Gitignored dev-only paths
-/Scripts/
+**/Scripts/
 /workspace/
 /tests/
 /scripts-util/

@@ -33,6 +33,9 @@ __pycache__/
 *.pyc
 *.pid
 
+# bundled output from script2.py
+/bundle.lua
+
 # Serverless functions and Worker source (not static assets)
 /api/
 /cloudflare/

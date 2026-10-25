@@ -44,31 +44,99 @@ local function isRobloxUi(item)
 	return not config.IncludeRoblox.Value and RobloxGui ~= nil and item:IsDescendantOf(RobloxGui)
 end
 
--- a single unwritable instance must not abort the whole pass
-local function setFont(item, font)
-	return pcall(function()
-		item.Font = font
+-- roblox's icon fonts draw a glyph from the label's text, so forcing a text
+-- font on them turns the icon into its name ("magnifying-glass"); only labels
+-- already using one of Roblox's text fonts are safe to touch
+local TextFamilies = {}
+local HasFontFace = pcall(FontFace.new, Enum.Font.Garamond)
+
+if HasFontFace then
+	for _, font in Enum.Font:GetEnumItems() do
+		local ok, face = pcall(FontFace.new, font)
+
+		if ok then
+			TextFamilies[face.Family] = true
+		end
+	end
+end
+
+local FamilyFilter = HasFontFace and next(TextFamilies) ~= nil
+
+local function fontFaceOf(item)
+	if not HasFontFace then
+		return nil
+	end
+
+	local ok, face = pcall(function()
+		return item.FontFace
 	end)
+
+	return if ok then face else nil
+end
+
+local function isTextFont(item)
+	if not FamilyFilter then
+		return true
+	end
+
+	local face = fontFaceOf(item)
+
+	return face == nil or face.Family == "" or TextFamilies[face.Family] == true
+end
+
+-- a single unwritable instance must not abort the whole pass; the record is
+-- either an Enum.Font or a FontFace, whichever the label carried
+local function setFont(item, font)
+	if typeof(font) == "EnumItem" then
+		return pcall(function()
+			item.Font = font
+		end)
+	end
+
+	return pcall(function()
+		item.FontFace = font
+	end)
+end
+
+local function release(item, restore)
+	local original = old[item]
+
+	if original == nil then
+		return
+	end
+
+	if restore then
+		setFont(item, original)
+	end
+
+	old[item] = nil
 end
 
 local function process(item)
 	if isRobloxUi(item) then
-		local original = old[item]
-
-		if original then
-			setFont(item, original)
-
-			old[item] = nil
-		end
+		release(item, true)
 
 		return
 	end
 
-	if old[item] == nil then
-		old[item] = item.Font
+	-- the game swapped in an icon font, so it owns the label from here on
+	if not isTextFont(item) then
+		release(item, false)
+
+		return
 	end
 
-	setFont(item, config.Font.Value)
+	local face = fontFaceOf(item)
+
+	if old[item] == nil then
+		old[item] = face or item.Font
+	end
+
+	if face then
+		setFont(item, FontFace.new(config.Font.Value, face.Weight, face.Style))
+	else
+		setFont(item, config.Font.Value)
+	end
 end
 
 local function processTree(root)

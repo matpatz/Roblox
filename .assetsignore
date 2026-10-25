@@ -28,6 +28,11 @@ hits.json
 **/source/
 **/source.lua
 
+# local dev artifacts
+__pycache__/
+*.pyc
+*.pid
+
 # Serverless functions and Worker source (not static assets)
 /api/
 /cloudflare/

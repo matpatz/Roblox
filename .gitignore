@@ -19,7 +19,6 @@ hits
 TODO
 __pycache__/
 *.pyc
-*.pid
 
 bundle
 bundle.lua

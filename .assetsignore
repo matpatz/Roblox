@@ -31,7 +31,6 @@ hits.json
 # local dev artifacts
 __pycache__/
 *.pyc
-*.pid
 
 # bundled output from script2.py
 /bundle.lua

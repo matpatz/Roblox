@@ -8,8 +8,13 @@ local CoreGui = game:GetService("CoreGui")
 
 local CHUNK_SIZE = (200000 - 1) -- 200000 max char limit on TextLabels
 
+local uwu = CoreGui:FindFirstChild("uwu")
+if uwu then
+	uwu:Destroy()
+end
+
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "uw and wu"
+ScreenGui.Name = "uwu"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
@@ -56,4 +61,4 @@ while pos <= #pi do
 	end
 end
 
-print("Created", index, "labels")
+print(`Created {#pi} labels`)

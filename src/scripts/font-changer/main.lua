@@ -5,6 +5,7 @@
 local Knit = shared.Knit
 local services = Knit.services
 local conmanager = Knit.conmanager
+local scriptmanager = Knit.scriptmanager
 
 --// services
 local CoreGui = services.CoreGui
@@ -14,65 +15,202 @@ local PlayerGui = Players.LocalPlayer.PlayerGui
 local RobloxGui = CoreGui:FindFirstChild("RobloxGui")
 
 --// config
-getgenv()["font"] = Enum.Font.Garamond
-	-- the font of your choice
+local config = scriptmanager.config.set({
+	Font = { Value = Enum.Font.Garamond },
+		-- the font forced onto every text object
 
-getgenv()["active"] = true
-	-- if it's false: revert changes
+	Active = { Value = true },
+		-- false reverts every change
 
-local IncludeRoblox = true
-	-- items parented to CoreGui.RobloxGui (Roblox's ui)
+	IncludeRoblox = { Value = true },
+		-- CoreGui.RobloxGui items (Roblox's own ui)
+})
 
-local Containers = { CoreGui, PlayerGui }
+local TextClasses = "TextLabel, TextButton, TextBox"
+
+local Containers = {
+	["font_changer/core"] = CoreGui,
+	["font_changer/player"] = PlayerGui,
+}
 
 local old = {}
 
+-- a second run of this script has to take over instead of stacking: it would
+-- otherwise record the first run's font as every item's "original", and turning
+-- that second run off can then never unfont anything
+local Previous = getgenv().FontChanger
+
+local function isRobloxUi(item)
+	return not config.IncludeRoblox.Value and RobloxGui ~= nil and item:IsDescendantOf(RobloxGui)
+end
+
+-- a single unwritable instance must not abort the whole pass
+local function setFont(item, font)
+	return pcall(function()
+		item.Font = font
+	end)
+end
+
 local function process(item)
-	if IncludeRoblox and item.Parent == RobloxGui then
+	if isRobloxUi(item) then
+		local original = old[item]
+
+		if original then
+			setFont(item, original)
+
+			old[item] = nil
+		end
+
 		return
 	end
 
-	old[item] = old[item] or item.Font
-	item.Font = getgenv()["font"]
+	if old[item] == nil then
+		old[item] = item.Font
+	end
+
+	setFont(item, config.Font.Value)
 end
 
-local function main()
-	for _, Container in Containers do
-		for _, item in Container:QueryDescendants("TextLabel, TextButton, TextBox") do
-			process(item)
-		end
+local function processTree(root)
+	if root:IsA(TextClasses) then
+		process(root)
+	end
+
+	for _, item in root:QueryDescendants(TextClasses) do
+		process(item)
 	end
 end
 
 local function revert()
 	for item, font in old do
-		item.Font = font
+		if item.Parent == nil or setFont(item, font) then
+			old[item] = nil
+		end
+	end
+end
 
-		old[item] = nil
+local function sweep()
+	if not config.Active.Value then
+		revert()
+
+		return
+	end
+
+	for _, container in Containers do
+		processTree(container)
+	end
+end
+
+-- the poll thread dies for good if anything throws in it, so it never runs bare
+local function poll()
+	local ok, err = pcall(sweep)
+
+	if not ok then
+		warn("font_changer: " .. tostring(err))
 	end
 end
 
 --// connections
-conmanager.connect("font_changer/core", CoreGui.DescendantAdded, function(item)
-	if getgenv()["active"] then
-		process(item)
+local destroyUi
+
+local function shutdown()
+	config.Active.Value = false
+	revert()
+
+	conmanager.disconnect("font_changer/core")
+	conmanager.disconnect("font_changer/player")
+	conmanager.disconnect("font_changer/loop")
+
+	if destroyUi then
+		destroyUi()
 	end
-end)
+end
 
-conmanager.connect("font_changer/player", PlayerGui.DescendantAdded, function(item)
-	if getgenv()["active"] then
-		process(item)
-	end
-end)
+if Previous and Previous.shutdown then
+	pcall(Previous.shutdown)
+end
 
-getgenv()["processed"] = false
+getgenv().FontChanger = {
+	shutdown = shutdown,
+	config = config,
+}
 
-conmanager.connect("font_changer/loop", 2, function()
-	if getgenv()["active"] then
-		main()
-	else
-		revert()
-	end
+for key, container in Containers do
+	conmanager.connect(key, container.DescendantAdded, function(item)
+		if not config.Active.Value then
+			return
+		end
 
-	getgenv()["processed"] = getgenv()["active"]
-end)
+		processTree(item)
+	end)
+end
+
+conmanager.connect("font_changer/loop", 2, poll)
+
+--// ui
+local Rayfield = Knit.ui.new("Rayfield")()
+
+local Window = Rayfield:CreateWindow({
+	Name = "Font Changer",
+	LoadingTitle = "Font Changer",
+	LoadingSubtitle = "voltex",
+	ConfigurationSaving = { Enabled = false },
+})
+
+local Main = Window:CreateTab("Main", 4483362458)
+local a = Window:CreateTab("a")
+
+destroyUi = function()
+	Rayfield:Destroy()
+end
+
+
+Main:CreateSection("Font")
+
+local FontNames = {}
+for _, Font in Enum.Font:GetEnumItems() do
+	table.insert(FontNames, Font.Name)
+end
+
+Main:CreateDropdown({
+	Name = "Font",
+	Options = FontNames,
+	CurrentOption = { config.Font.Value.Name },
+	MultipleOptions = false,
+	Flag = "",
+
+	Callback = function(Selected)
+		local Font = Enum.Font[Selected[1]]
+
+		if not Font then
+			return
+		end
+
+		config.Font.Value = Font
+		sweep()
+	end,
+})
+
+Main:CreateSection("Settings")
+
+Main:CreateToggle({
+	Name = "Active",
+	CurrentValue = config.Active.Value,
+	Flag = "",
+
+	Callback = function(Value)
+		config.Active.Value = Value
+		sweep()
+	end,
+})
+
+Main:CreateToggle({
+	Name = "Include Roblox UI",
+	CurrentValue = config.IncludeRoblox.Value,
+	Flag = "",
+
+	Callback = function(Value)
+		config.IncludeRoblox.Value = Value
+		sweep()
+	end,
+})

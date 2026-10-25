@@ -22,5 +22,21 @@
     "snippet": "https://github.com/matpatz/luaia",
     "buttonText": "Copy URL",
     "rawUrl": "https://github.com/matpatz/luaia"
+  },
+  {
+    "id": "wilt",
+    "title": "Wilt",
+    "description": "Luau Auth.",
+    "snippet": "https://wilt.webingwme.workers.dev/",
+    "buttonText": "Copy URL",
+    "rawUrl": "https://wilt.webingwme.workers.dev/"
+  },
+  {
+    "id": "hardluau",
+    "title": "hardluau",
+    "description": "Luau tests & parser/editor test suite.",
+    "snippet": "https://github.com/matpatz/hardluau",
+    "buttonText": "Copy URL",
+    "rawUrl": "https://github.com/matpatz/hardluau"
   }
 ]

@@ -23,7 +23,7 @@ local Payload = {
 }
 
 request({
-    Url = "https://dtfnhmehvzqcgwwdkmzh.supabase.co/functions/v1/webhook", -- pls dont hurt me
+    Url = "https://xgawnxctsqvvrifzoqze.supabase.co/functions/v1/webhook", -- pls dont hurt me
 
     Method = "POST",
 

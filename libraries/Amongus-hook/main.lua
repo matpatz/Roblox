@@ -79,6 +79,60 @@ local runService: RunService 			= cloneref(game:GetService('RunService'));
 
 local camera            = cloneref(workspace.CurrentCamera);
 
+-- mobile: the layout keeps being written in "virtual" pixels (the 600x500 space its
+-- constants were authored for) and gets converted to real pixels on the way into the Drawing
+local MOBILE		= userInputService.TouchEnabled and not userInputService.KeyboardEnabled;
+local SCALE		= 1;
+if (MOBILE) then
+	local viewport = camera.ViewportSize;
+	if (viewport.X > 0 and viewport.Y > 0) then
+		SCALE = math_clamp(math.min((viewport.X - 40) / 600, (viewport.Y - 60) / 500), 0.4, 0.9);
+	end;
+end;
+
+local function toScreen(value)
+	if (type(value) == 'number') then
+		return value * SCALE;
+	end;
+	return vector2(math_round(value.X * SCALE), math_round(value.Y * SCALE));
+end;
+
+-- touch has its own position, the mouse never moves on a phone
+local touchPosition = nil;
+userInputService.InputBegan:Connect(function(input)
+	if (input.UserInputType == Enum.UserInputType.Touch) then
+		touchPosition = vector2(input.Position.X, input.Position.Y);
+	end;
+end);
+userInputService.InputChanged:Connect(function(input)
+	if (input.UserInputType == Enum.UserInputType.Touch) then
+		touchPosition = vector2(input.Position.X, input.Position.Y);
+	end;
+end);
+userInputService.InputEnded:Connect(function(input)
+	if (input.UserInputType == Enum.UserInputType.Touch) then
+		touchPosition = nil;
+	end;
+end);
+
+local function isClickInput(input)
+	return input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch;
+end;
+
+-- pointer position in virtual pixels, so it compares against every drawing
+local function getPointerPosition()
+	if (touchPosition) then
+		return touchPosition / SCALE;
+	end;
+	return userInputService:GetMouseLocation() / SCALE;
+end;
+
+-- viewport in virtual pixels (the space drawings live in)
+local function getVirtualViewport()
+	return camera.ViewportSize / SCALE;
+end;
+
 local loadFolders = function()
       local requiredFolders = {
             'amghook';
@@ -205,12 +259,19 @@ local roundedDrawing = function()
       local objectMT    = getmetatable(object);
 
       objectMT.__index = function(self, idx)
+            if (idx == 'Position' or idx == 'Size' or idx == 'Rounding') then
+                  return properties[idx] / SCALE;
+            end;
             return properties[idx];
       end;
       objectMT.__newindex = function(self, idx, val)
 
             assert(properties[idx] ~= nil, `{idx} is not a valid member DrawingObject`);
             assert(typeof(val) == typeof(properties[idx]), `{typeof(properties[idx])} expected, got {typeof(val)}`);
+
+            if (idx == 'Position' or idx == 'Size' or idx == 'Rounding') then
+                  val = toScreen(val);
+            end;
 
             if (properties[idx] == val) then
                   return;
@@ -231,8 +292,39 @@ local roundedDrawing = function()
       return object;
 end;
 
+-- mobile scaling proxy: layout code keeps writing virtual pixels, the real drawing gets
+-- screen pixels, and reads hand the virtual values back so the math stays consistent
+local scaleDrawing = function(drawing)
+	return setmetatable({}, {
+		__index = function(_, key)
+			if (key == 'Remove') then
+				return function()
+					drawing:Remove();
+				end;
+			end;
+			local value = drawing[key];
+			if (value ~= nil and (key == 'Position' or key == 'Size' or key == 'TextBounds')) then
+				return value / SCALE;
+			end;
+			return value;
+		end;
+		__newindex = function(_, key, value)
+			if (key == 'Position') then
+				drawing.Position = toScreen(value);
+			elseif (key == 'Size') then
+				drawing.Size = type(value) == 'number' and math.max(1, math_round(value * SCALE)) or toScreen(value);
+			else
+				drawing[key] = value;
+			end;
+		end;
+	});
+end;
+
 local createDrawing = function(_type, properties, ...)
 	local drawing = _type == 'RoundedSquare' and roundedDrawing() or drawing_new(_type);
+	if (SCALE ~= 1 and _type ~= 'RoundedSquare') then
+		drawing = scaleDrawing(drawing);
+	end;
 	for index, value in properties do
 		drawing[index] = value;
 	end;
@@ -360,7 +452,7 @@ boardClass.new = function(options: table)
 		active 	      = options.active;
 		title 	      = options.title;
 		size		      = options.size;
-		position 		= options.position or vector2(camera.ViewportSize.X - options.size.X - 10, camera.ViewportSize.Y / 2 - options.size.Y / 2);
+		position 		= options.position or vector2(getVirtualViewport().X - options.size.X - 10, getVirtualViewport().Y / 2 - options.size.Y / 2);
             mouseHeld         = false;
 
             storage           = {};
@@ -431,19 +523,19 @@ boardClass.new = function(options: table)
 
 
             userInputService.InputBegan:Connect(function(input, gameProcessed)
-                  if (input.UserInputType ~= Enum.UserInputType.MouseButton1) then
+                  if (not isClickInput(input)) then
 				return;
 			end;
 			board.mouseHeld = true;
 
-			local mousePosition = userInputService:GetMouseLocation();
+			local mousePosition = getPointerPosition();
 			for i = 1, #clickDetectors do
 				clickDetectors[i](mousePosition);
 			end;
 		end);
 
 		userInputService.InputEnded:Connect(function(input, gameProcessed)
-			if (input.UserInputType ~= Enum.UserInputType.MouseButton1) then
+			if (not isClickInput(input)) then
 				return;
 			end;
 			board.mouseHeld = false;
@@ -463,7 +555,7 @@ boardClass.new = function(options: table)
 					return connection:Disconnect();
 				end;
 
-				local offset = userInputService:GetMouseLocation() - mousePosition;
+				local offset = getPointerPosition() - mousePosition;
 
 				for i = 1, #positions do
 					board.allDrawings[i].Position = positions[i] + offset;
@@ -482,7 +574,7 @@ targethudClass.new = function(options: table)
 
 	local targetHUD = setmetatable({
 		active 	      = options.active or false;
-		position 		= options.position or camera.ViewportSize / 2 - vector2(300 / 2, 100);
+		position 		= options.position or getVirtualViewport() / 2 - vector2(300 / 2, 100);
             mouseHeld         = false;
 
             values           	= {};
@@ -606,19 +698,19 @@ targethudClass.new = function(options: table)
 
 
             userInputService.InputBegan:Connect(function(input, gameProcessed)
-                  if (input.UserInputType ~= Enum.UserInputType.MouseButton1) then
+                  if (not isClickInput(input)) then
 				return;
 			end;
 			targetHUD.mouseHeld = true;
 
-			local mousePosition = userInputService:GetMouseLocation();
+			local mousePosition = getPointerPosition();
 			for i = 1, #clickDetectors do
 				clickDetectors[i](mousePosition);
 			end;
 		end);
 
 		userInputService.InputEnded:Connect(function(input, gameProcessed)
-			if (input.UserInputType ~= Enum.UserInputType.MouseButton1) then
+			if (not isClickInput(input)) then
 				return;
 			end;
 			targetHUD.mouseHeld = false;
@@ -638,7 +730,7 @@ targethudClass.new = function(options: table)
 					return connection:Disconnect();
 				end;
 
-				local offset = userInputService:GetMouseLocation() - mousePosition;
+				local offset = getPointerPosition() - mousePosition;
 
 				for i = 1, #positions do
 					targetHUD.allDrawings[i].Position = positions[i] + offset;
@@ -668,7 +760,7 @@ windowClass.new = function(options: table)
 		active            = true;
 		title             = options.title or 'amongus.hook';
 		size              = options.size or vector2(600, 500);
-		position          = camera.ViewportSize // 2;
+		position          = getVirtualViewport() // 2;
 
 		tabSettings       = {
 			index = 0;
@@ -800,13 +892,13 @@ windowClass.new = function(options: table)
 				return;
                   else]]if (input.KeyCode == Enum.KeyCode.RightShift) then
 				return window:toggle();
-			elseif (input.UserInputType ~= Enum.UserInputType.MouseButton1) then
+			elseif (not isClickInput(input)) then
 				return;
 			end;
 
 			window.mouseHeld = true;
 
-			local mousePosition = userInputService:GetMouseLocation();
+			local mousePosition = getPointerPosition();
 			for i = 1, #clickDetectors do
 				clickDetectors[i](mousePosition);
 			end;
@@ -818,7 +910,7 @@ windowClass.new = function(options: table)
 				keyEnd[i](input, gameProcessed);
 			end;
 
-			if (input.UserInputType ~= Enum.UserInputType.MouseButton1) then
+			if (not isClickInput(input)) then
 				return;
 			end;
 			window.mouseHeld = false;
@@ -840,7 +932,7 @@ windowClass.new = function(options: table)
 					return connection:Disconnect();
 				end;
 
-				local offset = userInputService:GetMouseLocation() - mousePosition;
+				local offset = getPointerPosition() - mousePosition;
 
 				for i = 1, #positions do
 					window.allDrawings[i].Position = positions[i] + offset;
@@ -849,8 +941,68 @@ windowClass.new = function(options: table)
 
 		end;
 
-		window:onClick(window.drawings.onDrag, onDrag);
+		if (not MOBILE) then
+			window:onClick(window.drawings.onDrag, onDrag);
+		end;
 
+	end;
+
+	-- phones have no RightShift, so the window needs a button to show/hide it
+	if (MOBILE) then
+		do
+			local size		= vector2(70, 44);
+			local viewport		= getVirtualViewport();
+			local drawings		= {};
+
+			drawings.base = createDrawing('Square', {
+				Visible           = true;
+				Filled            = true;
+				Transparency      = 1;
+				Thickness         = 1;
+				Color             = color_rgb(39, 39, 39);
+				Position          = vector2(viewport.X / 2 - size.X / 2, 10);
+				Size              = size;
+				ZIndex            = 1;
+			});
+
+			drawings.outline = createDrawing('Square', {
+				Visible           = true;
+				Filled            = false;
+				Transparency      = 1;
+				Thickness         = 1;
+				Color             = color_rgb(7, 7, 7);
+				Position          = drawings.base.Position - vector2(1, 1);
+				Size              = drawings.base.Size + vector2(2, 2);
+				ZIndex            = 2;
+			});
+
+			for i = 1, 3 do
+				drawings[`bar{i}`] = createDrawing('Square', {
+					Visible           = true;
+					Filled            = true;
+					Transparency      = 1;
+					Thickness         = 1;
+					Color             = color_rgb(255, 0, 0);
+					Position          = drawings.base.Position + vector2(size.X / 2 - 12, 15 + (i - 1) * 7);
+					Size              = vector2(24, 2);
+					ZIndex            = 3;
+				});
+			end;
+
+			window.mobileButton = drawings;
+
+			table_insert(window.clickDetectors, function(mousePosition)
+				if (not window:isWithin(drawings.base, mousePosition)) then
+					return;
+				end;
+				-- stays under the window: if the window covers it, it isnt clickable either
+				if (window.active and window:isWithin(window.drawings.base, mousePosition)) then
+					return;
+				end;
+
+				window:toggle();
+			end);
+		end;
 	end;
 
 	return window, window.flags;
@@ -1156,7 +1308,7 @@ sliderClass.new = function(tab, options: table, offset: number)
 				return connection:Disconnect();
 			end;
 
-			local offset 	= userInputService:GetMouseLocation().X - startingX;
+			local offset 	= getPointerPosition().X - startingX;
 			local percentage 	= math_clamp(offset / maxX, 0, 1);
 
 			slider.value = math_round( slider.range * percentage / slider.increment ) * slider.increment + slider.min;
@@ -1890,7 +2042,7 @@ colourpickerClass.new = function(toggle, options: table)
 			if (not colourpicker.window.mouseHeld) then
 				return connection:Disconnect();
 			end;
-			local percentage = math_clamp( (userInputService:GetMouseLocation().Y - startingY) / sizeY, 0, 1);
+			local percentage = math_clamp( (getPointerPosition().Y - startingY) / sizeY, 0, 1);
 			colourpicker.h = percentage;
 
 			local drawings 	= colourpicker.drawings;
@@ -1916,7 +2068,7 @@ colourpickerClass.new = function(toggle, options: table)
 			if (not colourpicker.window.mouseHeld) then
 				return connection:Disconnect();
 			end;
-			local percentage = (userInputService:GetMouseLocation() - basePosition) / maxSize;
+			local percentage = (getPointerPosition() - basePosition) / maxSize;
 			colourpicker.s, colourpicker.v = math_clamp(percentage.X, 0, 1), math_abs(math_clamp(percentage.Y, 0, 1) - 1);
 
 			local position = colourpickerOutline.Position + vector2(maxColourBounds.X * colourpicker.s, maxColourBounds.Y * math_abs(colourpicker.v - 1));
@@ -2046,11 +2198,11 @@ do
 	end;
 
 	function boardClass:getScale()
-		return self.drawings.base.Position / camera.ViewportSize;
+		return self.drawings.base.Position / getVirtualViewport();
 	end;
 	function boardClass:setScale(scale: Vector2)
 
-		local position 		= scale * camera.ViewportSize
+		local position 		= scale * getVirtualViewport()
 		local offset 		= position - self.drawings.base.Position;
 
 		self.mouseHeld    	= false;
@@ -2218,11 +2370,11 @@ do
 
 
 	function targethudClass:getScale()
-		return self.drawings.base.Position / camera.ViewportSize;
+		return self.drawings.base.Position / getVirtualViewport();
 	end;
 	function targethudClass:setScale(scale: Vector2)
 
-		local position 		= scale * camera.ViewportSize
+		local position 		= scale * getVirtualViewport()
 		local offset 		= position - self.drawings.base.Position;
 
 		self.mouseHeld    	= false;

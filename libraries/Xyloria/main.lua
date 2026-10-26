@@ -14,6 +14,9 @@ Xyloria.Version = "1.1.0"
 
 local TEXT_SIZE = 11
 
+-- phones/tablets: no hardware keyboard, so the RightShift toggle is unreachable
+local MOBILE = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
 Xyloria.Themes = {
 	Teal = {
 		Background = Color3.fromRGB(15, 15, 15),
@@ -269,6 +272,33 @@ function Window:_connect(signal, callback)
 	return connection
 end
 
+-- touch taps are unreliable through Activated (scroll gestures eat them), so fire on
+-- touch down and drop the duplicate Activated that follows the release
+function Window:_tap(button, callback)
+	local touchHeld = false
+	self:_connect(button.InputBegan, function(input)
+		if input.UserInputType ~= Enum.UserInputType.Touch then
+			return
+		end
+		touchHeld = true
+		callback()
+	end)
+	self:_connect(button.InputEnded, function(input)
+		if input.UserInputType ~= Enum.UserInputType.Touch then
+			return
+		end
+		task.delay(0.1, function()
+			touchHeld = false
+		end)
+	end)
+	self:_connect(button.Activated, function()
+		if touchHeld then
+			return
+		end
+		callback()
+	end)
+end
+
 function Window:_bind(object, property, key)
 	table.insert(self._binds, { object, property, key })
 	object[property] = self.Theme[key]
@@ -370,6 +400,9 @@ function Window:Minimize()
 	self.Minimized = true
 	self._token += 1
 	local token = self._token
+	if self._mobileToggle then
+		self._mobileToggle.Visible = false
+	end
 	self._savedPosition = self._root.Position
 	self._rootTween = apply(self._root, { Position = self._pill.Position }, false, Ease.In)
 	apply(self._introScale, { Scale = 0.2 }, false, Ease.In)
@@ -405,6 +438,9 @@ function Window:Restore()
 			return
 		end
 		self._pill.Visible = false
+		if self._mobileToggle then
+			self._mobileToggle.Visible = true
+		end
 	end)
 end
 
@@ -570,7 +606,7 @@ function Window:CreateTab(first)
 
 	table.insert(self.Tabs, tab)
 
-	self:_connect(button.Activated, function()
+	self:_tap(button, function()
 		self:SelectTab(tab)
 	end)
 	self:_connect(button.MouseEnter, function()
@@ -704,7 +740,7 @@ function Window:Notify(first, ...)
 		end)
 	end
 
-	closeButton.Activated:Connect(dismiss)
+	self:_tap(closeButton, dismiss)
 	task.delay(duration, dismiss)
 
 	return dismiss
@@ -845,7 +881,7 @@ function Tab:CreateButton(first, ...)
 		fire(self.Callback)
 	end
 
-	window:_connect(hitbox.Activated, function()
+	window:_tap(hitbox, function()
 		object:Fire()
 	end)
 
@@ -933,7 +969,7 @@ function Tab:CreateToggle(first, ...)
 		return self.Value
 	end
 
-	window:_connect(hitbox.Activated, function()
+	window:_tap(hitbox, function()
 		toggle:Set(not toggle.Value)
 	end)
 
@@ -1229,7 +1265,7 @@ function Tab:CreateDropdown(first, ...)
 				Parent = list,
 			})
 			corner(optionButton, 4)
-			window:_connect(optionButton.Activated, function()
+			window:_tap(optionButton, function()
 				dropdown:Set(option)
 				dropdown:Toggle(false)
 			end)
@@ -1262,7 +1298,7 @@ function Tab:CreateDropdown(first, ...)
 	window:_flag(dropdown, config.Flag, dropdown.Value)
 	rebuild()
 
-	window:_connect(header.Activated, function()
+	window:_tap(header, function()
 		dropdown:Toggle()
 	end)
 
@@ -1405,7 +1441,7 @@ function Tab:CreateKeybind(first, ...)
 		return self.Value
 	end
 
-	window:_connect(button.Activated, function()
+	window:_tap(button, function()
 		bind.Listening = not bind.Listening
 		window._listening = bind.Listening
 		paint(false)
@@ -1488,6 +1524,60 @@ function Xyloria:CreateWindow(config)
 	})
 	self.Gui = gui
 
+	-- mobile replacement for the RightShift toggle, pinned to the top center and
+	-- kept under the window in z order so it never sits on top of the ui
+	if MOBILE then
+		local toggle = create("Frame", {
+			Name = "MobileToggle",
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(0.5, 0, 0, 32),
+			Size = UDim2.fromOffset(46, 30),
+			BackgroundTransparency = 1,
+			ZIndex = 0,
+			Parent = gui,
+		})
+		local toggleBody = create("CanvasGroup", {
+			Name = "Body",
+			Size = UDim2.fromScale(1, 1),
+			BorderSizePixel = 0,
+			ZIndex = 0,
+			Parent = toggle,
+		})
+		self:_bind(toggleBody, "BackgroundColor3", "Background")
+		corner(toggleBody, 5)
+		local toggleBorder = create("Frame", {
+			Position = UDim2.fromOffset(1, 1),
+			Size = UDim2.new(1, -2, 1, -2),
+			BackgroundTransparency = 1,
+			ZIndex = 2,
+			Parent = toggleBody,
+		})
+		corner(toggleBorder, 4)
+		self:_bind(stroke(toggleBorder, theme.Stroke), "Color", "Stroke")
+		local toggleMark = create("Frame", {
+			Name = "Mark",
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromOffset(8, 8),
+			Rotation = 45,
+			BorderSizePixel = 0,
+			ZIndex = 1,
+			Parent = toggleBody,
+		})
+		self:_bind(toggleMark, "BackgroundColor3", "Accent")
+		corner(toggleMark, 1)
+		local toggleButton = newButton({
+			Name = "Hitbox",
+			Size = UDim2.fromScale(1, 1),
+			ZIndex = 3,
+			Parent = toggleBody,
+		})
+		self._mobileToggle = toggle
+		self:_tap(toggleButton, function()
+			self:Toggle()
+		end)
+	end
+
 	local root = create("Frame", {
 		Name = "Window",
 		AnchorPoint = Vector2.new(0.5, 0.5),
@@ -1530,7 +1620,12 @@ function Xyloria:CreateWindow(config)
 		if screen.X <= 0 or screen.Y <= 0 then
 			return
 		end
-		fit.Scale = math.clamp(math.min((screen.X - 24) / size.X, (screen.Y - 24) / size.Y), 0.5, 1)
+		if MOBILE then
+			local scale = math.min((screen.X - 48) / size.X, (screen.Y - 48) / size.Y)
+			fit.Scale = math.clamp(scale, 0.32, 0.75)
+		else
+			fit.Scale = math.clamp(math.min((screen.X - 24) / size.X, (screen.Y - 24) / size.Y), 0.5, 1)
+		end
 	end
 	updateScale()
 	self:_connect(gui:GetPropertyChangedSignal("AbsoluteSize"), updateScale)
@@ -1654,10 +1749,10 @@ function Xyloria:CreateWindow(config)
 			apply(bar, { BackgroundColor3 = self.Theme.Text }, false, Ease.Fast)
 		end
 	end)
-	self:_connect(minimizeButton.Activated, function()
+	self:_tap(minimizeButton, function()
 		self:Minimize()
 	end)
-	self:_connect(closeButton.Activated, function()
+	self:_tap(closeButton, function()
 		self:Close()
 	end)
 
@@ -1812,7 +1907,7 @@ function Xyloria:CreateWindow(config)
 	end)
 
 	self:_connect(topbar.InputBegan, function(input)
-		if not isPointer(input) or self.Minimized or self._closing then
+		if MOBILE or not isPointer(input) or self.Minimized or self._closing then
 			return
 		end
 		if self._rootTween then
@@ -1829,30 +1924,36 @@ function Xyloria:CreateWindow(config)
 		end)
 	end)
 
-	self:_connect(pillButton.InputBegan, function(input)
-		if not isPointer(input) then
-			return
-		end
-		local half = Vector2.new(pillWidth, 40) / 2
-		local startCenter = toOffset(pill.Position, gui.AbsoluteSize)
-		local moved = false
-		startDrag(input, function(position, reference)
-			local delta = position - reference
-			if not moved and delta.Magnitude < 6 then
+	if MOBILE then
+		self:_tap(pillButton, function()
+			self:Restore()
+		end)
+	else
+		self:_connect(pillButton.InputBegan, function(input)
+			if not isPointer(input) then
 				return
 			end
-			moved = true
-			local screen = gui.AbsoluteSize
-			local target = startCenter + delta
-			local x = math.clamp(target.X, half.X, math.max(half.X, screen.X - half.X))
-			local y = math.clamp(target.Y, half.Y, math.max(half.Y, screen.Y - half.Y))
-			pill.Position = UDim2.fromOffset(x, y)
-		end, function()
-			if not moved then
-				self:Restore()
-			end
+			local half = Vector2.new(pillWidth, 40) / 2
+			local startCenter = toOffset(pill.Position, gui.AbsoluteSize)
+			local moved = false
+			startDrag(input, function(position, reference)
+				local delta = position - reference
+				if not moved and delta.Magnitude < 6 then
+					return
+				end
+				moved = true
+				local screen = gui.AbsoluteSize
+				local target = startCenter + delta
+				local x = math.clamp(target.X, half.X, math.max(half.X, screen.X - half.X))
+				local y = math.clamp(target.Y, half.Y, math.max(half.Y, screen.Y - half.Y))
+				pill.Position = UDim2.fromOffset(x, y)
+			end, function()
+				if not moved then
+					self:Restore()
+				end
+			end)
 		end)
-	end)
+	end
 
 	self:_connect(UserInputService.InputBegan, function(input, processed)
 		if processed or self._listening or not self.ToggleKey then

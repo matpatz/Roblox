@@ -1,34 +1,40 @@
-local failed_response = {
-    Success = false,
-    StatusCode = 500,
-    StatusMessage = "somethingnotgood",
-    Body = nil,
-    Headers = {}, -- TODO: Get offical potassium headers
-}
+local Knit = shared.Knit
+local services = Knit.services
 
-return function(options)
-    local Method = options.Method
-    local Url = options.Url
-
-    if not Url or not Method then
-        return failed_response
-    end
-
-    local response = {
-        Success = true,
-        StatusCode = 200,
-        StatusMessage = "Ok",
+local function failed(reason: string)
+    return {
+        Success = false,
+        StatusCode = 500,
+        StatusMessage = reason,
         Body = "",
         Headers = {}, -- TODO: Get offical potassium headers
     }
+end
 
-    if Method == "GET" then
-        response.Body = game:HttpGetAsync(Url)
-    --elseif Method == "POST" then
-    --    response.Body = game:HttpPostAsync(Url, Enum.HttpContentType.ApplicationUrlEncoded)
-    else
-        error("Unsupported Method")
+return function(options)
+    if type(options) ~= "table" or not options.Url or not options.Method then
+        return failed("malformed request") -- handlers read Body, so never hand back nil
     end
 
-    return response
+    local ok, response = pcall(function()
+        return services.HttpService:RequestAsync({
+            Url = options.Url,
+            Method = options.Method,
+            Headers = options.Headers,
+            Body = options.Body,
+            Compress = options.Compress,
+        })
+    end)
+
+    if not ok then
+        return failed(tostring(response))
+    end
+
+    return {
+        Success = response.Success,
+        StatusCode = response.StatusCode,
+        StatusMessage = response.StatusMessage,
+        Body = response.Body,
+        Headers = response.Headers, -- TODO: Get offical potassium headers
+    }
 end

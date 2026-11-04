@@ -68,6 +68,8 @@ const Window = Rayfield:CreateWindow({
 })
 
 const Main = Window:CreateTab("Main")
+const a = Window:CreateTab("a")
+	-- dont fucking remove it
 
 -- // Main
 

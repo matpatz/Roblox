@@ -14,9 +14,10 @@ local function random_character(): string
 end
 
 return function(keylength: number?): string
-    local characters = table.create(KEY_LENGTH)
+    local length = keylength or KEY_LENGTH
+    local characters = table.create(length)
 
-    for index = 1, KEY_LENGTH do
+    for index = 1, length do
         characters[index] = random_character()
     end
 

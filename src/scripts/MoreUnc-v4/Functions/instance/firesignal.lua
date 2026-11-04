@@ -4,12 +4,16 @@ local getfunction = Knit.require(`{shared.script}/Functions`, "main").getfunctio
 local getconnections = getfunction("getconnections", "instance")
 
 return function(signal, ...)
-    local Args = { ... }
+    -- BindableEvent / BindableFunction: the engine fires it, no connections to walk
+    local fire = signal.Fire
+
+    if type(fire) == "function" then
+        fire(signal, ...)
+
+        return
+    end
+
     for _, Connection in next, getconnections(signal) do
-        if #Args > 0 then
-            Connection:Fire(table.unpack(Args))
-        else
-            Connection:Fire()
-        end
+        Connection:Fire(...)
     end
 end

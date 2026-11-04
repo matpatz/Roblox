@@ -1,16 +1,6 @@
-local signal_template = {
-    Enabled = true,
-    ForeignState = false,
-    LuaConnection = true,
-    Function = nil,
-    Thread = nil,
-    Script = nil
-}
-
+-- roblox gives scripts no way to walk a signal's connections, so there is nothing
+-- real to hand back here; executors that ship their own keep theirs, this is only
+-- reached when the executor has none. returning fake proxies made firesignal throw
 return function(signal)
-    local response = {}
-    for i = 1, 10 do
-        response[i] = signal_template
-    end
-    return response
+    return {}
 end

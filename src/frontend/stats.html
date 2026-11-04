@@ -100,21 +100,28 @@ function renderStats(data) {
 }
 
 function renderGraph(history) {
-  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  let entries = [];
+  const dayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const today = new Date();
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  const countsByDate = new Map();
 
-  if (!history || history.length === 0) {
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      entries.push({ label: dayLabels[d.getDay()] + ' ' + d.getDate(), count: 0 });
-    }
-  } else {
-    entries = history.map(function(entry) {
-      const d = new Date(entry.date + 'T00:00:00');
-      return { label: dayLabels[d.getDay()] + ' ' + d.getDate(), count: entry.count };
-    });
-  }
+  (history || []).forEach(function(entry) {
+    const date = new Date(entry.date + 'T00:00:00');
+    if (Number.isNaN(date.getTime())) return;
+    const key = date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
+    countsByDate.set(key, entry.count);
+  });
+
+  const entries = dayLabels.map(function(label, index) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    const key = date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
+    return {
+      label: label + ' ' + date.getDate(),
+      count: countsByDate.get(key) || 0
+    };
+  });
 
   let maxCount = Math.max.apply(null, entries.map(function(e) { return e.count; }));
   if (maxCount === 0) maxCount = 1;

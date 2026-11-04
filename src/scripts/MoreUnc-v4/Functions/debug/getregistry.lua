@@ -1,3 +1,3 @@
 return function(): { [any]: any }
-    return
+    return {} -- the lua registry isnt reachable from a script
 end

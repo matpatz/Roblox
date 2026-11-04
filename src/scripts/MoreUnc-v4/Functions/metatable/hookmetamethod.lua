@@ -8,15 +8,26 @@ local hookfunction = getfunction("hookfunction", "closures")
 
 type func = typeof(function() end)
 
-return function(object: Instance | table | userdata, method: string, hook: func): table?
-    local foundmethod = getrawmetatable(object)[method]
-    local clonedmethod = clonefunction(foundmethod)
-    
-    hookfunction(foundmethod, function(...)
+return function(object: Instance | table | userdata, method: string, hook: func): func?
+    local original = getrawmetatable(object)
+
+    if not original then
+        return nil -- protected by __metatable, or not something a metatable hangs off
+    end
+
+    local method_fn = original[method]
+
+    if type(method_fn) ~= "function" then
+        return nil
+    end
+
+    local clonedmethod = clonefunction(method_fn)
+
+    hookfunction(method_fn, function(...)
         return hook(...)
     end)
-    
-    return clonedmethod -- I think? idk it says returns a table so like uhm yea
+
+    return clonedmethod
 end
 
 --[[

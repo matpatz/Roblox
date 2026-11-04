@@ -6,8 +6,13 @@ local hooks = globals.get("hooks")
 type func = typeof(function() end)
 
 return function(func: func)
-    if not isfunctionhooked(func) then
-        error("function is not hooked")
+    local entry = hooks[func]
+
+    if not entry then
+        error("function is not hooked", 2)
     end
-    hookfunction(func, hooks[func])
+
+    hooks[func] = nil
+
+    return entry.original
 end

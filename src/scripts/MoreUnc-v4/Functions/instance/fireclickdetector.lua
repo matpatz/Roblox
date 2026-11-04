@@ -1,20 +1,33 @@
 local Knit = shared.Knit
+local getfunction = Knit.require(`{shared.script}/Functions`, "main").getfunction
 local player = Knit.require(`{shared.script}/Modules`, "player")
 
-return function(ClickDetector: Instance, Distance: number, Signal)
-    local HumanoidRootPart = player.HumanoidRootPart
-    if not HumanoidRootPart then
-        return
+local firesignal = getfunction("firesignal", "instance")
+
+return function(ClickDetector: Instance, distance: number?, signal: string?)
+    if typeof(ClickDetector) ~= "Instance" or not ClickDetector:IsA("ClickDetector") then
+        error(`expected ClickDetector, got {typeof(ClickDetector)}`, 2)
     end
 
-    local CFrame = HumanoidRootPart.CFrame
-    HumanoidRootPart.CFrame = ClickDetector.Parent.CFrame
+    distance = distance or 0
+    signal = signal or "MouseClick"
 
-    -- firesignal whatever here
+    local HumanoidRootPart = player.HumanoidRootPart
+    local OldCFrame = HumanoidRootPart and HumanoidRootPart.CFrame
 
-    task.delay(1, function()
-        if HumanoidRootPart then
-            HumanoidRootPart.CFrame = CFrame
-        end
-    end)
+    if HumanoidRootPart and distance ~= 0 and ClickDetector.Parent then
+        HumanoidRootPart.CFrame = ClickDetector.Parent.CFrame
+    end
+
+    ClickDetector.MaxActivationDistance = math.huge
+
+    local signal_object = ClickDetector[signal]
+
+    if signal_object then
+        firesignal(signal_object, player.LocalPlayer)
+    end
+
+    if HumanoidRootPart and OldCFrame then
+        HumanoidRootPart.CFrame = OldCFrame
+    end
 end

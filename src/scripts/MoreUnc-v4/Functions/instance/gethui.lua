@@ -1,7 +1,7 @@
 local Knit = shared.Knit
 
-local RobloxGui = Knit.services.CoreGui:FindFirstChild("RobloxGui")
+local CoreGui = Knit.services.CoreGui
 
 return function(): Instance
-    return RobloxGui
+    return CoreGui:FindFirstChild("RobloxGui") or CoreGui
 end

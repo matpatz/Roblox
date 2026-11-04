@@ -18,7 +18,7 @@ local LocalPlayer = services.Players.LocalPlayer
 --// Variables
 
 local SendShootReq = Blaster.SendShootReq
-local castRays = BlasterUtility.castRays
+local castRays = BlasterUtility.CastRays
 
 local config = scriptmanager.config.set(
     {

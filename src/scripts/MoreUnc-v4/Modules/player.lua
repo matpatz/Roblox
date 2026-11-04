@@ -1,8 +1,7 @@
 local Knit = shared.Knit
 local player = Knit.player
 
-local lp = player.localplayer
-
-player.localplayer = lp
+-- localplayer was never set, the manager calls it LocalPlayer
+player.localplayer = player.LocalPlayer
 
 return player

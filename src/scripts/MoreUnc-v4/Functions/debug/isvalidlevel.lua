@@ -4,8 +4,8 @@ local init = Knit.require(`{shared.script}/Functions`, "main")
 local getinfo = init.getfunction("getinfo", "debug")
 
 return function(level: number): boolean
-    local a, b = pcall(function()
-        local _ = getinfo(level, "n")
-    end)
-    return a
+    -- out of range levels hand back nil instead of throwing, so check both
+    local ok, source = pcall(getinfo, level)
+
+    return ok and source ~= nil
 end

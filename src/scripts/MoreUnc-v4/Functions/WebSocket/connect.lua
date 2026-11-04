@@ -1,11 +1,12 @@
 local Knit = shared.Knit
 local instances = Knit.require(`{shared.script}/Modules`, "instances")
 
-local Messages = instances.new("BindableEvent")
-local Closed = instances.new("BindableEvent")
-
 return function(url: string)
-    local Warned   = false
+    -- per connection, otherwise every socket fires everyone elses handlers
+    local Messages = instances.new("BindableEvent", true)
+    local Closed = instances.new("BindableEvent", true)
+
+    local Warned = false
     local IsClosed = false
 
     return {
@@ -13,6 +14,10 @@ return function(url: string)
         OnClose = Closed.Event,
 
         Send = function(_, Message)
+            if IsClosed then
+                return
+            end
+
             if Warned then
                 return
             end
@@ -26,6 +31,11 @@ return function(url: string)
 
             IsClosed = true
             Closed:Fire()
+
+            task.delay(0, function()
+                Messages:Destroy()
+                Closed:Destroy()
+            end)
         end,
     }
 end

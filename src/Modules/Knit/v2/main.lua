@@ -4,9 +4,9 @@ shared.Knit = Knit
 local defualts = {
     domains = {
         "https://vtex.win",
+        "https://www.voltex.website",
         "https://gitlab.com/voltex-group3/voltex-project/-/raw/main",
         "https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main",
-        "https://www.voltex.website",
     },
     fetch_timeout = 5
 }

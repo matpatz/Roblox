@@ -138,7 +138,7 @@ async function handler_fn(req, res) {
     // no auth. The old /guilds/{id} call needed a bot token and showed 0 whenever
     // BOT_TOKEN was unset/invalid.
     fetch(`https://discord.com/api/v10/invites/${DISCORD_INVITE}?with_counts=true`, {
-      headers: { 'User-Agent': 'VoltexStats/1.0 (voltex.website)' }
+      headers: { 'User-Agent': 'VoltexStats/1.0 (vtex.win)' }
     }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
     supabase.from('totals').select('total_executions').eq('id', 1).single(),
     countActiveUsers(supabase, thirtyDaysAgo.toISOString()),

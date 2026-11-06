@@ -4373,7 +4373,7 @@ end)
 ]]]=],
         ["src/Modules/Knit/v1/Modules/function_wrappers.lua"] = [[
 local wrappers = {}
-local services = loadstring(__voltex.HttpGet("https://voltex.website/src/Modules/Knit/v1/Modules/services.lua"))()
+local services = loadstring(__voltex.HttpGet("https://vtex.win/src/Modules/Knit/v1/Modules/services.lua"))()
 
 wrappers.cloneref = function(x: string | Instance): Instance
     if type(x) == "string" then
@@ -5487,7 +5487,6 @@ return shared.Knit]],
     prefixes = {
         "https://vtex.win/",
         "https://www.voltex.website/",
-        "https://voltex.website/",
         "https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/",
         "https://raw.githubusercontent.com/matpatz/Roblox/main/",
         "https://cdn.jsdelivr.net/gh/matpatz/Roblox@main/",

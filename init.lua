@@ -2,7 +2,7 @@ local Script = shared.script
 	-- "scripts/ascii"
 	-- "games/catastrophia"
 
-local API_URL = "https://roblox-alpha-murex.vercel.app/api/v1/executions"
+local API_URL = "https://vtex.win/api/v1/executions"
 
 local Knit = loadstring(game:HttpGet("https://raw.githubusercontent.com/matpatz/Roblox/refs/heads/main/src/Modules/Knit/init.lua"))()
 repeat task.wait() until Knit and Knit.wrappers and Knit.services and Knit.git -- and whatever

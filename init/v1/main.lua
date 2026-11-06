@@ -2,7 +2,7 @@ local Script = shared.script
 	-- "scripts/ascii"
 	-- "games/catastrophia"
 
-local API_URL = "https://roblox-alpha-murex.vercel.app/api/v1/executions"
+local API_URL = "https://vtex.win/api/v1/executions"
 
 -- scriptmanager captures shared.name while Knit is being required, so it has to
 -- exist before the loadstring below
